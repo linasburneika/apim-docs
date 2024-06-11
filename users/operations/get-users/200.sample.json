@@ -1,0 +1,16 @@
+{
+  "users": [{
+	"id": "e7aee7b1-4967-4f40-b220-0b1dc12c4542",      
+	"email": "John.Smith@example.com",
+    "givenName": "John",
+    "surname": "Smith",    
+    "organizationName": "Example Organization"
+  },
+  {
+	"id": "30af8cae-cd6b-4c5f-a984-5a03710db06e",      
+	"email": "Jane.Smith@example.com",
+    "givenName": "Jane",
+    "surname": "Smith",    
+    "organizationName": "Example Organization"
+  }]
+}

@@ -1,0 +1,18 @@
+{
+  "error": {
+    "code": "InvalidUsersRequest",
+    "message": "Cannot query users.",
+    "details": [
+      {
+        "code": "MissingRequiredParameter",
+        "message": "A search value was not specified.",
+        "target": "$search"
+      },
+      {
+        "code": "InvalidValue",
+        "message": "The search value must be between 3 and 200 characters.",
+        "target": "$search"
+      }
+    ]
+  }
+}

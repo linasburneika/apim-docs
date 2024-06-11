@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "InvalidHeaderValue",
+    "message": "Authorization header is empty."
+  }
+}

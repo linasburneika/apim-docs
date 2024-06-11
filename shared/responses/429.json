@@ -1,0 +1,9 @@
+{
+  "description": "This response indicates that the user has sent too many requests in a given amount of time.",
+  "headers": [
+    {
+      "name": "retry-after",
+      "description": "The number of requests exceeds the rate-limit for the client subscription."
+    }
+  ]
+}

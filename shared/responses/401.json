@@ -1,0 +1,3 @@
+{
+  "description": "This response indicates that request lacks valid authentication credentials. Access token might not been provided, issued by the wrong issuer, does not have required scopes or request headers were malformed.",
+}

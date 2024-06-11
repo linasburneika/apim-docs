@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "HeaderNotFound",
+    "message": "Header Authorization was not found in the request. Access denied."
+  }
+}

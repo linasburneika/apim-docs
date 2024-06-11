@@ -1,0 +1,9 @@
+{
+  "name": "Accept",
+  "description": "[concat('Setting to `', parameters('acceptHeader'),'` is recommended.')]",
+  "type": "string",
+  "required": true,
+  "values": [
+    "[parameters('acceptHeader')]"
+  ]
+}

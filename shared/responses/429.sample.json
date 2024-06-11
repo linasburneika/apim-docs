@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "TooManyRequests",
+    "message": "More requests were received than the subscription rate-limit allows."
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "Unauthorized",
+    "message": "Access denied due to invalid client. Make sure that client was registered on https://developer.bentley.com."
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Authorization",
+  "description": "OAuth access token with `itwin-platform` scope",
+  "type": "string",
+  "required": true,
+  "values": []
+}

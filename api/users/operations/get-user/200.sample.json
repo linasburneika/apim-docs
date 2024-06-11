@@ -4,6 +4,6 @@
 	"email": "John.Smith@example.com",
     "givenName": "John",
     "surname": "Smith",    
-    "organizationName": "Example Organization [docs]"
+    "organizationName": "Example Organization"
   }
 }

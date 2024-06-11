@@ -1,46 +1,34 @@
 {
   "components": {
     "schemas": {
-      "userMinimal": {
-        "title": "User"
-      },
-      "Error": {
-        "description": "Contains error information.",
+      "DetailedError": {
+        "description": "Contains error information and an array of more specific errors.",
         "properties": {
-          "target": {
-            "description": "The target of the error."
+          "code": {
+            "description": "One of a server-defined set of error codes."
           },
           "message": {
             "description": "A human-readable representation of the error."
           },
-          "code": {
-            "description": "One of a server-defined set of error codes."
-          }
-        }
-      },
-      "DetailedErrorResponse": {
-        "description": "Gives details for an error that occurred while handling the request. Note that clients MUST NOT assume that every failed request will produce an object of this schema, or that all of the properties in the response will be non-null, as the error may have prevented this response from being constructed.",
-        "title": "Detailed Error Response",
-        "properties": {
-          "error": {
-            "description": "Error Detailed information."
-          }
-        }
-      },
-      "DetailedError": {
-        "description": "Contains error information and an array of more specific errors.",
-        "properties": {
           "target": {
             "description": "The target of the error."
           },
           "details": {
             "description": "Optional array of more specific errors."
+          }
+        }
+      },
+      "Error": {
+        "description": "Contains error information.",
+        "properties": {
+          "code": {
+            "description": "One of a server-defined set of error codes."
           },
           "message": {
             "description": "A human-readable representation of the error."
           },
-          "code": {
-            "description": "One of a server-defined set of error codes."
+          "target": {
+            "description": "The target of the error."
           }
         }
       },
@@ -53,6 +41,19 @@
           }
         }
       },
+      "userid-list": {
+        "description": "User Ids to query",
+        "title": "UsersIds"
+      },
+      "DetailedErrorResponse": {
+        "description": "Gives details for an error that occurred while handling the request. Note that clients MUST NOT assume that every failed request will produce an object of this schema, or that all of the properties in the response will be non-null, as the error may have prevented this response from being constructed.",
+        "title": "Detailed Error Response",
+        "properties": {
+          "error": {
+            "description": "Error Detailed information."
+          }
+        }
+      },
       "user-list": {
         "description": "User Search Results",
         "title": "Users",
@@ -62,9 +63,8 @@
           }
         }
       },
-      "userid-list": {
-        "description": "User Ids to query",
-        "title": "UsersIds"
+      "userMinimal": {
+        "title": "User"
       }
     }
   }

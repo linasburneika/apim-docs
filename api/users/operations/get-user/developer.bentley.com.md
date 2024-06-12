@@ -1,4 +1,4 @@
-Direct content links to developer.bentley.com 
+Links to developer.bentley.com 
 
 
 [displayName.md](https://developer.bentley.com/apis/users/operations/get-user/#get-user)

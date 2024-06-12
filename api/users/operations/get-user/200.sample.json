@@ -2,8 +2,8 @@
   "user": {
 	"id": "e7aee7b1-4967-4f40-b220-0b1dc12c4542",      
 	"email": "John.Smith@example.com",
-    "givenName": "John",
-    "surname": "Smith",    
+    "givenName": "John [docs]",
+    "surname": "Smith [docs]",    
     "organizationName": "Example Organization"
   }
 }

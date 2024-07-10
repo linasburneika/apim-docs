@@ -1,1 +1,1 @@
-Get users by id list [docs]
+Get users by id list

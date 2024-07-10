@@ -1,1 +1,1 @@
-Access information about users. [docs]
+Access information about users.

@@ -1,1 +1,1 @@
-Get user [docs]
+Get user

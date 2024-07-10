@@ -1,4 +1,4 @@
-Retrieve the logged in user's profile. [docs]
+Retrieve the logged in user's profile.
 
 {!Authorization.md!}
 

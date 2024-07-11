@@ -1,1 +1,1 @@
-Add iTwin group members | This is a test
+Add iTwin group members

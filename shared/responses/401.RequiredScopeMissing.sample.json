@@ -1,6 +1,0 @@
-{
-  "error": {
-    "code": "RequiredScopeMissing",
-    "message": "Access denied due to invalid access_token. One or more required scopes are missing. Make sure to provide a valid token for this API endpoint."
-  }
-}

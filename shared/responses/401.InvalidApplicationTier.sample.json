@@ -1,6 +1,0 @@
-{
-  "error": {
-    "code": "InvalidApplicationTier",
-    "message": "The application is not allowed to access this API."
-  }
-}

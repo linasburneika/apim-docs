@@ -1,6 +1,0 @@
-{
-  "error": {
-    "code": "InvalidAuthorizationScheme",
-    "message": "Authorization scheme 'Baerer' is not valid."
-  }
-}

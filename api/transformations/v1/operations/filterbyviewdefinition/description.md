@@ -24,6 +24,7 @@ categories - ids of visible enabled/categories contained within a view definitio
 hiddenCategories - ids of disabled/hidden categories contained within a view definition.
 neverDrawn - element ids which should be left out of the target iModel.
 alwaysDrawn - element ids which should be included in to the target iModel.
+isAlwaysDrawnExclusive - boolean flag that determines whether all elements, except those defined in "alwaysDrawn", should be filtered out. The default value is false if not specified.
 subCategoryOvr
     - subCategory - id of sub category 
     - invisible - geometry belonging to an invisible subCategory will be left out of target iModel

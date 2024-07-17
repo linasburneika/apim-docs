@@ -1,0 +1,5 @@
+---
+
+Performs introspection of the provided Bearer JWT token
+
+---

@@ -1,0 +1,24 @@
+name: "Deploy-Environment"
+
+on:
+  # This is a reusable workflow
+  workflow_call:
+    inputs: 
+      environment:
+        description: "Name of the environment to deploy"
+        required: true
+        type: string
+
+# permissions:
+#   id-token: write
+#   contents: read
+
+# defaults:
+#   run:
+#     shell: pwsh
+
+jobs:
+  build-code:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "$environment - PR Branch - $GITHUB_HEAD_REF"

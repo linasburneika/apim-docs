@@ -20,5 +20,6 @@ on:
 jobs:
   build-code:
     runs-on: ubuntu-latest
+    environment: ${{inputs.environment}}
     steps:
-      - run: echo "$environment - PR Branch - $GITHUB_HEAD_REF"
+      - run: echo "${{inputs.environment}} - PR Branch - $GITHUB_HEAD_REF"

@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          ref: ${{inputs.pr_base_ref}}"
+          ref: ${{inputs.pr_base_ref}}
           
       - name: Getting Branch
         run: |

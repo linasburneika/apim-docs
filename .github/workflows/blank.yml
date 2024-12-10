@@ -15,27 +15,22 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  qa-deploy:
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: QA
+  prod-approval-gate:
+    needs: qa-deploy
+    environment: Production
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-
-      # Runs a single command using the runners shell
-      - name: Get PR branch
-        run: echo "PR branch $GITHUB_HEAD_REF"
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+      - name: approved
+        env: 
+          ENV_NAME: Production
+        run: write-host "Approve for $($env.ENV_NAME)"
+    
+  prod-deploy:
+    needs: prod-approval-gate
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: Production

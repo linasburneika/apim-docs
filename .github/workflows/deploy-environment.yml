@@ -12,15 +12,7 @@ on:
         description: "Working branch of Pull Request"
         required: true
         type: string
-
-# permissions:
-#   id-token: write
-#   contents: read
-
-# defaults:
-#   run:
-#     shell: pwsh
-
+        
 jobs:
   build-code:
     runs-on: ubuntu-latest
@@ -31,7 +23,16 @@ jobs:
           echo "Environment:${{inputs.environment}}"
           echo "PR Branch:${{inputs.pr_head_ref}}"
           
-      - name: Dump GitHub context
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          sha: ${{inputs.pr_head_ref}} 
+
+      - name: List all changed files
         env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          for file in ${ALL_CHANGED_FILES}; do
+            echo "$file was changed"
+          done

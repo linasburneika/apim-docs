@@ -38,4 +38,5 @@ jobs:
     needs: prod-approval-gate
     uses: ./.github/workflows/deploy-environment.yml
     with:
+      pr_head_ref: ${{github.head_ref}}
       environment: Production

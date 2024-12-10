@@ -1,1 +1,1 @@
-The Clash Detection API allows you to manage clash detection suppression rules, tests, runs, results and manual suppression.
+The Clash Detection API allows you to manage clash detection suppression rules, tests, runs, results and manual suppression. Test

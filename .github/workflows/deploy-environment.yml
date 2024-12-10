@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{inputs.environment}}
     steps:
-      - run: echo "${{inputs.environment}} - PR Branch - ${{github.head_ref}}"
+      - run: echo "${{inputs.environment}} - PR Branch - $pr_head_ref"
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}

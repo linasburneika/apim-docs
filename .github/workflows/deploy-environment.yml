@@ -22,6 +22,11 @@ jobs:
         run: |
           echo "Environment:${{inputs.environment}}"
           echo "PR Branch:${{inputs.pr_head_ref}}"
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
           
       - name: Get changed files
         id: changed-files

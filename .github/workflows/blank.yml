@@ -20,7 +20,7 @@ jobs:
     uses: ./.github/workflows/deploy-environment.yml
     with:
       pr_head_ref: "${{github.head_ref}}"
-      pr_base_ref: refs/heads/master
+      pr_base_ref: "master"
       environment: QA
       
   prod-approval-gate:
@@ -38,5 +38,5 @@ jobs:
     uses: ./.github/workflows/deploy-environment.yml
     with:
       pr_head_ref: "${{github.head_ref}}"
-      pr_base_ref: refs/heads/release
+      pr_base_ref: "release"
       environment: Production

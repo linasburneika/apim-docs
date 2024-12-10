@@ -12,12 +12,21 @@ on:
         description: "Working branch of Pull Request"
         required: true
         type: string
+      pr_base_ref:
+        description: "Working branch of Pull Request"
+        required: true
+        type: string
         
 jobs:
   build-code:
     runs-on: ubuntu-latest
     environment: ${{inputs.environment}}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ${{inputs.pr_base_ref}}"
+          
       - name: Getting Branch
         run: |
           echo "Environment:${{inputs.environment}}"

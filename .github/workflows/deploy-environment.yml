@@ -29,7 +29,7 @@ jobs:
       - name: Getting Branch
         run: |
           echo "Environment:${{inputs.environment}}"
-          echo "PR Branch:${{inputs.pr_head_ref}}:
+          echo "PR Branch:${{inputs.pr_head_ref}}"
           
       - name: Dump GitHub context
         env:

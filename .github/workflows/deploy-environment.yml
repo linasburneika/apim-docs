@@ -49,8 +49,7 @@ jobs:
         env:
           ALL_MODIFIED_FILES: ${{ steps.changed-files.outputs.all_modified_files }}
         run: |
-          $files = $Env:ALL_MODIFIED_FILES | ConvertFrom-Json
-          write-host $files
+          write-host $Env:ALL_MODIFIED_FILES
 
       # - name: Merge ${{inputs.pr_head_ref}} branch to 'Release'
       #   run: |

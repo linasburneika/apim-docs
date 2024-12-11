@@ -1,0 +1,98 @@
+name: "Deploy-Environment"
+
+on:
+  # This is a reusable workflow
+  workflow_call:
+    inputs: 
+      environment:
+        description: "Name of the environment to deploy"
+        required: true
+        type: string
+      pr_head_ref:
+        description: "Working branch of Pull Request"
+        required: true
+        type: string
+      pr_base_ref:
+        description: "Working branch of Pull Request"
+        required: true
+        type: string
+    outputs:
+      resolved_environment:
+        description: "Resolved production environment"
+        value: ${{ jobs.build-code.outputs.resolved_environment }}
+        
+jobs:
+  build-code:
+    runs-on: ubuntu-latest
+    environment: ${{inputs.environment}}
+    # Map the job outputs to step outputs
+    outputs:
+      resolved_environment: ${{ steps.list-changed-files.outputs.RESOLVED_ENVIRONMENT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ${{inputs.pr_base_ref}}
+          
+      - name: Print information
+        run: |
+          echo "Environment:${{inputs.environment}}"
+          echo "PR Branch:${{inputs.pr_head_ref}}"
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+          
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          json: true
+          escape_json: false
+          sha: ${{inputs.pr_head_ref}} 
+
+      - name: List all changed files
+        shell: pwsh
+        id: list-changed-files
+        env:
+          ALL_MODIFIED_FILES: ${{ steps.changed-files.outputs.all_modified_files }}
+        run: |
+          $environments = Get-Content environments.json -Raw | ConvertFrom-Json 
+
+          function Get-EnvironmentForPath {
+            param (
+              [string]$path
+            )
+            foreach ($env in $jsonContent.PSObject.Properties) {
+              if ($env.Value -contains $path) {
+                  return $env.Name
+              }
+            }
+            return "production"
+          }
+
+          $files = $Env:ALL_MODIFIED_FILES | ConvertFrom-Json
+          $envs = @()
+
+          foreach ($path in $files) {
+              $environment = Get-EnvironmentForPath -path $path
+              If ($envs -notContains $environment ){
+                  $envs += $environment
+              }
+          }
+          
+          if($envs.Count -gt 1){
+            Write-Host "Multiple environments detected: $envs"
+            exit 1
+          }
+          
+          Write-Host "Resolved environment: $envs[0]"
+          "RESOLVED_ENVIRONMENT=$envs[0]" >> $env:GITHUB_OUTPUT
+
+      - name: Merge ${{inputs.pr_head_ref}} branch to 'Release'
+        if: github.repository == 'octo-org/octo-repo-prod'
+        run: |
+          git checkout ${{inputs.pr_base_ref}}
+          git merge ${{inputs.pr_head_ref}}
+          git push

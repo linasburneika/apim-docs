@@ -1,0 +1,20 @@
+{
+    "prod-access-control": [
+        "content/apis/access-control",
+        "content/apis/access-control-v2"
+    ],
+    "prod-carbon-calculation": [
+        "content/apis/carbon-calculation"
+    ],
+    "prod-changed-elements": [
+        "content/apis/changed-elements",
+        "content/apis/changed-elements-v2"
+    ],
+    "prod-clash-detection": [
+        "content/apis/clash-detection",
+        "content/apis/clash-detection-v2"
+    ],
+    "prod-contextcapture": [
+        "content/apis/contextcapture"
+    ]
+}

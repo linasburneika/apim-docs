@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 1
           ref: ${{inputs.pr_base_ref}}
           
-      - name: Getting Branch
+      - name: Print information
         run: |
           echo "Environment:${{inputs.environment}}"
           echo "PR Branch:${{inputs.pr_head_ref}}"
@@ -50,3 +50,9 @@ jobs:
           for file in ${ALL_CHANGED_FILES}; do
             echo "$file was changed"
           done
+
+      - name: Merge ${{inputs.pr_head_ref}} branch to 'Release'
+        run: |
+          git checkout ${{inputs.pr_base_ref}}
+          git merge ${{inputs.pr_head_ref}}
+          git push

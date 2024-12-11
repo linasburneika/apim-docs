@@ -42,6 +42,7 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           json: true
+          escape_json: false
           sha: ${{inputs.pr_head_ref}} 
 
       - name: List all changed files
@@ -49,7 +50,8 @@ jobs:
         env:
           ALL_MODIFIED_FILES: ${{ steps.changed-files.outputs.all_modified_files }}
         run: |
-          write-host $Env:ALL_MODIFIED_FILES
+          $files = $Env:ALL_MODIFIED_FILES | ConvertFrom-Json
+          write-host files
 
       # - name: Merge ${{inputs.pr_head_ref}} branch to 'Release'
       #   run: |

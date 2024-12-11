@@ -61,15 +61,17 @@ jobs:
           $environments = Get-Content environments.json -Raw | ConvertFrom-Json 
 
           function Get-EnvironmentForPath {
-            param (
-              [string]$path
-            )
-            foreach ($env in $environments.PSObject.Properties) {
-              if ($env.Value -contains $path) {
-                  return $env.Name
+              param (
+                  [string]$path
+              )
+              foreach ($env in $environments.PSObject.Properties) {
+                  foreach ($envPath in $env.Value) {
+                      if ($path -like "$envPath*") {
+                          return $env.Name
+                      }
+                  }
               }
-            }
-            return "production"
+              return "Production"
           }
 
           $files = $Env:ALL_MODIFIED_FILES | ConvertFrom-Json

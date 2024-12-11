@@ -1,5 +1,5 @@
 ---
-title: Production Settings
+title: 'Production Settings'
 displayOrder: 4
 ---
 

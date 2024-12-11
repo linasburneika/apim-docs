@@ -1,5 +1,5 @@
 ---
-title: CC Orientations
+title: 'CC Orientations'
 displayOrder: 3
 ---
 

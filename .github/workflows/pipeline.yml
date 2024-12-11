@@ -35,5 +35,5 @@ jobs:
     uses: ./.github/workflows/deploy-environment-prod.yml
     with:
       pr_head_ref: "${{github.head_ref}}"
-      pr_base_ref: "release"
+      pr_base_ref: "Release"
       environment: ${{needs.qa-deploy.outputs.resolved_environment}}

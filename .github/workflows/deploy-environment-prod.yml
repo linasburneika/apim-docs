@@ -59,7 +59,6 @@ jobs:
           write-host ($files -join "`n") 
 
       - name: Merge ${{inputs.pr_head_ref}} branch to 'Release'
-        if: github.repository == 'octo-org/octo-repo-prod'
         run: |
           git checkout ${{inputs.pr_base_ref}}
           git merge ${{inputs.pr_head_ref}}

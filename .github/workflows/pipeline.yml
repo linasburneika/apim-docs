@@ -14,7 +14,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   qa-deploy:
-    uses: ./.github/workflows/deploy-environment.yml
+    uses: ./.github/workflows/deploy-environment-qa.yml
     with:
       pr_head_ref: "${{github.head_ref}}"
       pr_base_ref: "master"
@@ -22,18 +22,18 @@ jobs:
       
   prod-approval-gate:
     needs: qa-deploy
-    environment: Production
+    environment: ${{needs.qa-deploy.outputs.resolved_environment}}
     runs-on: ubuntu-latest
     steps:
       - name: approved
         env: 
-          ENV_NAME: Production
+          ENV_NAME: ${{needs.qa-deploy.outputs.resolved_environment}}
         run: echo "Approve for $($env.ENV_NAME)"
     
   prod-deploy:
     needs: prod-approval-gate
-    uses: ./.github/workflows/deploy-environment.yml
+    uses: ./.github/workflows/deploy-environment-prod.yml
     with:
       pr_head_ref: "${{github.head_ref}}"
       pr_base_ref: "release"
-      environment: Production
+      environment: ${{needs.qa-deploy.outputs.resolved_environment}}

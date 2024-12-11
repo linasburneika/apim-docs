@@ -47,14 +47,20 @@ jobs:
 
       - name: List all changed files
         shell: pwsh
+        id: list-changed-files
         env:
           ALL_MODIFIED_FILES: ${{ steps.changed-files.outputs.all_modified_files }}
         run: |
           $files = $Env:ALL_MODIFIED_FILES | ConvertFrom-Json
-          write-host $files
 
-      # - name: Merge ${{inputs.pr_head_ref}} branch to 'Release'
-      #   run: |
-      #     git checkout ${{inputs.pr_base_ref}}
-      #     git merge ${{inputs.pr_head_ref}}
-      #     git push
+          write-host "Source Branch: ${{inputs.pr_head_ref}}"
+          write-host "Target Branch: ${{inputs.pr_base_ref}}"
+          write-host "`nChanged Files:"
+          write-host ($files -join "`n") 
+
+      - name: Merge ${{inputs.pr_head_ref}} branch to 'Release'
+        if: github.repository == 'octo-org/octo-repo-prod'
+        run: |
+          git checkout ${{inputs.pr_base_ref}}
+          git merge ${{inputs.pr_head_ref}}
+          git push

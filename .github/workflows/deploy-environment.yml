@@ -45,9 +45,12 @@ jobs:
           sha: ${{inputs.pr_head_ref}} 
 
       - name: List all changed files
+        shell: pwsh
         env:
           ALL_MODIFIED_FILES: ${{ steps.changed-files.outputs.all_modified_files }}
-        run: echo ALL_MODIFIED_FILES
+        run: |
+          $files = $Env:ALL_MODIFIED_FILES | ConvertFrom-Json
+          write-host $files
 
       # - name: Merge ${{inputs.pr_head_ref}} branch to 'Release'
       #   run: |

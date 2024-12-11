@@ -64,7 +64,7 @@ jobs:
             param (
               [string]$path
             )
-            foreach ($env in $jsonContent.PSObject.Properties) {
+            foreach ($env in $environments.PSObject.Properties) {
               if ($env.Value -contains $path) {
                   return $env.Name
               }

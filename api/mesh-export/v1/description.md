@@ -1,1 +1,0 @@
-Export iModel 3D content to GLTF format.

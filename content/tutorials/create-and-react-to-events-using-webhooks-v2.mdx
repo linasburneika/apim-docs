@@ -1,0 +1,460 @@
+---
+title: 'Create and react to events using Webhooks API V2'
+version: 1
+tile:
+  name: 'Create and react to events using Webhooks API V2'
+  description: 'This tutorial will teach you how to use Webhooks API V2 to subscribe to events and introduce basic event handling workflows.'
+  href: '/tutorials/create-and-react-to-events-using-webhooks-v2/'
+  durationInMinutes: 45
+  relatedApiIds: ['webhooks']
+---
+
+<Introduction skillLevel="Intermediate" durationInMinutes="45">
+
+## Introduction
+
+In this tutorial, you will learn how to use the Webhooks API V2 to create and manage your webhooks. Also you will learn how to validate the webhook signature and process received event messages in your application.
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- Basic knowledge on [webhooks](https://en.wikipedia.org/wiki/Webhook) and how they work.
+- Knowledge on web application deployment or experience using [Heroku](https://www.heroku.com/about)/[Netlify](https://www.netlify.com/).
+- Already registered your own Service Application on the iTwin Platform.
+  - Steps to follow for registering an Service Application can be found [here](/tutorials/authorize-service/).
+  - The Webhooks API V2 can only be called by Service Applications.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 1. Set up your environment
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://nodejs.org"
+      target="_blank"
+      title="Node.js"
+      icon={<NodeJsIcon />}
+    />,
+    <LinkButton
+      href="https://git-scm.com/downloads"
+      target="_blank"
+      title="Git"
+      icon={<GitIcon />}
+    />
+  ]}>
+
+### 1.1 Required materials
+
+##### <a href="https://nodejs.org" target="_blank">Node.js (14.x LTS version)</a>
+
+This tool provides the backend JavaScript runtime necessary for your computer to read and render code appropriately. It also allows you to run NPM command line.
+
+##### <a href="https://git-scm.com/downloads" target="_blank">Git</a>
+
+This is the common source code control system.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://code.visualstudio.com/"
+      target="_blank"
+      title="VS Code"
+      icon={<VSCodeIcon />}
+    />,
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+### 1.2 Suggested materials
+
+##### <a href="https://code.visualstudio.com/" target="_blank">Visual Studio Code</a>
+
+This is our recommended editor and debugger tool for developing iTwin.js applications. It is free, open source and includes a GUI for working with GIT.
+
+##### <a href="https://www.postman.com/downloads/" target="_blank">Postman</a>
+
+If you want to test the REST API calls directly, you can use [Postman](https://www.postman.com/downloads/) or any other solution capable of sending HTTP requests. If you do it this way, you will require an authorization token for the requests to work.
+
+##### <a href="https://signup.heroku.com/" target="_blank">Heroku account</a>
+
+Heroku will be used to deploy the test application during this tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Create your application
+
+Since webhooks are sending the events via HTTP requests you need to have an application running that exposes a public HTTP endpoint - callback URL. In this tutorial we are going to use [Node.js](https://nodejs.org/en) together with [Express](https://expressjs.com/) for test application.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>Project initialization</Title>,
+  <CodeBlock 
+    language="bash" 
+    code={
+`cd your-project
+npm init -y
+npm install express
+npm install -D typescript @types/express
+tsc --init`} />,
+  <Title>tsconfig.json</Title>,
+  <CodeBlock language="json" code={`"outDir":"dist"`} />,
+  <Title>package.json</Title>,
+  <CodeBlock language="json" code={`"main":"dist/index.js"`} />,
+  <CodeBlock language="json" code={
+`"scripts":{
+  "start":"tsc && node dist/index.js"
+}`} />,
+]}>
+
+### 2.1 Initialize the project
+
+To start off, create new directory for your application and execute the following initialization commands. These commands will initialize new npm project, install required dependencies and configure typescript. After initialization, update freshly generated `tsconfig.json` file by setting `outDir` property to `"dist"`. Next step will be updating `package.json` file to update the application entry point and `start` script. After that is done, the project is ready for the next step.
+
+<Alert type="informational">
+
+If you are running into `tsc is not recognized` problems, try installing typescript globally `npm install typescript -g`.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>src/index.ts</Title>,
+  <CodeBlock language="typescript" code={
+`import express from "express";\n
+const app = express();
+app.use(express.text({ type: "application/json" }));\n
+app.post("/events", () => {
+  // Handle the event
+});\n
+const port = 5000;
+app.listen(port, () => {
+  console.log("Application was started.");
+});`} />
+]}>
+
+### 2.2 Create express server
+
+Now let's start implementing the application. At first, create a new file in your project directory `src/index.ts`. This is going to be the application starting point. From example on the side you can see that we are going to have a public HTTP endpoint that will be accepting POST requests `app.post("/events", () => {})`. This is because event messages are sent using POST method. Note that above there is a line `app.use(express.text({ type: "application/json" }))` that makes the server treat the requests with json content as text and not deserialize them initially because raw payload will be required for event authorization in one of the upcoming steps.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>src/index.ts</Title>,
+  <CodeBlock language="typescript" code={`import crypto from "crypto";`} />,
+  <CodeBlock language="typescript" code={
+`function validateSignature(payload: string, signatureHeader: string): boolean {
+  // Replace with your own webhook secret later
+  const secret = "4eb25d308ef2a9722ffbd7a2b7e5026f9d1f2feaca5999611d4ef8692b1ad70d";\n
+  const [algorithm, signature] = signatureHeader.split("=");
+  const generated_sig = crypto.createHmac(algorithm, secret).update(payload, "utf-8").digest("hex");\n
+  return generated_sig.toLowerCase() === signature.toLowerCase();
+}`} />
+]}>
+
+### 2.3 Add event authorization
+
+In order to authorize the event source, we need to add event signature validation. Event signature is `HMAC-SHA256` string that is included in the request `Signature` header. For validation we will be using Node.js `crypto` utility which basically lets us to generate the same type of signature in our end. Generated signature and the signature included in the request should match to pass the authorization. Let's start adding validation by creating a new function `function validateSignature(payload: string, signatureHeader: string)`. As a first parameter it will to expect raw request payload and as a second parameter it will expect signature header value. This function will also need the webhook `secret` which we are going to add later on we create a webhook. Since, the signature header value also contains the cryptographic algorithm name and the signature value separated by `=`, we need to extract these values into separate variables `const [algorithm, signature] = signatureHeader.split("=")`. Then at this point, using all the existing variables we can generate a signature `crypto.createHmac(algorithm, secret).update(payload, "utf-8").digest("hex")`. Lastly, we need to check if both signatures match and return the result.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>src/models.ts</Title>,
+  <CodeBlock language="typescript" code={
+`export type Event = {
+  content: iModelDeletedEvent | NamedVersionCreatedEvent;
+  eventType: string;
+  enqueuedDateTime: string;
+  messageId: string;
+  webhookId: string;
+  iTwinId: string;
+};\n
+export type iModelDeletedEvent = {
+  imodelId: string;
+  userId: string;
+};\n
+export type MemberAddedEvent = {
+  memberId: string;
+  eventCreatedBy: string;
+  memberType: string;
+  roleId: string;
+  roleName: string;
+}`} />
+]}>
+
+### 2.4 Define data models
+
+Before we can start receiving the events, we need to prepare the models for expected data. You can find the schema for the base event and all other available events [here](/apis/webhooks-v2/available-events). Create a new file `src/models.ts` and create event types by matching the schema. For this example we will create two event types, `iModels.iModelDeleted.v1` and `accessControl.memberAdded.v1`
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>src/index.ts</Title>,
+  <CodeBlock language="typescript" code={`import { Event, NamedVersionCreatedEvent } from "./models";`} />,
+  <CodeBlock language="typescript" code={
+`app.post("/events", (req, res) => {
+  const signatureHeader = req.headers["signature"] as string;
+  if (!signatureHeader || !req.body) res.sendStatus(401);\n
+  if (!validateSignature(req.body, signatureHeader)) {
+    res.sendStatus(401);
+  } else {
+    const event = JSON.parse(req.body) as Event;
+    switch (event.eventType) {
+      case "accessControl.memberAdded.v1": {
+        const content = event.content as MemberAddedEvent;
+        console.log(\`Member (Id:\${content.memberId}) was added to iTwin (\${event.iTwinId})!  Member was granted the \${content.roleName} role (Id: \${content.roleId}).\`);
+        break;
+      }
+      default:
+        res.sendStatus(400); //Unexpected event type
+    }
+  }
+  res.sendStatus(200);
+});`} />
+]}>
+
+### 2.5 Event handling
+
+Now that we have everything ready for event handling, we can start implementing it. First we want to validate the request you receive came from our Webhooks Service. You can do this be checking the signature header. If the request either does not contain a signature header or a request body, you can go ahead and return '401 Unauthorized" `if (!signatureHeader || !req.body) res.sendStatus(401)`. If request does have these components then we can proceed with further processing logic and try to validate the event signature using the function we defined in step 2.3 `if (!validateSignature(req.body, signatureHeader)) res.sendStatus(401)`. If validation fails, we can assume that the event was sent from unexpected source and safely return `401 Unauthorized` as well.
+
+If we do not receive a response within 5 seconds we will count that request as failed and start the retry procedure. To avoid any inadvertent timeouts we suggest validating the request, putting any work you will be doing in reaction to the event on a seperate thread, and then return '200 Ok'. More information about the retry procedure can be found [here](/apis/webhooks-v2/overview/#RetryProcedure).
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 2.6 Deploy
+
+For this application to work, you have to deploy it to be publicly accessible. If you have any preferences for the deployment, go ahead and use your own deployment method and platform. If not, you can keep following the tutorial and deploy the application using [Heroku](https://www.heroku.com/about):
+
+1. [Create a Heroku Remote](https://devcenter.heroku.com/articles/git#create-a-heroku-remote).
+1. [Deploy by pushing the code](https://devcenter.heroku.com/articles/git#deploy-your-code).
+1. Use `heroku logs --tail` for monitoring the behavior of the application.
+
+Once you have the application deployed and running, we can move on to the webhook creation.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Create a webhook
+
+Webhooks allows you to subscribe to events happening in iTwin Platform. Webhooks are an easy way to automate workflows inside of the iTwin Platform.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP request for "Create webhook" operation</Title>,
+    <CodeBlock
+      language="http"
+      code={
+`POST https://api.bentley.com/webhooks HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />
+  ]}
+>
+
+### 3.1 Request
+
+A webhook for iModel events is created by sending a POST request to https://api.bentley.com/webhooks/. `Authorization` header with valid Bearer access token is required.
+
+The Webhooks API V2 can only be called by Service Applications. For more information on Service Applications and how to obtain an access token can be found [here](/tutorials/authorize-service/). A list of your Service Applications can be found [here](/my-apps).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example request body</Title>,
+    <CodeBlock
+      language="json"
+      code={
+`{  
+  "callbackUrl":"https://HOSTNAME/events",
+  "scope": "account",
+  "secret": "optional-32-character-value"
+  "eventTypes":[
+    "iModels.iModelDeleted.v1",
+    "accessControl.memberAdded.v1"
+  ]
+}`} />
+  ]}
+>
+
+### 3.2 Request body
+
+Webhook creation properties:
+
+- **callbackUrl** - a public endpoint of your application where you expect the event to be sent.
+- **eventTypes** - a list of event types you want to subscribe to. A full list can be found [here](/apis/webhooks-v2/available-events)
+- **secret** - (optional) At least 32 character string value. Used to validate the request to the callback url. If no value is given a secret will be generate and returned. For more information, see [here](/apis/webhooks-v2/overview/#Webhooksecret).
+- **scope** - Scope of the events that will be received. Only 'Account' is the accepted value.
+
+For more information see the [documentation](/apis/webhooks-v2/operations/create-webhook).
+
+<Alert type="informational">
+
+Don't forget to replace the `HOSTNAME` placeholder value with your deployed application hostname.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example response result</Title>,
+    <CodeBlock
+      language="json"
+      code={
+`{
+  "webhook":{
+    "id": "00000000-0000-0000-0000-000000000000",
+    "scope": "Account",
+    "scopeId": "00000000-0000-0000-0000-000000000000",
+    "active": false,
+    "callbackUrl":"https://HOSTNAME/events",
+    "secret": "1de62d1611b20e00245c0db2b0805e9f60021b104702a3c227cf6e216f1f153b",
+    "eventTypes": [
+      "iModels.iModelDeleted.v1",
+      "accessControl.memberAdded.v1"
+    ]
+  }
+}`} />
+  ]}
+>
+
+### 3.3 Response
+
+On the successful response you will get returned the webhook secret if you did not provided one in the request. We will be need it later to validate received events. You will need to store the secret in your application storage in order to prepare for receiving events, but for this tutorial just use it to replace the `const secret` value in `function validateSignature` from step 2.3.
+
+<Alert type="informational">
+
+Note that the webhook secret should not be shared with anyone and treated as a private key.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Activate a webhook
+
+For your webhooks to start receiving events it must first be activated. By default webhooks are created as inactivate.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP request for "Update webhook" operation</Title>,
+    <CodeBlock
+      language="http"
+      code={
+`PATCH https://api.bentley.com/webhooks/WEBHOOK_ID HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />
+  ]}
+>
+
+### 4.1 Request
+
+A webhook can be updated by sending a PATCH request to https://api.bentley.com/webhooks/WEBHOOK_ID.
+
+The Webhooks API V2 can only be called by Service Applications. For more information on Service Applications and how to obtain an access token can be found [here](/tutorials/authorize-service/). A list of your Service Applications can be found [here](/my-apps).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example request body</Title>,
+    <CodeBlock
+      language="json"
+      code={
+`{  
+  "active": true
+}`} />
+  ]}
+>
+
+### 4.2 Request body
+
+To activate a webhook you will need to set the `active` field to `true`.
+
+For more information see the [documentation](/apis/webhooks-v2/operations/update-webhook).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example response result</Title>,
+    <CodeBlock
+      language="json"
+      code={
+`{
+  "webhook":{
+    "id": "00000000-0000-0000-0000-000000000000",
+    "scope": "Account",
+    "scopeId": "00000000-0000-0000-0000-000000000000",
+    "active": true,
+    "callbackUrl":"https://HOSTNAME/events",
+    "eventTypes": [
+      "iModels.iModelDeleted.v1",
+      "accessControl.memberAdded.v1"
+    ]
+  }
+}`} />
+  ]}
+>
+
+### 4.3 Response
+
+On the successful response you will get returned the webhook with the updated values. For this example only the 'active' field is updated.
+
+Your webhook is now active. Your application setup in Step 2 will now start to receive events.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Workflow Automation API group documentation"
+    href="/api-groups/workflow-automation"
+    description="An overview and detailed Workflow Automation API group documentation."
+  />
+  <LinkCard
+    title="Data Management API group documentation"
+    href="/api-groups/data-management"
+    description="An overview and detailed Data Management API group documentation."
+  />
+</TileList>
+
+</ContinueLearningSection>

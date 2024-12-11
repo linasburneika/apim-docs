@@ -1,0 +1,403 @@
+---
+title: 'Export data from an iModel'
+version: 1
+tile:
+  name: 'Export data from an iModel'
+  description: 'This tutorial guides you through exporting data from an iModel to other formats, such as IFC or LandXM using the Export API.'
+  href: '/tutorials/export-data-from-imodel/'
+  durationInMinutes: 30
+  relatedApiIds: ['export', 'imodels']
+---
+
+<Introduction 
+  skillLevel="Intermediate" 
+  durationInMinutes="30">
+
+## Introduction
+
+This quick start is intended to help you export data from an iModel to different formats like [IFC](https://www.buildingsmart.org/standards/bsi-standards/industry-foundation-classes/) or [LandXML](http://www.landxml.org/) and store it in the iTwin Storage. Export API works in project and iModel context.
+In this walk-through, you will be able to start an export.
+
+</Introduction>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Export data from an iModel tutorial"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. Use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+To make requests to the API, a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you need to use Client ID generated from previous registration step.
+
+</Alert>
+
+### Grab a user token from Api reference "Try it out" Section
+
+1. Go to [Create Configuration](/apis/export/operations/startExport/)
+1. Click "Try it out" button.
+1. On Authorization section select "AuthorizationCode".
+1. After popup closes Authorization header with your user token value should be visible.
+1. Save user token value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Create a Connection
+
+The export process uses connections that link to iModels. For example, you can create multiple connections to an iModel and execute them on-demand multiple times to export changes. So let's make such a connection in this step.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language='http' code={`POST https://api.bentley.com/export/connections HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  ]}
+>
+
+#### Request
+
+To create a connection, send a `POST` request to the `export/connections` endpoint.
+
+1. Authorization header with a valid Bearer token is required.
+1. IMODEL_ID of the iModel we want to export.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+<CodeBlock
+  language="json"
+  code={`{
+    "displayName": "Connection1",
+    "iModelId": "IMODEL_ID",
+    "authenticationType": "User"
+}`}
+/>
+  ]}
+>
+
+#### Request Body
+
+- `displayName` - a user-friendly name for the connection
+- `iModelId` - The ID of the iModel containing the connection
+- [Optional] `authenticationType` - one of `User` or `Service`. The authentication type defaults to `User` and uses a refresh token to get an access token for long exports. For now Export only supports `User` authenticationType.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock
+  language="json"
+  code={`{
+    "connection": {
+        "id": "CONNECTION_ID",
+        "displayName": "connection1",
+        "iModelId": "IMODEL_ID",
+        "projectId": "PROJECT_ID",
+        "authenticationType": "User",
+        "_links": {
+            "iModel": {
+                "href": "https://api.bentley.com/imodels/IMODEL_ID"
+            },
+            "project": {
+                "href": "https://api.bentley.com/projects/PROJECT_ID"
+            },
+            "lastRun": null
+        }
+    }
+}`}
+/>
+  ]}
+>
+
+#### Response
+
+The request response contains created connection properties values. Id is needed in next step
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Store refresh token for user
+
+The export process usually takes time and is performed in the background. For that, we need to store the user's refresh token. To get the authorization information, use the Get Authorization Information API. This API will return the current status and a redirect URL where user has to be redirected on the browser if the token has to be renewed.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Get Authorization Information Request Syntax and Headers</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/export/authorizationInformation?redirectUrl=REDIRECT_URL HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />
+  ]}
+>
+
+#### Request
+
+In order to do that, send a GET https://api.bentley.com/export/authorizationInformation?redirectUrl=REDIRECT_URL request.
+
+1. Authorization header with valid Bearer token is required.
+2. REDIRECT_URL is a url of where a user should be redirected after successful token renewal.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Get Authorization Information Response Body</Title>,
+  <CodeBlock language='json' code={`{
+    "authorizationInformation": {
+        "isUserAuthorized": true,
+        "_links": {
+            "authorizationUrl": {
+                "href": null
+            }
+        }
+    }
+}`} /> 
+  ]}
+>
+
+#### Response if user has a valid refresh token
+
+'isUserAuthorized' with value 'true' means, user has a valid refresh token and can run long running export.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Get Authorization Information Response Body</Title>,
+  <CodeBlock language='json' code={`{
+    "authorizationInformation": {
+        "isUserAuthorized": false,
+        "_links": {
+            "authorizationUrl": {
+                "href": "https://connect-itwinbridgeportal.bentley.com/authenticate?redirect_url=REDIRECT_URL"
+            }
+        }
+    }
+}`} /> 
+  ]}
+>
+
+#### Response if user does not have a valid refresh token
+
+'isUserAuthorized' with value 'false' means, user does not have valid refresh token and cannot run long running export. To refresh token user has to be redirected to authorizationUrl from response.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 5. Run a Connection
+
+A run defines a single connection export process. Send a `run start` request to initialize the export process.
+
+`exportType` is a required property. Valid values are `IFC` or `LandXML`. Additionally, the following optional parameters are also available:
+
+- **inputOptions** -
+
+  - `changesetId` - Changeset Id of the iModel.
+  - `mappingFileId` - User-defined mapping file Id.
+
+- **outputOptions** -
+
+  - `folderId` - Folder Id to store the output file.
+  - `saveLogs` - Set to save the logs of export.
+  - `replaceOlderFile` - Set to replace the older file for same imodel.
+  - `location` - Location type one of 'USER_BLOBS_TORAGE' or 'STORAGE'. Defaults to STORAGE (STORAGE API).
+  - `outputSasUrl` - Output file SAS url if the location is 'USER_BLOBS_TORAGE'.
+  - `logsSasUrl` - Logs file SAS url if the location is 'USER_BLOBS_TORAGE' ans saveLogs is set.
+
+- `ifcVersion` - Ifc Version if the export type is "IFC" (One of 'IFC4.3', 'IFC2x3', 'IFC2x3 CV 2.0', 'IFC4 RV 1.2').
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language="http" code={`POST https://api.bentley.com/export/connections/CONNECTION_ID/run HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language='json' code={`{
+  "exportType": "ExportType",
+  "ifcVersion": "IfcVersion",
+  "projectId": "ProjectId",
+  "inputOptions": {
+        "mappingFileId": "MappingFileId",
+        "changesetId": "ChangesetId"
+    },
+  "outputOptions": {
+        "location": "Location",
+        "outputSasUrl": "OutputSasUrl",
+        "logsSasUrl": "LogsSasUrl",
+        "folderId": "FolderId",
+        "replaceOlderFile": true,
+        "saveLogs": true
+    }
+}`} />
+  ]}
+>
+
+#### Request
+
+Send a `POST` request to the `export/connections/CONNECTION_ID/runs` endpoint with valid connectionId to run a connection.
+
+1. Authorization header with valid Bearer token is required.
+1. CONNECTION_ID which should be started for processing. Use the value from previous step response.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}
+actions={[
+<CodeBlock language="http" code={`HTTP/1.1 202 Accepted`} />
+]}>
+
+#### Response
+
+On successful request, operation returns http status code 202/accepted - the request is accepted for processing and will be executed in the background.
+If there is already an active run in progress for this connection, new run is being added to the queue.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 6. Get runs statuses
+
+A run contains export process status. To get runs history and statuses get request has to be made.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language="http" code={`POST https://api.bentley.com/export/connections/CONNECTION_ID/runs HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  ]}
+>
+
+#### Request
+
+Getting Run status requires sending a GET request to the export/connections/CONNECTION_ID/runs endpoint with valid connectionId.
+
+1. Authorization header with valid Bearer token is required.
+1. CONNECTION_ID which runs we want to get.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock
+  language="json"
+  code={`{
+  "runs":[
+    {
+      "id":"41062244-3e62-42a3-8232-9f2b4d31be16",
+      "state":"Completed",
+      "result":"Success"
+    }
+  ],
+  "_links":{
+    "self":{
+      "href":"https://api.bentley.com/export/connections/CONNECTION_ID/runs?$skip=0&$top=100"
+    },
+    "prev":{
+      "href":"https://api.bentley.com/export/connections/CONNECTION_ID/runs?$skip=0&$top=100"
+    },
+    "next":{
+      "href":"https://api.bentley.com/export/connections/CONNECTION_ID/runs?$skip=100&$top=100"
+    }
+  }
+}`}
+/>
+  ]}
+>
+
+##### Response
+
+At the end of export, the run state should be `Completed`, and result `Success`.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 7. Conclusion
+
+In this tutorial we have gone through a iModel export process:
+
+1. Create a connection
+2. Run the connection
+3. Get run status.
+
+After successful run, output file could be found in the location provided (Storage API by default).
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+<TileList>
+  <Tile
+    name="Synchronize an iModel using Synchronization API"
+    description="You will learn how to use the synchronization REST API to synchronize data to iModel."
+    href="/tutorials/synchronization-storage-tutorial/"
+  />
+  <Tile
+    name="Filter an iModel using Transformation API"
+    description="You will learn how to use the transformation REST API to filter iModel data."
+    href="/tutorials/filter-by-view-definition-transformation/"
+  />
+  <Tile
+    name="Get started with Storage API"
+    description="You will learn the main workflows and operations of the storage REST API."
+    href="/tutorials/storage-quick-start/"
+  />
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Export API documentation"
+    href="/apis/export/overview"
+    description="An overview and detailed Export API documentation."
+  />
+</TileList>
+
+</ContinueLearningSection>

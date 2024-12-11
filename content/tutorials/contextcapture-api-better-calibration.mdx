@@ -1,0 +1,135 @@
+---
+title: 'Better calibration in Reality Modeling'
+version: 1
+tile:
+  name: 'Better calibration in Reality Modeling'
+  description: 'Learn how to specify calibration settings in Reality Modeling, and download the result of a calibration'
+  thumbnail: '/images/cccs-calibration-thumb.jpg'
+  href: '/tutorials/contextcapture-api-better-calibration/'
+  durationInMinutes: 10
+  relatedApiIds: ['contextcapture']
+---
+
+<Introduction
+  skillLevel="Expert"
+  durationInMinutes="10"
+  summaryImageSrc="/images/cccs-calibration-header.jpg">
+
+## Introduction
+
+The goal of this tutorial is to specify calibration settings to _Reality Modeling_, so that you can obtain a better model.
+
+In this tutorial, we will cover how to send calibration settings to _Reality Modeling_, and how to retrieve calibration reports from the service.
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- Completed the [Reality Modeling Quick Start tutorial](/tutorials/contextcapture-api-quick-start).
+- A basic understanding of the calibration/aerotriangulation concept in Reality Modeling. See [Reality Modeling Master Help](https://docs.bentley.com/LiveContent/web/ContextCapture%20Help-v10/en/GUID-95336991-F284-4AD8-A33B-9AE341507D5C.html) for a description of the calibration settings
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>AT Settings exchange structure</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "ATSettingsExchange":{
+    "PhotogroupEstimationMode": "OnePass"-"MultiPass",
+    "ColorEqualizationMode": "EqualizeBlockwise"-"EqualizeNone",
+    "SplatsMode": "SplatsAtlas"-"SplatsNone",
+    "AdjustmentConstraints": "None"|"UserConstraints"|"ControlPoints"|"PositionMetadata"|"PointClouds"|"Automatic",
+    "RigidRegistration": "None"|"UserConstraints"|"ControlPoints"|"PositionMetadata"|"PointClouds"|"Automatic",
+    "EstimationGroups": "PerPhotogroup"-"PerPhoto",
+    "RotationPolicy": "Compute"-"Keep"-"Adjust"-"AdjustWithinTolerance %.%",
+    "CenterPolicy": "Compute"-"Keep"-"Adjust"-"AdjustWithinTolerance %.%",
+    "FocalPolicy": "Compute"-"Keep"-"Adjust"-"AdjustWithinTolerance %.%",
+    "PrincipalPolicy": "Compute"-"Keep"-"Adjust"-"AdjustWithinTolerance %.%",
+    "RadialPolicy": "Compute"-"Keep"-"Adjust"-"AdjustWithinTolerance %.%",
+    "TangentialPolicy": "Compute"-"Keep"-"Adjust"-"AdjustWithinTolerance %.%",
+    "TiePointsPolicy": "Compute"-"Keep",
+    "FisheyeFocalPolicy": "Compute"-"Keep"-"AdjustFisheyeFocalSymmetric"-"AdjustFisheyeFocalAsymmetric",
+    "FisheyeDistortionPolicy": "Compute"-"Keep"-"AdjustFisheyeDistortion_01xx0"-"AdjustFisheyeDistortion_x1xx0"-"AdjustFisheyeDistortion_x1xxx"-"AdjustWithinTolerance %.%",
+    "AspectRatioPolicy": "Compute"-"Keep"-"Adjust"-"AdjustWithinTolerance %.%",
+    "SkewPolicy": "Compute"-"Keep"-"Adjust"-"AdjustWithinTolerance %.%",
+    "PairSelectionMode": "Default"-"Sequence"-"Loop"-"Exhaustive"-"Similar images only",
+    "PairSelectionMaxDistance": int,
+    "KeyPointsDensity": "Normal"-"High",
+    "ExtractQR": "QR Codes"|"April Tags"|"Chili Tags"|"Disabled",
+    "ComponentConstructionMode": "OnePass"-"MultiPass"
+  }
+}`}
+    />,
+  ]}>
+
+## 1. Specifying calibration settings
+
+If you want to apply specific settings for the calibration, you can add a file in the workspace reality data: the file `at_settings.json` has to be uploaded to `/{jobId}/data/`.
+Note that no check on the uploaded file is performed until the job is actually submitted, and if the parameters are not fitted to the inputs, the job will failed.
+
+Note that every properties in the following structure are optional.
+Strings separated by `-` mean only one option can be specified. Strings separated by `|` can be combined using `|`, eg: `"QR Codes|Chili Tags"`. For parameter `"AdjustWithinTolerance %.%"`, `%.%` has to be replace by a double.
+
+If you have a preset and you want to apply it, upload it as `at_preset.cfg` in `/{jobId}/data/`. No need to specify the name in the the ATSettings file.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Accessing calibration results
+
+Once the step _AT_CloudExport_ is executed, you can access calibration results (including reports) through the workspace reality data.
+
+In `/{jobId}/outputs/calibration/` you will find:
+
+- `acquisition_report`, a folder containing an HTML page with CSS regarding the acquisition of your images
+- `quality_report`, a folder containing HTML pages regarding with quality of your calibration
+- `block.xmlz` and `block - TiePoints.xmlz`, the corresponding _CCOrientations_ of this calibration
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulations for completing the _Reality Modeling_ calibration tutorial!
+You should now be able to specify calibration settings and retrieve reports once a calibration is completed.
+
+To go further and use _Reality Modeling_ to its maximum potential, you can check the following tutorials.
+
+<TileList>
+  <Tile
+    name="Using cache in Reality Modeling"
+    description="This tutorial focuses on using cache for faster processing in Reality Modeling"
+    thumbnail="/images/cccs-cache-thumb.png"
+    href="/tutorials/contextcapture-api-how-to-use-cache"
+  ></Tile>
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="iTwins API"
+    href="/apis/itwins/"
+    description="An iTwin is necessary for using Reality Modeling API. You can check its possibilities."
+  />
+  <LinkCard
+    title="Reality Data API"
+    href="/apis/realitydata/"
+    description="Reality Data API is necessary for uploading inputs for Reality Modeling, and downloading outputs."
+  />
+  <LinkCard
+    title="Reality Management API"
+    href="/apis/reality-management/"
+    description="Reality Management API is necessary for uploading inputs for Reality Modeling, and downloading outputs."
+  />
+</TileList>
+
+</ContinueLearningSection>

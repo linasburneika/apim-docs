@@ -1,0 +1,395 @@
+---
+title: 'Create and react to iModel events using Webhooks API V1'
+version: 1
+tile:
+  name: 'Create and react to iModel events using Webhooks API V1'
+  description: 'This tutorial will teach you how to use Webhooks API V1 to subscribe to iModel events and introduce basic event handling workflows.'
+  href: '/tutorials/create-and-react-to-events-using-webhooks/'
+  durationInMinutes: 45
+  relatedApiIds: ['webhooks']
+---
+
+<Introduction skillLevel="Intermediate" durationInMinutes="45">
+
+## Introduction
+
+In this tutorial, you will learn how to use the Webhooks REST API V1 to create and manage your webhooks. Also you will learn how to validate the webhook signature and process received event messages in your application.
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- Basic knowledge on [webhooks](https://en.wikipedia.org/wiki/Webhook) and how they work.
+- Knowledge on web application deployment or experience using [Heroku](https://www.heroku.com/about)/[Netlify](https://www.netlify.com/).
+- Already registered your own application/client on iTwin Platform.
+  - Steps to follow for registering an application can be found [here](/tutorials/register-and-modify-application/).
+- Any existing **iModel** that your application/client has access and contains at least one changeset that has not a named version created on.
+  - In order to create one you need to run the synchronization for an iModel which is described in this [tutorial](/tutorials/synchronization-storage-tutorial). Or you can [create a new iModel](/tutorials/create-test-imodel-sample) from Bentley provided sample.
+- Knowledge on creating named versions for your iModel.
+  - A tutorial on how to create a named version can be found [here](/tutorials/create-named-version).
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 1. Set up your environment
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://nodejs.org"
+      target="_blank"
+      title="Node.js"
+      icon={<NodeJsIcon />}
+    />,
+    <LinkButton
+      href="https://git-scm.com/downloads"
+      target="_blank"
+      title="Git"
+      icon={<GitIcon />}
+    />
+  ]}>
+
+### 1.1 Required materials
+
+##### <a href="https://nodejs.org" target="_blank">Node.js (14.x LTS version)</a>
+
+This tool provides the backend JavaScript runtime necessary for your computer to read and render code appropriately. It also allows you to run NPM command line.
+
+##### <a href="https://git-scm.com/downloads" target="_blank">Git</a>
+
+This is the common source code control system.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://code.visualstudio.com/"
+      target="_blank"
+      title="VS Code"
+      icon={<VSCodeIcon />}
+    />,
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+### 1.2 Suggested materials
+
+##### <a href="https://code.visualstudio.com/" target="_blank">Visual Studio Code</a>
+
+This is our recommended editor and debugger tool for developing iTwin.js applications. It is free, open source and includes a GUI for working with GIT.
+
+##### <a href="https://www.postman.com/downloads/" target="_blank">Postman</a>
+
+If you want to test the REST API calls directly, you can use [Postman](https://www.postman.com/downloads/) or any other solution capable of sending HTTP requests. If you do it this way, you will require an authorization token for the requests to work.
+
+##### <a href="https://signup.heroku.com/" target="_blank">Heroku account</a>
+
+Heroku will be used to deploy the test application during this tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Create your application
+
+Since webhooks are sending the events via HTTP requests you need to have an application running that exposes a public HTTP endpoint - callback URL. In this tutorial we are going to use [Node.js](https://nodejs.org/en) together with [Express](https://expressjs.com/) for test application.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>Project initialization</Title>,
+  <CodeBlock 
+    language="bash" 
+    code={
+`cd your-project
+npm init -y
+npm install express
+npm install -D typescript @types/express
+tsc --init`} />,
+  <Title>tsconfig.json</Title>,
+  <CodeBlock language="json" code={`"outDir":"dist"`} />,
+  <Title>package.json</Title>,
+  <CodeBlock language="json" code={`"main":"dist/index.js"`} />,
+  <CodeBlock language="json" code={
+`"scripts":{
+  "start":"tsc && node dist/index.js"
+}`} />,
+]}>
+
+### 2.1 Initialize the project
+
+To start off, create new directory for your application and execute the following initialization commands. These commands will initialize new npm project, install required dependencies and configure typescript. After initialization, update freshly generated `tsconfig.json` file by setting `outDir` property to `"dist"`. Next step will be updating `package.json` file to update the application entry point and `start` script. After that is done, the project is ready for the next step.
+
+<Alert type="informational">
+
+If you are running into `tsc is not recognized` problems, try installing typescript globally `npm install typescript -g`.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>src/index.ts</Title>,
+  <CodeBlock language="typescript" code={
+`import express from "express";\n
+const app = express();
+app.use(express.text({ type: "application/json" }));\n
+app.post("/events", () => {
+  // Handle the event
+});\n
+const port = 5000;
+app.listen(port, () => {
+  console.log("Application was started.");
+});`} />
+]}>
+
+### 2.2 Create express server
+
+Now let's start implementing the application. At first, create a new file in your project directory `src/index.ts`. This is going to be the application starting point. From example on the side you can see that we are going to have a public HTTP endpoint that will be accepting POST requests `app.post("/events", () => {})`. This is because event messages are sent using POST method. Note that above there is a line `app.use(express.text({ type: "application/json" }))` that makes the server treat the requests with json content as text and not deserialize them initially because raw payload will be required for event authorization in one of the upcoming steps.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>src/index.ts</Title>,
+  <CodeBlock language="typescript" code={`
+app.options("/events", async (req, res) => {
+  const requestedOrigin = req.headers["webhook-request-origin"] as string;\n
+  res.setHeader("allow", ["POST"]);
+  res.setHeader("webhook-allowed-origin", requestedOrigin);
+  res.sendStatus(200);
+});`} />
+]}>
+
+### 2.3 Add callback validation handler
+
+Before we start working with event handling, first we need to make sure that newly created webhook gets activated by passing the callback URL validation. To handle this, we need to add one more HTTP endpoint that accepts OPTIONS requests `app.options("/events", () => {})` and performs the validation handshake as described in [documentation](/apis/webhooks/#callbackvalidation).
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>src/index.ts</Title>,
+  <CodeBlock language="typescript" code={`import crypto from "crypto";`} />,
+  <CodeBlock language="typescript" code={
+`function validateSignature(payload: string, signatureHeader: string): boolean {
+  // Replace with your own webhook secret later
+  const secret = "4eb25d308ef2a9722ffbd7a2b7e5026f9d1f2feaca5999611d4ef8692b1ad70d";\n
+  const [algorithm, signature] = signatureHeader.split("=");
+  const generated_sig = crypto.createHmac(algorithm, secret).update(payload, "utf-8").digest("hex");\n
+  return generated_sig.toLowerCase() === signature.toLowerCase();
+}`} />
+]}>
+
+### 2.4 Add event authorization
+
+In order to authorize the event source, we need to add event signature validation. Event signature is `HMAC-SHA256` string that is included in the request `Signature` header. For validation we will be using Node.js `crypto` utility which basically lets us to generate the same type of signature in our end. Generated signature and the signature included in the request should match to pass the authorization. Let's start adding validation by creating a new function `function validateSignature(payload: string, signatureHeader: string)`. As a first parameter it will to expect raw request payload and as a second parameter it will expect signature header value. This function will also need the webhook `secret` which we are going to add later on we create a webhook. Since, the signature header value also contains the cryptographic algorithm name and the signature value separated by `=`, we need to extract these values into separate variables `const [algorithm, signature] = signatureHeader.split("=")`. Then at this point, using all the existing variables we can generate a signature `crypto.createHmac(algorithm, secret).update(payload, "utf-8").digest("hex")`. Lastly, we need to check if both signatures match and return the result.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>src/models.ts</Title>,
+  <CodeBlock language="typescript" code={
+`export type Event = {
+  content: IModelEvent | NamedVersionCreatedEvent;
+  contentType: string;
+  enqueuedDateTime: string;
+  messageId: string;
+  subscriptionId: string;
+};\n
+export type IModelEvent = {
+  imodelId: string;
+  projectId: string;
+};\n
+export type NamedVersionCreatedEvent = {
+  changesetId: string;
+  changesetIndex: string;
+  versionId: string;
+  versionName: string;
+} & IModelEvent;`} />
+]}>
+
+### 2.5 Define data models
+
+Before we can start receiving the events, we need to prepare the models for expected data. You can find events schema by downloading API definition file from [API reference](/apis/webhooks). Select preferred schema type on the right and click Export. Now from that point, create a new file `src/models.ts` and create event types by matching the schema.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>src/index.ts</Title>,
+  <CodeBlock language="typescript" code={`import { Event, NamedVersionCreatedEvent } from "./models";`} />,
+  <CodeBlock language="typescript" code={
+`app.post("/events", (req, res) => {
+  const signatureHeader = req.headers["signature"] as string;
+  if (!signatureHeader || !req.body) res.sendStatus(401);\n
+  if (!validateSignature(req.body, signatureHeader)) {
+    res.sendStatus(401);
+  } else {
+    const event = JSON.parse(req.body) as Event;
+    switch (event.contentType) {
+      case "NamedVersionCreatedEvent": {
+        const content = event.content as NamedVersionCreatedEvent;
+        console.log(\`New named version (ID: \${content.versionId}, Name: \${content.versionName}) was created for iModel (ID: \${content.imodelId})\`);
+        break;
+      }
+      default:
+        res.sendStatus(400); //Unexpected event type
+    }
+  }
+});`} />
+]}>
+
+### 2.6 Event handling
+
+Now that we have everything ready for event handling, we can start implementing it. Firstly, we want to return `401 Unauthorized` for any request that does not have a event signature header or any payload, because these are required components for passing the validation `if (!signatureHeader || !req.body) res.sendStatus(401)`. If request does have these components then we can proceed with further processing logic and try to validate the event signature using the function we defined in step 2.3 `if (!validateSignature(req.body, signatureHeader)) res.sendStatus(401)`. If validation fails, we can assume that the event was sent from unexpected source and safely return `401 Unauthorized` as well. In other case, when validation passes, proceed by deserializing the event and react accordingly to its type.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 2.7 Deploy
+
+For this application to work, you have to deploy it to be publicly accessible. If you have any preferences for the deployment, go ahead and use your own deployment method and platform. If not, you can keep following the tutorial and deploy the application using [Heroku](https://www.heroku.com/about):
+
+1. [Create a Heroku Remote](https://devcenter.heroku.com/articles/git#create-a-heroku-remote).
+1. [Deploy by pushing the code](https://devcenter.heroku.com/articles/git#deploy-your-code).
+1. Use `heroku logs --tail` for monitoring the behavior of the application.
+
+Once you have the application deployed and running, we can move on to the webhook creation.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Create a webhook
+
+Webhooks are one way that apps can send automated messages or information to other apps. In this case, we are going to create a webhook for an existing iModel events.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP request for "Create iModel events webhook" operation</Title>,
+    <CodeBlock
+      language="http"
+      code={
+`POST https://api.bentley.com/webhooks/imodels HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />
+  ]}
+>
+
+### 3.1 Request
+
+A webhook for iModel events is created by sending a POST request to https://api.bentley.com/webhooks/imodels. `Authorization` header with valid Bearer access token is required.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example request body</Title>,
+    <CodeBlock
+      language="json"
+      code={
+`{
+  "imodelId":"IMODEL_ID",
+  "callbackUrl":"https://HOSTNAME/events",
+  "eventTypes":[
+    "NamedVersionCreatedEvent"
+  ],
+  "expirationDateTime":"2021-06-07T08:27:42Z"
+}`} />
+  ]}
+>
+
+### 3.2 Request body
+
+Webhook creation has 3 required properties:
+
+- **imodelId** - related iModel ID of which events you want to receive.
+- **callbackUrl** - a public endpoint of your application where you expect the event to be sent.
+- **eventTypes** - a list of iModel event types you want to subscribe to.
+- expirationDateTime - _(optional)_ date and time when the webhook will not longer be active. If the value is not specified, webhook will expire in 30 days.
+
+For more information see the [documentation](/apis/webhooks/operations/create-imodels-webhook).
+
+<Alert type="informational">
+
+Don't forget to replace the `IMODEL_ID` placeholder value with an existing iModel ID and `HOSTNAME` placeholder value with your deployed application hostname.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example response "Location" header</Title>,
+    <CodeBlock language="http" code={`Location: https://api.bentley.com/webhooks/f6f3aff5-7e28-4874-a3ff-22dbc62d94c9`} />,
+    <Title>Example response result</Title>,
+    <CodeBlock
+      language="json"
+      code={
+`{
+  "webhook":{
+    "id": "b41adbb6-2ecc-4770-a626-1721dff5be1e",
+    "secret":"4eb25d308ef2a9722ffbd7a2b7e5026f9d1f2feaca5999611d4ef8692b1ad70d"
+  }
+}`} />
+  ]}
+>
+
+### 3.3 Response
+
+On the successful response you will get returned the webhook secret which will be needed later validating received events. The location of created webhook will be included in response `Location` header value. Generally you would need to store both webhook location or ID and secret in your application storage in order to prepare for receiving events, but for this tutorial just use it to replace the `const secret` value in `function validateSignature` from step 2.3.
+
+<Alert type="informational">
+
+Note that the webhook secret should not be shared with anyone and treated as a private key.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Trigger iModel event
+
+Since we created the webhook specifically for `NamedVersionCreatedEvent` event type, you will need to trigger this event manually. Use Get iModel Changesets [operation](/apis/imodels-v2/operations/create-named-version). For detailed explanation on how to create a named version see this [tutorial](/tutorials/create-named-version).
+
+After you create a named version, webhook event will be triggered and sent to your application (callback URL) for further processing. If you have deployed your test application using Heroku, use `heroku logs --tail` command to monitor your application logs and wait for the event to be captured and processed.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Workflow Automation API group documentation"
+    href="/api-groups/workflow-automation"
+    description="An overview and detailed Workflow Automation API group documentation."
+  />
+  <LinkCard
+    title="Data Management API group documentation"
+    href="/api-groups/data-management"
+    description="An overview and detailed Data Management API group documentation."
+  />
+</TileList>
+
+</ContinueLearningSection>

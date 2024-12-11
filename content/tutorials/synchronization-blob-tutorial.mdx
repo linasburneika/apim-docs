@@ -1,0 +1,585 @@
+---
+title: 'Synchronize a file from Azure Blob Storage'
+version: 1
+tile:
+  name: 'Synchronize a file from Azure Blob Storage'
+  description: 'Walk-through how to synchronize a file from Azure Blob Storage to an iModel using Synchronization API.'
+  thumbnail: '/images/synchronizationThumbnail.png'
+  href: '/tutorials/synchronization-blob-tutorial/'
+  durationInMinutes: 30
+  relatedApiIds: ['synchronization', 'imodels']
+---
+
+<Introduction skillLevel="Basic" durationInMinutes="30">
+
+## Introduction
+
+This tutorial guides you through synchronizing a file from Azure Blob Storage to an iModel using the Synchronization API. The Synchronization API works in an iTwin and iModel context. To synchronize a set of files, create a connection between the iModel and files. A Connection is an aggregation of properties such as file metadata, which is needed for synchronization. You can run Connections on-demand converting the specified file to an iModel.
+
+</Introduction>
+
+<TutorialSection
+  actions={data => [
+    <CreateServiceAppButton 
+      clientName="Synchronization tutorial client"
+    >
+      Register
+    </CreateServiceAppButton>
+]}>
+
+## 1. Register a Service Application
+
+To start the tutorial you will need to register an application to be able to use iTwin Platform APIs.
+To make your tutorial more interactive please use the **Register Application** button.
+
+After you click this button it will register a client and will display these settings.
+
+- **client_id**: the unique identifier for your application. It is displayed on the application details page as **Client ID**.
+- **client_secret**: the secret created and displayed when you created the application.
+- **scope**: a list of accesses granted to the application. Displayed on the application details page as **Scopes**.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get Access Token
+
+In this tutorial, we are using the Client credentials authentication workflow. This workflow allows a web service (confidential client) to use its own credentials instead of impersonating a user to authenticate when calling a web service. Permissions are granted directly to the application itself by an administrator. When the App presents a token to a resource, the resource ensures the App is authorized to perform the action since there is no user involved in the authentication.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection
+  actions={(data) => [
+    <Title>Request to Token endpoint</Title>,
+    <HttpSample
+      method="POST"
+      url={`${data.authority}/connect/token`}
+      headers={{
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }}
+      body={new URLSearchParams({
+        client_id: data.clientId ?? 'CLIENT_ID',
+        client_secret: data.clientSecret ?? 'CLIENT_SECRET',
+        scope: data.scope ?? "itwin-platform",
+        grant_type: 'client_credentials'
+      }).toString()}
+      saveResponseTo={"tokenResponse"}
+      canSendRequest={data.clientId && data.clientSecret && data.scope}
+      tooltip={"Send a request to get an access token"}
+    />
+  ]}
+>
+
+#### Request to Token endpoint
+
+Call the token endpoint with the `'Content-Type': 'application/x-www-form-urlencoded'` header.
+
+Request body (with [url encoded](https://www.w3schools.com/tags/ref_urlencode.ASP) characters):
+
+- **client_id**: the unique identifier generated when creating the application; you can find it on the [My Apps](/my-apps) page. The **client_id** is displayed in the last step if the App was created during this tutorial.
+- **client_secret**: the secret created and displayed when you created the application.
+- **scope**: space separated scopes (in this tutorial: `itwin-platform`)
+- **grant_type**: **client_credentials** it indicates a authorization flow for service-to-service communication.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection
+  actions={(data) => [
+    <Title>Response from the Token endpoint</Title>,
+    <CodeBlock
+      language="json"
+      code={JSON.stringify(
+        data.tokenResponse
+        || {
+            "access_token": "JWT_TOKEN",
+            "token_type": "Bearer",
+            "expires_in": 3599
+          }, undefined, 2)
+      }
+    />
+  ]}
+>
+
+#### Response
+
+Response contains:
+
+- **token_type**: **Bearer** - part of Authorization header that is constructed like `Authorize: token_type access_token`. For more information, see [Difference between OAuth 1.0 and OAuth 2.0](https://www.oauth.com/oauth2-servers/differences-between-oauth-1-2/bearer-tokens/).
+- **access_token**: access token itself (in [JWT](https://jwt.io) format) that will be passed into **Authorize** header for api calls as **Bearer JWT_TOKEN**.
+- **expires_in**: lifespan of access token in seconds.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Create an iModel
+
+An iModel is a specialized information container for exchanging data associated with the lifecycle of infrastructure assets.
+iModels were created to facilitate the sharing and distribution of information regardless of the source and format of the information.
+
+The iTwin Platform iModels API is based on iModelHub cloud service which enables alignment, accountability, and accessibility of infrastructure digital twins.
+It is the control center for iModels and is responsible for coordinating concurrent access to iModels as well as changes made to them.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language='http' code={`POST https://api.bentley.com/imodels HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}
+    />
+  ]}
+>
+
+#### Request
+
+An empty iModel is created by sending a HTTP POST message to https://api.bentley.com/imodels/ endpoint with the payload describing the iModel to be created.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+      "iTwinId": "ITWIN_ID",
+      "name": "Sun City Renewable-energy Plant",
+      "description": "Overall model of solar farms in Sun City",
+      "extent": {
+          "southWest": {
+            "latitude": 46.13267702834806,
+            "longitude": 7.672120009938448
+          },
+          "northEast": {
+            "latitude": 46.302763954781234,
+            "longitude": 7.835541640797823
+          }
+        }
+    }`}
+    />,
+  ]}
+>
+
+#### Request Body
+
+There are two required properties for the create iModel payload.
+
+**name** - iModel name is required which uniquely identifies the iModel within the iTwin. <br/>
+**iTwinId** - provides the iTwin identifier that created iModel will belong to. The iTwin identifier is a required property. <br />
+**description** - free form text field so you could give more information about the iModel. <br />
+**extent** - iModels usually are placed at some location on the Earth.
+This property allows to specify the maximum rectangular area on the Earth which encloses the iModel.
+The maximum extent is used to help keep your iModel clean.
+When new elements are imported, those outside the extent will be flagged for further processing.
+This extent will also help to zoom to the area of interest in web viewers.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Get a Blob SAS Url
+
+This tutorial shows how to synchronize a file stored on Azure blob storage. Files from Azure blob storage can be accessed through preauthenticated SAS urls.
+
+There are two ways to get a SAS url:
+
+- [Create a SAS url for blob manually](https://learn.microsoft.com/en-us/azure/ai-services/Translator/document-translation/how-to-guides/create-sas-tokens?tabs=blobs)
+- [Create a SAS url for blob programatically](https://learn.microsoft.com/en-us/azure/storage/blobs/sas-service-create-dotnet?tabs=dotnet)
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 5. Create a Connection
+
+The synchronization process is based on connections that establish links from design files to iModels. There can be multiple connections for an iModel, and those can be executed on-demand multiple times to synchronize changes. In this step, we will be creating such a connection.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language='http' code={`POST https://api.bentley.com/synchronization/imodels/manifestConnections HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  ]}
+>
+
+#### Request
+
+To create a connection, send a `POST` request to the `synchronization/imodels/manifestConnections` endpoint.
+
+- Authorization header with valid Bearer token is required.
+- IMODEL_ID of created iModel from step 3.
+- FILE_ID is used to uniquelly identify a file in an imodel. Synchronizing same file again same file id should be provided.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+<CodeBlock
+  language="json"
+  code={`{
+    "displayName": "Connection1",
+    "iModelId": "IMODEL_ID",
+    "sourceFiles": [{
+        "sourceFileId": "FILE_ID"
+    }],
+    "authenticationType": "Service"
+}`}
+/>
+  ]}
+>
+
+#### Request Body
+
+- **displayName** - user facing connection name
+- **iModelId**: - id of the iModel that contains the connection
+- **sourceFiles** - information about the source files
+  - **sourceFileId** - id of the file from the external document management system
+- **authenticationType** - set the property to **Service** to use the API from server application without user context.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock 
+    language="json" 
+    code={`{
+      "connection": {
+          "iModelId": "IMODEL_ID",
+          "iTwinId": "ITWIN_ID",
+          "authenticationType": "Service",
+          "_links": {
+              "iModel": {
+                  "href": "https://api.bentley.com/imodels/IMODEL_ID"
+              },
+              "iTwin": {
+                  "href": "https://api.bentley.com/itwins/ITWIN_ID"
+              },
+              "lastRun": null
+          },
+          "id": "CONNECTION_ID",
+          "displayName": "Connection to a file"
+      }
+    }`}
+  />
+  ]}
+>
+
+#### Response
+
+Note the Id as you will need it in the next step.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 6. Run a Connection
+
+A Run defines a single connection synchronization process. It can be initialized manually by sending a run start request.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language="http" code={`POST https://api.bentley.com/synchronization/imodels/manifestConnections/CONNECTION_ID/runs HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />
+  ]}
+>
+
+#### Request
+
+Send a `POST` request to the `synchronization/imodels/manifestConnections/CONNECTION_ID/runs` endpoint with a valid connection ID to run a connection.
+
+- Authorization header with valid Bearer token is required.
+- CONNECTION_ID which should be started for processing. Use the value from previous step response.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+        "sourceFiles": [{
+        "id": "FILE_ID",
+        "name": "FileName.dgn",
+        "url": "https://myaccount.blob.core.windows.net/files/FileName.dgn?sv=2012-02-12&st=2009-02-09&se=2009-02-10&sr=c&sp=r&si=YWJjZGVmZw%3d%3d&sig=dD80ihBh5jfNpymO5Hg1IdiJIEvHcJpCMiCMnN%2fRnbI%3d",
+        "connector": "MSTN",
+        "documentAttribute ":{
+          "className":"SchemaName:ClassName",
+            "properties":{
+               "Revision":"R01",
+               "Suitability":"S01",
+               "CodeValue":"89c7f032-6dfb-4a0b-8511-983e2d18728a"
+            }
+        }
+    }]
+        "documentAttributeSchemaUrl":""https://blobstoragelocation/documentAttributeSchema.json""
+}`}
+    />,
+  ]}
+>
+
+#### Request Body
+
+- **sourceFiles** - information about source files
+- **id** - id of the file from external document management system
+- **name** - name of a file
+- **url** - valid blob SAS url with read permissions
+- **connector** - identifier of the connector used to process the file. For more information, see [Supported formats.](/apis/synchronization/supported-formats/)
+
+#### Optional Properties
+
+- **documentAttribute** - A document attribute consists of the following:
+  - **className** - Defines the ECClass in the schema to be used for the associated document. Classes are derived from published BIS schema named documentMetadataClass. The JSON schema for the document metadata is available here (https://cdn.jsdelivr.net/npm/@bentley/document-metadata-schema@1.0.0/DocumentMetadata.ecschema.json)
+  - **properties** - Defines the properties to be set for the associated document. These properties are derived from the above mentioned Class.
+- **documentAttributeSchemaUrl** - URL contains a JSON file that has document attribute schema as defined in iTwin.js. For more details on ECSchema please see the iTwin.js documentation (https://www.itwinjs.org/v1/bis/ec/ec-schema/). This schema is typically created by the user or a program. A manifest connection passes this information to the connector which will use this schema to store document attributes inside the iModel.
+- **Additional note** - The schema generation happens as a separate process. Once generated the user stores the schema at a BLOB storage location. This API does not support the generation of the schema, but uses it to support the properties user wants to pass during a connection run.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock
+  language="json"
+  code={`{
+  "$schema": "https://dev.bentley.com/json_schemas/ec/32/ecschema",
+  "name": "BridgeSpatial",
+  "version": "01.00.00",
+  "alias": "brsp",
+  "description": "Schema modeling the spatial breakdown of Bridges.",
+  "references": [
+    {
+      "name": "CoreCustomAttributes",
+      "version": "01.00.03"
+    },
+    {
+      "name": "BisCore",
+      "version": "01.00.13"
+    },
+    {
+      "name": "SpatialComposition",
+      "version": "01.00.01"
+    },
+    {
+      "name": "LinearReferencing",
+      "version": "02.00.03"
+    }
+  ],
+  "customAttributes": [
+    {
+      "className": "CoreCustomAttributes.ProductionStatus",
+      "SupportedUse": "NotForProduction"
+    }
+  ],
+  "items": {
+    "Bridge": {
+      "schemaItemType": "EntityClass",
+      "label": "Bridge",
+      "description": "TODO",
+      "baseClass": "SpatialComposition.Facility",
+      "mixins": [
+        "LinearReferencing.ILinearLocationElement"
+      ]
+    },
+		"Substructure": {
+			"schemaItemType": "EntityClass",
+			"label": "SubStructure",
+			"description": "TODO",
+			"baseClass": "SpatialComposition.FacilityPart"
+		},
+		"Superstructure": {
+			"schemaItemType": "EntityClass",
+			"label": "SuperStructure",
+			"description": "TODO",
+			"baseClass": "SpatialComposition.FacilityPart"
+		},
+		"Deck": {
+			"schemaItemType": "EntityClass",
+			"label": "Deck",
+			"description": "TODO",
+			"baseClass": "SpatialComposition.FacilityPart"
+		},
+		"Pier": {
+			"schemaItemType": "EntityClass",
+			"label": "Pier",
+			"description": "TODO",
+			"baseClass": "SpatialComposition.FacilityPart"
+		},
+		"Abutment": {
+			"schemaItemType": "EntityClass",
+			"label": "Abutment",
+			"description": "TODO",
+			"baseClass": "SpatialComposition.FacilityPart"
+		}
+	}
+}`}
+/>
+  ]}
+>
+
+- **Schema generation** Schema can be generated or edit schemas using [schema editor tool](https://imodelschemaeditor.bentley.com/?). This URL can be updated to include the projectId and iModelId query parameters such as [schema-editor-tool-url](https://imodelschemaeditor.bentley.com/?)projectid=ProjectId&imodelid=iModelId. Following is an example of schema JSON file referenced by the documentAttributeSchemaUrl property.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}
+actions={[
+<CodeBlock language="http" code={`HTTP/1.1 202 Accepted`} />
+]}>
+
+#### Response
+
+On a successful request, the operation returns http status code 202/accepted - the request is accepted for processing and will be executed in the background.
+If there is an active run in progress for this connection, a new run is added to the queue. The response includes a location header pointing to the created run.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 7. Get runs statuses
+
+A run contains the synchronization process status. To track a run and associated status, make a GET request to a link from previous request response location header.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/imodels/manifestConnections/CONNECTION_ID/runs/RUN_ID HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  ]}
+>
+
+#### Request
+
+To get the status of the Run, send a GET request to the synchronization/imodels/manifestConnections/CONNECTION_ID/runs/RUN_ID endpoint with a valid connection and run Id. For convenience take a link from previous request response location header.
+
+- Authorization header with valid Bearer token is required.
+- CONNECTION_ID of the run we want to get.
+- RUN_ID of the run we want to get.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock
+  language="json"
+  code={`{
+    "run": {
+        "id": "RUN_ID",
+        "startDateTime": "02/15/2022 08:24:45",
+        "endDateTime": "02/15/2022 08:26:50",
+        "phase": "MasterFile",
+        "jobs": [
+            {
+                "id": "JOB_ID",
+                "startDateTime": "02/15/2022 08:25:58",
+                "endDateTime": "02/15/2022 08:26:28",
+                "state": "Completed",
+                "result": "Success",
+                "connectorType": "MSTN",
+                "tasks": [
+                    {
+                        "id": "TASK_ID",
+                        "startDateTime": "02/15/2022 08:25:58",
+                        "endDateTime": "02/15/2022 08:26:28",
+                        "retryAttempts": 0,
+                        "state": "Completed",
+                        "result": "Success",
+                        "error": null
+                    }
+                ]
+            }
+        ],
+        "state": "Completed",
+        "result": "Success"
+    }
+}`}
+/>
+  ]}
+>
+
+#### Response
+
+At the end of synchronization, the run state should be "Completed" and result "Success".
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 8. Synchronize an updated file
+
+If a file is changed on Azure Blob Storage, it has to be synchronized again for the iModel to be updated. The workflow should be:
+
+1. File is updated on Azure Blob Storage.
+2. Run the connection again. (See step 6)
+3. Get connection run status. (See step 7)
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 9. Conclusion
+
+In this tutorial we have gone through a file from Azure Blob Storage synchronization process:
+
+- Create an empty iModel
+- Create a connection
+- Run the connection
+- Get run status.
+
+After a successful run, the iModel now contains the design file changes.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulations for the completion of your first synchronization! You've now know a lot on the subject, but there's still possibilities to learn more to unleash the platform capabilities.
+
+<TileList>
+  <Tile
+    name="Create iModel Named Version"
+    description="This quick start is intended to guide you through the steps to create a new iModel Named Version."
+    href="/tutorials/create-named-version"
+  />
+  <Tile
+    name="Synchronization Configuration API"
+    description="This tutorial guides you through synchronizing a file using different configurations with the Synchronization API."
+    href="/tutorials/synchronization-configurations-api-tutorial"
+  />
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Synchronization API documentation"
+    href="/api-groups/synchronization"
+    description="An overview and detailed Synchronization API documentation."
+  />
+  <LinkCard
+    title="Synchronization API code sample"
+    href="https://github.com/iTwin/synchronization-api-sample-app"
+    description="A working code sample showing how Synchronization API can be integrated into a React application."
+    isExternal
+  />
+  <LinkCard
+    title="Data Management API documentation"
+    href="/api-groups/data-management/"
+    description="An overview and detailed Data Management API documentation."
+  />
+</TileList>
+
+</ContinueLearningSection>

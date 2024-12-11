@@ -1,0 +1,379 @@
+---
+title: 'Clash Suppression Rules Basics'
+version: 1
+tile:
+  name: 'Clash Suppression Rules Basics'
+  description: 'Walk-through of the creation and usage of suppression rules for clash detection tests.'
+  href: '/tutorials/clash-suppression-rules-basics/'
+  thumbnail: '/images/ClashDetectionSample.png'
+  durationInMinutes: 20
+  relatedApiIds: ['clashdetection']
+---
+
+<Introduction 
+  skillLevel="Intermediate" 
+  durationInMinutes="20">
+
+## Introduction
+
+Suppression rules are rules for clash detection tests that will allow you to filter out potentially unwanted results based on properties of either or both of the clashing elements. In this tutorial, you will learn how to:
+
+- Create a suppression rule
+- Associate a suppression rule with a test
+- Interpret the results of a test using suppression rules
+- Update your suppression rule
+- Delete your suppression rule
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- Access to an iModel and the associated projectId and imodelId for that iModel, along with the named version ID for the version you want to run the test against
+- Knowledge of how to run a clash detection test
+  - Instructions on clash test basics, including creation and running are located [here](/tutorials/clash-test-basics)
+- Property and schema information for the rules you want to implement
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 1. Get a token
+
+To make request to the API a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+### Grab a user token from Api reference "Try it" Section
+
+1. Go [here](/apis/clash-detection/operations/create-clashdetection-tests/)
+1. Click "Try it" button.
+1. On Authorization section select "AuthorizationCode".
+1. After popup closes Authorization header with your user token value should be visible.
+1. Save user token value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`GET https://api.bentley.com/clashdetection/suppressionRuleTemplates?projectId=00000000-0000-0000-0000-000000000000 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "suppressionRuleTemplates":[
+    {
+      "id":"0000000000000000000000000000000000000000000",
+      "displayName":"Suppression/Definition/Generic/AnyProperty",
+      "description":"Suppress clashes based on properties of any one of the clashing elements",
+      "prompt":"Suppress clashes if any one of the clashing elements has a property that satisfies the expression: -Expression-. Note: Use wild card \"_\" to match any single character, and \"%\" to match multiple characters",
+      "templateExpression":{
+        "propertyExpression":{
+          "relationshipPath":"ArchitecturalPhysical:Door",
+          "propertyName":"Origin",
+          "operator":"IS NOT NULL",
+          "propertyValue":""
+        }
+      }
+    }
+  ],
+  "_links":{
+    "next":{
+      "href":"https://api.bentley.com/clashdetection/suppressionRuleTemplates?projectId=00000000-0000-0000-0000-000000000000&continuationToken=00000000000000000000000000000000000000"
+    }
+  }
+}`} />
+]}>
+
+## 2. Get Suppression Rules Templates
+
+Suppression rules work by checking elements in a valid clash against specific criteria. A rule can suppress a clash based on matching query criteria on a single element in a clash, matching criteria on both elements in a clash, or even matching criteria based on the relationship between two elements in a clash.
+
+To make it simpler, we've provided a variety of suppression rule templates. A HTTP `GET https://api.bentley.com/clashdetection/suppressionRuleTemplates?projectId[&continuationToken][&$top]` request will return all of the valid suppression rule templates for the given project id. You simply choose the template that sounds best suited for your goals based on the prompt description.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`POST https://api.bentley.com/clashdetection/suppressionRules HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "projectId":"00000000-0000-0000-0000-000000000000",
+  "displayName":"Suppress Long Pipes",
+  "reason":"Sample Demo",
+  "templateId":"0000000000000000000000000000000000000000000",
+  "parameters":{
+    "propertyExpression":{
+      "relationshipPath":"ProcessPhysical:IsmCurveMember",
+      "propertyName":"AutoLength",
+      "operator":">",
+      "propertyValue":"24"
+    }
+  }
+}`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "suppressionRule":{
+    "id":"0000000000000000000000000000000000000000000",
+    "_links":{
+      "self":{
+        "href":"https://api.bentley.com/clashdetection/suppressionRules/0000000000000000000000000000000000000000000"
+      }
+    }
+  }
+}`} />
+]}>
+
+## 3. Creating a Suppression Rule
+
+To create a suppression rule, you need to include the template id of your chosen template, a name for the rule, a reason that describes why the rule exists and what it covers, and the test parameters and send an HTTP request to `POST https://api.bentley.com/clashdetection/suppressionRules`
+
+The parameters will vary based on your chosen template. Some templates, like 'suppress clashes if clashing elements are in the same category', don't require any parameters- we don't need any more information from you, we can just check the element categories against each other. For templates that do require parameters, you should follow the guidelines set forth by the template expression.
+
+For more advanced users, or those who wish to do something a little more complicated that isn't covered by the standard templates, there are UnaryECSql and BinaryECSql templates that are essentially freeform and allow you to write the desired query criteria yourself in an ECSql expression.
+
+If your rule creation is successful, it will return the rule metadata and a rule id. This will be used in the following steps to associate the rule with a test.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+<Title>Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`PUT https://api.bentley.com/clashdetection/tests/000000000000000-000000000000000000000000000 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock 
+    language="http"
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Update Clash Test Request Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "projectId":"00000000-0000-0000-0000-000000000000",
+  "displayName":"Sample Test",
+  "description":"Categories: Tag v Structure",
+  "setA":{
+    "modelIds":[],
+    "categoryIds":["0x4000000000d"],
+    "selfCheck":false,
+    "clearance":0
+  },
+  "setB":{
+    "modelIds":[],
+    "categoryIds":["0x40000000e71"],
+    "selfCheck":false,
+    "clearance":0
+  },
+  "suppressTouching":true,
+  "touchingTolerance":0.001,
+  "includeSubModels":false,
+  "suppressionRules":["0000000000000000000000000000000000000000000"]
+}`} />,
+<Title>Response Body</Title>,
+<CodeBlock
+  language="json"
+  code={`{
+  "test":{
+    "id":"000000000000000-000000000000000000000000000",
+    "_links":{
+      "self":{
+        "href":"https://api.bentley.com/clashdetection/tests/000000000000000-000000000000000000000000000"
+      }
+    }
+  }
+}`}
+/>
+]}>
+
+## 4. Adding a Suppression Rule to a Clash Test
+
+You can either use your suppression rule when creating a fresh clash test or when updating a previously created test. If you need a refresher, full instructions and parameter explanations for either option are located [here](/tutorials/clash-test-basics)
+
+The only new step for either option is including a suppression rules array in the request block properties. This will be an array of IDs including the testId returned in the previous creation step, along with any other rules you would want to associate with the test.
+
+Note that when updating a test, this is a replacement update, so if there were previously any rules associated with a test, you will need to include them in the array if you want them to continue to be associated with the test. This also means to disassociate a suppression rule with a clash test, all you would have to do is send an update request _without_ the specified ID in the suppressionRules array.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`GET https://api.bentley.com/clashdetection/results/000000000000000-000000000000000000000000000 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+<Title>Response Body</Title>,
+<CodeBlock
+  language="json"
+  code={`{
+  "result":[
+    {
+      "clashType":"Collision",
+      "clearance":-1,
+      "elementAId":"0x400000000c4",
+      "elementALabel":"1-SWS-0104-EX-OPM [4-5G]",
+      "elementACategoryIndex":0,
+      "elementAModelIndex":0,
+      "elementBId":"0x4000000003e",
+      "elementBLabel":"IsmCurveMember [4-1Q]",
+      "elementBCategoryIndex":1,
+      "elementBModelIndex":0,
+      "center":{
+        "x":12.192031860351562,
+        "y":407.69541931152344,
+        "z":122.92329406738281
+      },
+      "suppressingRuleIndexArray":[0]
+    }
+  ],
+  "categoryList":[
+    {
+      "id":"0x4000000000d",
+      "displayName":"Tag-Category"
+    },
+    {
+      "id":"0x40000000e71",
+      "displayName":"Structure"
+    }
+  ],
+  "modelList":[
+    {
+      "id":"0x20000000002",
+      "displayName":"Sample"
+    }
+  ],
+  "suppressingRuleList":[
+    {
+      "id":"0000000000000000000000000000000000000000000",
+      "displayName":"Sample Suppression Rule"
+    }
+  ]
+}`}/>
+]}>
+
+## 5. Interpreting Clash Results with Suppression Rules
+
+At this point, you should already understand the basics of how clash tests work and how to run them, so go ahead and run your updated test now, or if you need to, go [here](/tutorials/clash-test-basics) to review the process.
+
+While the process of running a test hasn't changed, the results themselves will if there were clashes affected by your new suppression rule. Clashes that fit the suppression rule criteria are not removed from results directly; rather, they have an array property (suppressingRuleIndexArray) that includes the zero-based index of any suppression rule. You can then use this array index to look up the relevant suppressing rule in the suppressingRuleList array, which includes the id and name. This will allow you to see the effect of multiple suppression rules, and which clashes they impact, without having to rerun the test multiple times.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`PUT https://api.bentley.com/clashdetection/suppressionRules/0000000000000000000000000000000000000000000 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "displayName":"Long Pipes Suppression Rule",
+  "reason":"Suppress long pipes over 24 meters."
+}`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "suppressionRule":{
+    "id":"0000000000000000000000000000000000000000000",
+    "_links":{
+      "self":{
+        "href":"https://api.bentley.com/clashdetection/suppressionRules/0000000000000000000000000000000000000000000"
+      }
+    }
+  }
+}`} />
+]}>
+
+## 6. Updating a Suppression Rule
+
+To update a suppression rule is relatively simple, all you need to do is send a HTTP `PUT https://api.bentley.com/clashdetection/suppressionRules/{id}` request. However, you can only update the name and reason- you will not be able to change the rule parameters and would have to create a new rule instead. Both parameters are optional, so if you only want to update one or the other, you can only send that property during the update. You will not need to update any of the associated tests- next time you run them, they will returns responses based on the updated rule.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`DELETE https://api.bentley.com/clashdetection/suppressionRules/0000000000000000000000000000000000000000000 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />
+]}>
+
+## 7. Deleting a Suppression Rule
+
+Deleting a suppression rule is also easy, just send a HTTP request to `DELETE https://api.bentley.com/clashdetection/suppressionRules/{id}` Upon a successful deletion, the response body will be empty; it will only include additional information if the deletion failed.
+
+At this time, deleting a suppression rule does not automatically delete them from associated tests, so please make an effort to update the tests in conjunction with the rule deletion to keep things consistent.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 8. Conclusion
+
+You should now be able to successfully create and update suppression rules. This will allow you to filter the number of clashes based on your specified criteria so you only have to spend time investigating the issues you think might need attention.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Validation API documentation"
+    href="/api-groups/validation/"
+    description="An overview and detailed version of Validation API documentation, including Clash Detection."
+  />
+</TileList>
+
+</ContinueLearningSection>

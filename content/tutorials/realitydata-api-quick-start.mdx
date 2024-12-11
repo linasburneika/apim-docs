@@ -1,0 +1,735 @@
+---
+title: 'Get started with RealityData API'
+version: 1
+tile:
+  name: 'Get started with RealityData API'
+  description: 'This tutorial is an introduction to RealityData API, explaining the basic workflows.'
+  thumbnail: '/images/realitydata-quick-start-thumb.png'
+  href: '/tutorials/realitydata-api-quick-start/'
+  durationInMinutes: 30
+  relatedApiIds: ['realitydata']
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="30"
+  summaryImageSrc="/images/realitydata-quick-start.jpg">
+
+## Introduction
+
+The RealityData API provides you the ability to manage and share reality models. This tutorial will help you get started using the RealityData API.
+
+This tutorial will guide you through:
+
+- Creating, modifying and deleting RealityData.
+- Associating and dissociating a RealityData to a Project.
+- Uploading and downloading reality models to RealityData.
+
+## Prerequisites
+
+- A reality model, such as a `.3mx` file.
+- Project iTwin created.
+
+  - To learn more, see the [create and query iTwins guide](/tutorials/create-and-query-itwins-guide/).
+
+<Alert type="informational">
+
+The created project must have a role that contains the **RDS_ASSIGN**, **RDS_CREATE**, **RDS_MANAGE** and **RDS_USE** permissions, assigned to yourself. A project created through the iTwins API should give you the necessary permissions automatically. For more information on managing projects, you may consult the [iTwins API](/apis/itwins/overview/).
+
+</Alert>
+
+</Introduction>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+### Suggested Tools
+
+##### <a href="https://www.postman.com/downloads/" target="_blank">Postman</a>
+
+To test the REST API calls directly, use [Postman](https://www.postman.com/downloads/) or any other solution capable of sending HTTP requests. If you do it this way, you will require an authorization token for the requests to work. See the _Get a token_ section below for more information.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <CreateNativeAppButton 
+    tooltip="Register basic Desktop/Mobile App for this tutorial" 
+    clientName="RealityData Quick Start Tutorial"
+  >
+    Register Application
+  </CreateNativeAppButton>
+]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. For this tutorial, a Desktop/Mobile Application is recommended. You can use the **Register** button to automatically create your first Desktop/Mobile application. This allows you to configure [Authorization Code Flow for your Desktop/Mobile application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, a few lines of code is displayed under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - the unique identifier for your application. It is displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. It is displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where to return users after logging out. It is displayed on the application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. It is displayed on the application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a Token
+
+To make request to the API, a user token is needed. There are several ways to get it. You can consult the Authorization API documentation [here](/apis/overview/authorization/),
+and you can use a sample powershell script [here](https://github.com/iTwin/platform-api-samples/tree/main/Authorization) to use in your app.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>Example HTTP Request for POST RealityData Operation</Title>,
+    <CodeBlock language="http"
+     code={`POST https://api.bentley.com/realitydata HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.v1+json
+Content-Type: application/json\n
+ {
+    "projectId": "d8414d06-560e-49da-81a5-f7204fa4457b",
+    "realityData": {
+        "displayName": "Name of the reality data to create",
+        "classification": "Model",
+        "type": "3mx",
+        "description": "Description of the reality data",
+        "dataset": "Dataset",
+        "group": "GroupId",
+        "rootDocument": "Models/Scene/myModel.3mx",
+        "acquisition": {
+            "startDateTime": "2021-05-12T20:03:12Z",
+            "endDateTime": "2021-05-15T05:07:18Z",
+            "acquirer": "Data Acquisition Inc."
+        },
+        "extent": {
+            "southWest": {
+                "latitude": 40.0206,
+                "longitude": -75.6355
+            },
+            "northEast": {
+                "latitude": 40.0356,
+                "longitude": -75.6059
+            }
+        },
+        "authoring": false
+    }
+  }
+}`}/>,
+ <Title>Example Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 201 Created
+Content-Length: 112
+Request-Context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 2b59e2ac-3e89-42bf-9678-2717b395c5bf
+X-ITwinPlatform-Media-Type: bentley.itwin-platform.v1
+X-ITwinPlatform-Region: East US
+Date: Mon, 04 Oct 2021 20:51:49 GMT`} />,
+    <Title>Example Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+    "realityData": {
+        "id": "95d8dccd-d89e-4287-bb5f-3219acbc71ae",
+        "displayName": "Name of the reality data to create",
+        "dataset": "Dataset",
+        "group": "GroupId",
+        "description": "Description of reality data",
+        "rootDocument": "Models/Scene/myModel.3mx",
+        "size": 0,
+        "classification": "Model",
+        "type": "3mx",
+        "acquisition": {
+            "startDateTime": "2021-05-12T20:03:12Z",
+            "endDateTime": "2021-05-15T05:07:18Z",
+            "acquirer": "Data Acquisition Inc."
+        },
+         "extent": {
+            "southWest": {
+                "latitude": 40.0206,
+                "longitude": -75.6355
+            },
+            "northEast": {
+                "latitude": 40.0356,
+                "longitude": -75.6059
+            }
+        },
+        "authoring": false,
+        "accessControl": "Project",
+        "dataCenterLocation": "North Europe",
+        "modifiedDateTime": "2021-04-09T19:03:12Z",
+        "lastAccessedDateTime": "2021-04-09T00:00:00Z",
+        "createdDateTime": "2021-02-22T20:03:40Z"
+    }
+}`} />,
+  ]}>
+
+## 3. Create a RealityData
+
+While using the RealityData API, you will mainly work with `RealityData` objects. The class defines properties that describe the content of the
+reality data and provides an access point to the data stored in a blob container, using Microsoft Azure Storage technologies.
+
+`RealityData` properties represent the descriptive data related to a reality data. In addition to this, reality data content is stored as files and folders within a blob container uniquely associated to this reality data.
+Individual files and folders follow, from the root of the reality data, a normal file tree structure.
+
+Use a `POST https://api.bentley.com/realitydata` HTTP request to create a `RealityData`.
+
+Currently, the required properties for creating a `RealityData` are:
+
+- `DisplayName` : Name of the RealityData
+- `Classification` e.g. "Model"
+- `Type` e.g. "3mx"
+
+Upon successfully creating a `RealityData`, the `id` property will be generated, and it is used as it's unique identifier.
+
+</TutorialSection>
+
+<TutorialSection
+ subSection={true}
+  actions={[
+    <Title>Example HTTP Request for Get RealityData Container Operation</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com//realitydata/69401bde-6200-4c6c-b783-046f1935e825/container/?projectId=615f57e7-876e-46fc-ab11-79af30cae299&access=Write HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.v1+json
+Content-Type: application/json`}/>,
+ <Title>Example Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+Cache-Control: must-revalidate, no-cache, private
+Pragma: no-cache
+Transfer-Encoding: chunked
+Content-Type: application/json
+Content-Encoding: gzip
+ETag: "KtH8hBTTkTuyVh8/AjJ/wdYPRZ4="
+Vary: Accept-Encoding
+Request-Context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+Strict-Transport-Security: max-age=63072000
+Mas-Server: Bentley-WSG/4.0.13,Bentley-WebAPI/2.9
+X-Correlation-ID: dfab9114-7a6c-4cfe-bed0-c03720278dd9
+Mas-Request-Id: dfab9114-7a6c-4cfe-bed0-c03720278dd9
+Set-Cookie: {...}
+X-ITwinPlatform-Media-Type: bentley.itwin-platform.v1
+X-ITwinPlatform-Region: East US
+Date: Mon, 04 Oct 2021 20:56:34 GMT`} />,
+    <Title>Example Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+    "container": {
+        "type": "AzureBlobSasUrl",
+        "permissions": "Write",
+        "_links": {
+            "containerUrl": {
+                "href": "https://realityblobdeveussa01.blob.core.windows.net/69401bde-6200-4c6c-b783-046f1935e825?sv=2020-08-04&se=2021-09-09T07%3A45%3A15Z&sr=c&sp=rl&sig=FiYaKr5m%2FPlev%2FwsOIpopyyCbJC3lbRKwhA3be2SQh8%3D"
+            }
+        }
+    }
+}`} />,
+  ]}>
+
+### 3.1 Upload a Reality Model
+
+Once your realityData is created, you may attach a reality model. The `GET https://api.bentley.com/realitydata/{id}/container/?projectId={projectId}&access=Write`
+HTTP request will provide you with a SAS URL with write access.
+
+In order to use this resource, consult the [Microsoft Documentation](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)
+
+Alternatively, if you do not have a reality model yet and want to generate your own reality model, you may be interested in [Reality Modeling](/tutorials/contextcapture-api-quick-start)
+
+> In order to visualize your Reality Model later on by using an
+> [iTwin Viewer](/tutorials/itwin-viewer-hello-world/), the created RealityData must have a valid `rootDocument` value.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>Example HTTP Request for Get RealityData Operation</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/realitydata?projectId=ec002f93-f0c1-4ab3-a407-351848eba233&$top=2 HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.v1+json
+Prefer: return=representation
+Content-Type: application/json`}/>,
+ <Title>Example Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+Cache-Control: must-revalidate, no-cache, private
+Pragma: no-cache
+Transfer-Encoding: chunked
+Content-Type: application/json
+Content-Encoding: gzip
+ETag: "HwjuhwwP78X3/dL8Efxr36UHJPc="
+Vary: Accept-Encoding
+Request-Context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+Strict-Transport-Security: max-age=63072000
+Mas-Server: Bentley-WSG/4.0.13,Bentley-WebAPI/2.9
+X-Correlation-ID: c6c00c24-e37e-4b30-a070-bd7e8b6090b2
+Mas-Request-Id: c6c00c24-e37e-4b30-a070-bd7e8b6090b2
+Set-Cookie: {...}
+X-ITwinPlatform-Media-Type: bentley.itwin-platform.v1
+X-ITwinPlatform-Region: East US
+Date: Mon, 04 Oct 2021 21:01:28 GMT`} />,
+    <Title>Example Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+    "realityData": [
+        {
+            "id": "4cc193e4-07a7-4ec8-8750-93c68b34cb11",
+            "displayName": "A random RealityData Display Name",
+            "dataset": "Dataset",
+            "group": "xxx",
+            "description": "Lorem ipsum...",
+            "rootDocument": "Graz/Scene/Graz.3mx",
+            "size": 444055,
+            "classification": "Model",
+            "type": "3mx",
+            "extent": {
+                "southWest": {
+                    "latitude": 50.1171,
+                    "longitude": -122.9543
+                },
+                "northEast": {
+                    "latitude": 50.1172,
+                    "longitude": -122.9543
+                }
+            },
+            "acquisition": {},
+            "accessControl": "Project",
+            "dataCenterLocation": "North Europe",
+            "modifiedDateTime": "2017-05-10T13:43:03Z",
+            "lastAccessedDateTime": "2021-08-11T00:00:00Z",
+            "createdDateTime": "2017-05-10T13:43:03Z"
+        },
+        {
+            "id": "a649f5f9-4c2d-4b2d-8ac0-0ba38d53727c",
+            "displayName": "A second RealityData's Display Name",
+            "dataset": "Dataset",
+            "group": "xxx",
+            "description": "Lorem ipsum...",
+            "rootDocument": "Graz/Scene/Graz.3mx",
+            "size": 739560,
+            "classification": "Model",
+            "type": "3mx",
+            "extent": {
+                "southWest": {
+                    "latitude": 50.1171,
+                    "longitude": -122.9543
+                },
+                "northEast": {
+                    "latitude": 50.1172,
+                    "longitude": -122.9543
+                }
+            },
+            "acquisition": {},
+            "accessControl": "Project",
+            "dataCenterLocation": "North Europe",
+            "modifiedDateTime": "2017-05-10T13:43:03Z",
+            "lastAccessedDateTime": "2021-08-11T00:00:00Z",
+            "createdDateTime": "2017-05-10T13:43:03Z"
+        }
+      ],
+         "_links": {
+        "next": {
+            "href": "https://api.bentley.com/realitydata?projectId=ec002f93-f0c1-4ab3-a407-351848eba233&continuationToken=eyJ0b3AiOjUwMCwic2tpcCI6NTAwfQ"
+        }
+    }
+ }`} />,
+  ]}>
+
+## 4. Get RealityData
+
+There are a few ways to query your RealityData. Depending on the app you are developing, one might be more useful than another. You may want to get a single RealityData or multiple ones.
+
+Once you have created RealityData, the `GET https://api.bentley.com/realitydata` request will be the route to use in order to get your created RealityData. Using this call as is will return the first 100 RealityData that you have access to, relatively to your organization's access rights.
+
+The `GET https://api.bentley.com/realitydata/?projectId={projectId}` request will return the first 100 RealityData under the given project, relatively to the project's access rights. provided you have access to it. A continuation token is provided for further querying.
+
+The `GET https://api.bentley.com/realitydata/{id}` request will only return the RealityData with the given identifier, provided that you have access to it.
+
+### 4.1 Tailoring RealityData Requests
+
+Optional parameters are available to customize RealityData requests :
+
+- `projectId` : project Identifier
+- `continuationToken` to get more RealityData on the current query
+- `$top` to query a number of realityData to get in each page
+- `extent` to query RealityData in a definite area to search.
+
+You may refer to the [RealityData API Documentation](/apis/reality-data/operations/get-all-reality-data/) for more information on parameters described above.
+
+When querying multiple RealiyData, the `Prefer: return=representation` header will instruct the API to return all properties on every realityData. Otherwise, only minimal information
+will be returned, such as `id`, `displayName` and `type`.
+
+</TutorialSection>
+
+<TutorialSection
+ subSection={true}
+  actions={[
+    <Title>Example HTTP Request for Get RealityData Container Operation</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com//realitydata/69401bde-6200-4c6c-b783-046f1935e825/container/?projectId=615f57e7-876e-46fc-ab11-79af30cae299&access=Write HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.v1+json
+Content-Type: application/json`}/>,
+ <Title>Example Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+Cache-Control: must-revalidate, no-cache, private
+Pragma: no-cache
+Transfer-Encoding: chunked
+Content-Type: application/json
+Content-Encoding: gzip
+ETag: "33/0jngG83tl3Zu9AbB+KRdpL34="
+Vary: Accept-Encoding
+Request-Context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+Strict-Transport-Security: max-age=63072000
+Mas-Server: Bentley-WSG/4.0.13,Bentley-WebAPI/2.9
+X-Correlation-ID: 81cc9899-faac-4d84-9149-6bcc26460e1d
+Mas-Request-Id: 81cc9899-faac-4d84-9149-6bcc26460e1d
+Set-Cookie: {...}
+X-ITwinPlatform-Media-Type: bentley.itwin-platform.v1
+X-ITwinPlatform-Region: East US
+Date: Mon, 04 Oct 2021 21:04:45 GMT`} />,
+    <Title>Example Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+    "container": {
+        "type": "AzureBlobSasUrl",
+        "permissions": "Read",
+        "_links": {
+            "containerUrl": {
+                "href": "https://realityblobdeveussa01.blob.core.windows.net/69401bde-6200-4c6c-b783-046f1935e825?sv=2020-08-04&se=2021-09-09T07%3A45%3A15Z&sr=c&sp=rl&sig=FiYaKr5m%2FPlev%2FwsOIpopyyCbJC3lbRKwhA3be2SQh8%3D"
+            }
+        }
+    }
+}`} />,
+  ]}>
+
+### 4.2 Visualize your Reality Model
+
+The `GET https://api.bentley.com/realitydata/{id}/container/?projectId={projectId}&permissions=Read` request will provide you with a SAS URL with read access.
+This will let you download the content of your RealityData.
+
+You may want to consult this [iTwinjs sample](https://www.itwinjs.org/sandboxes/iTwinPlatform/Reality%20Data)
+for a quick example to display your reality model.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>Example HTTP Request for PATCH RealityData Operation</Title>,
+    <CodeBlock language="http"
+     code={`PATCH https://api.bentley.com/realitydata/69401bde-6200-4c6c-b783-046f1935e825 HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.v1+json
+Content-Type: application/json\n
+{
+    "projectId" : "615f57e7-876e-46fc-ab11-79af30cae299",
+    "realityData":
+    {
+        "id": "69401bde-6200-4c6c-b783-046f1935e825",
+        "displayName": "Modified displayname",
+        "dataset": "Dataset",
+        "group": "xxx",
+        "description": "Lorem ipsum 2...",
+        "classification": "Model",
+        "type": "3mx"
+    }
+}
+}`}/>,
+ <Title>Example Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+Cache-Control: must-revalidate, no-cache, private
+Pragma: no-cache
+Transfer-Encoding: chunked
+Content-Type: application/json
+Content-Encoding: gzip
+Vary: Accept-Encoding
+Request-Context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+Strict-Transport-Security: max-age=63072000
+Mas-Server: Bentley-WSG/4.0.13,Bentley-WebAPI/2.9
+X-Correlation-ID: 7c55d6fd-173d-4af5-a9cc-b488077442ae
+Mas-Request-Id: 7c55d6fd-173d-4af5-a9cc-b488077442ae
+Set-Cookie: {...}
+X-ITwinPlatform-Media-Type: bentley.itwin-platform.v1
+X-ITwinPlatform-Region: East US
+Date: Mon, 04 Oct 2021 21:40:30 GMT`} />,
+    <Title>Example Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+    "realityData": {
+        "id": "69401bde-6200-4c6c-b783-046f1935e825",
+        "displayName": "Modified displayname",
+        "dataset": "Dataset",
+        "group": "xxx",
+        "description": "Lorem ipsum 2...",
+        "size": 0,
+        "classification": "Model",
+        "type": "3mx",
+        "authoring": false,
+        "extent": {
+            "southWest": {
+                "latitude": 50.1171,
+                "longitude": -122.9543
+            },
+            "northEast": {
+                "latitude": 50.1172,
+                "longitude": -122.9543
+            }
+        },
+        "acquisition": {},
+        "accessControl": "Project",
+        "dataCenterLocation": "North Europe",
+        "modifiedDateTime": "2021-09-08T18:00:47Z",
+        "lastAccessedDateTime": "2021-09-08T14:32:14Z",
+        "createdDateTime": "2021-09-08T14:32:14Z"
+    }
+}`} />,
+  ]}>
+
+## 5. Modify RealityData
+
+`RealityData` properties may be modified at will, provided you have sufficient permissions within the Project you are using or if you are the owner of the `RealityData`.
+Use a `PATCH https://api.bentley.com/realitydata/{id}` HTTP request to modify an existing `RealityData`.
+
+Refer to the [RealityData Properties](/apis/reality-data/rd-details/) page of the documentation for the detailed list of properties you can use and modify.
+
+</TutorialSection>
+
+<TutorialSection
+ subSection={true}
+  actions={[
+    <Title>Example HTTP Request for Get RealityData Container Operation</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com//realitydata/69401bde-6200-4c6c-b783-046f1935e825/container/?projectId=615f57e7-876e-46fc-ab11-79af30cae299&access=Write HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.v1+json
+Content-Type: application/json`}/>,
+ <Title>Example Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+Cache-Control: must-revalidate, no-cache, private
+Pragma: no-cache
+Transfer-Encoding: chunked
+Content-Type: application/json
+Content-Encoding: gzip
+ETag: "33/0jngG83tl3Zu9AbB+KRdpL34="
+Vary: Accept-Encoding
+Request-Context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+Strict-Transport-Security: max-age=63072000
+Mas-Server: Bentley-WSG/4.0.13,Bentley-WebAPI/2.9
+X-Correlation-ID: 81cc9899-faac-4d84-9149-6bcc26460e1d
+Mas-Request-Id: 81cc9899-faac-4d84-9149-6bcc26460e1d
+Set-Cookie: {...}
+X-ITwinPlatform-Media-Type: bentley.itwin-platform.v1
+X-ITwinPlatform-Region: East US
+Date: Mon, 04 Oct 2021 21:04:45 GMT`} />,
+    <Title>Example Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+    "container": {
+        "type": "AzureBlobSasUrl",
+        "permissions": "Write",
+        "_links": {
+            "containerUrl": {
+                "href": "https://realityblobdeveussa01.blob.core.windows.net/69401bde-6200-4c6c-b783-046f1935e825?sv=2020-08-04&se=2021-09-09T07%3A45%3A15Z&sr=c&sp=rl&sig=FiYaKr5m%2FPlev%2FwsOIpopyyCbJC3lbRKwhA3be2SQh8%3D"
+            }
+        }
+    }
+}`} />,
+  ]}>
+
+### 5.1 Modify your Reality Model
+
+You can refer to section 3.1 of this guide as it is the same operation, the `GET https://api.bentley.com/realitydata/{id}/container/?projectId={projectId}&access=Write`
+request will provide you with a SAS URL with write access. From there, you may change the content of the reality model.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 6. Manage RealityData Relations to Multiple Projects
+
+Depending on the purpose of your reality model, you may find useful to have your reality model, therefore it's `RealityData`, to be available across multiple project iTwins.
+The `RealityData` API leverages the strengths of the [iTwins API](/apis/itwins/) to make your model available to others.
+
+Two actions are possible:
+
+- Associating a RealityData to a Project
+- Dissociating a RealityData to a Project
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP Request for Associate RealityData Operation</Title>,
+    <CodeBlock language="http" code={`PUT https://api.bentley.com/realitydata/69401bde-6200-4c6c-b783-046f1935e825/projects/615f57e7-876e-46fc-ab11-79af30cae299 HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.v1+json
+Content-Type: application/json`}/>,
+  <Title>Example Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 201 Created
+Content-Length: 112
+Request-Context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 2b59e2ac-3e89-42bf-9678-2717b395c5bf
+X-ITwinPlatform-Media-Type: bentley.itwin-platform.v1
+X-ITwinPlatform-Region: East US
+Date: Mon, 04 Oct 2021 20:51:49 GMT`} />,
+    <Title>Example Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+        "projectAssociation": 
+        {
+          "id": "69401bde-6200-4c6c-b783-046f1935e825",
+          "projectId": "615f57e7-876e-46fc-ab11-79af30cae299"
+        }
+}`} />,
+  ]}>
+
+### 6.1 Associate RealityData to a Project
+
+The `PUT https://api.bentley.com/realitydata/{id}/projects/{projectId}` http request will add an association to the desired project, illustrated by `projectAssociation`.
+
+</TutorialSection>
+
+<TutorialSection
+ subSection={true}
+  actions={[
+    <Title>Example HTTP Request for Dissociate RealityData Operation</Title>,
+    <CodeBlock language="http" code={`DELETE https://api.bentley.com/realitydata/69401bde-6200-4c6c-b783-046f1935e825/projects/615f57e7-876e-46fc-ab11-79af30cae299 HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.v1+json
+Content-Type: application/json`}/>,
+ <Title>Example Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 204 No Content
+Content-Length: 0
+Request-Context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 07b4d6c4-6f05-492c-9b59-3bc382d4de76
+X-ITwinPlatform-Media-Type: bentley.itwin-platform.v1
+X-ITwinPlatform-Region: East US
+Date: Tue, 05 Oct 2021 14:57:12 GMT`} />
+]}>
+
+### 6.2 Dissociate RealityData from a Project
+
+The `DELETE https://api.bentley.com/realitydata/{id}/projects/{projectId}` http request will remove an association from the desired project.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>Example HTTP Request for Delete RealityData Operation</Title>,
+    <CodeBlock language="http" code={`DELETE https://api.bentley.com/realitydata/69401bde-6200-4c6c-b783-046f1935e825 HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.v1+json
+Content-Type: application/json`}/>,
+<Title>Example Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 204 No Content
+Content-Length: 0
+Request-Context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 8c9990c0-c305-42b3-bd44-db295c80dfbd
+X-ITwinPlatform-Media-Type: bentley.itwin-platform.v1
+X-ITwinPlatform-Region: East US
+Date: Tue, 05 Oct 2021 14:59:32 GMT`} /> 
+]}>
+
+## 7. Delete RealityData
+
+Once your RealityData is no longer needed, you may delete it with the `DELETE https://api.bentley.com/realitydata/{id}` HTTP request. Upon receiving a `204 No Content` response,
+which indicates a successful deletion, the `RealityData` resource along with it's reality model will be deleted. There is no need to manually delete the reality model
+by using GET container http requests with the Write permission.
+
+<Alert type="informational">
+
+If your RealityData is associated to more than one Project, you must first dissociate it from every project, except one. See section 6.2. Note that you must have sufficient rights within the project to delete RealityData.
+
+</Alert>
+
+<Alert type="warning">
+
+The RealityData API does not support a 'recycle bin' feature. Deleting a RealityData results in immediate deletion of the reality model and it cannot be recovered.
+
+</Alert>
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulations for completing the RealityData API tutorial! You now have the necessary knowledge to use the RealityData API.
+To go further and use the RealityData API to its full potential, you can have a look at the following related tutorials.
+
+<TileList>
+  <Tile
+    name="Get started with Reality Modeling API"
+    description="This tutorial is an introduction to Reality Modeling API, explaining the basic workflows."
+    thumbnail="/images/cccs-quick-start-thumb.jpg"
+    href="/tutorials/contextcapture-api-quick-start"
+  />
+  <Tile
+    name="Get started with Reality Analysis API"
+    description="This tutorial is an introduction to Reality Analysis API, explaining the basic workflows."
+    thumbnail="/images/rda/quick-start-thumb.jpg"
+    href="/tutorials/realitydataanalysis-api-quick-start"
+  />
+  <Tile
+    name="Reality Data"
+    description="Adding, removing, and modifying the display of reality data. Discovers available realitymodel and attaches the first one to the viewport."
+    href="https://www.itwinjs.org/sandboxes/iTwinPlatform/Reality%20Data"
+    isExternal
+  />
+
+</TileList>
+
+## More Resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Reality Data API"
+    href="/apis/reality-data/overview/"
+    description="Complete Reality Data API documentation."
+  />
+  {/* <LinkCard
+    title="Reality Data Sample App"
+    href="https://github.com/iTwin/realitydata-sample-app"
+    description="This is a simple node based console app that illustrates usage of the RealityData API."
+    isExternal={true}
+  /> */}
+  <LinkCard
+    title="Reality Data Client"
+    href="https://www.itwinjs.org/reference/reality-data-client/"
+    description="Typescript Client provided by itwin.js to facilitate the use the Reality Data API."
+    isExternal
+  />
+  <LinkCard
+    title="Reality Data client Npm Package"
+    href="https://www.npmjs.com/package/@bentley/reality-data-client"
+    description="Npm Package containing client wrappers for sending requests to the RealityData API."
+    isExternal
+  />
+</TileList>
+
+</ContinueLearningSection>

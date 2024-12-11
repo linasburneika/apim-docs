@@ -1,0 +1,673 @@
+---
+title: 'Create and Merge Forked iModel'
+version: 1
+tile:
+  name: 'Create Forked iModel and Merge it Back to the Main iModel'
+  description: 'This tutorial will create a forked iModel and merge it back into the main iModel'
+  thumbnail: '/images/fork-and-merge-thumbnail.svg'
+  href: '/tutorials/create-and-merge-forked-imodel/'
+  durationInMinutes: 40
+  relatedApiIds: ['transformations']
+---
+
+<Introduction 
+  skillLevel="Intermediate" 
+  durationInMinutes="40">
+
+## Introduction
+
+This quick start is intended to help you get started with forking and merging workflow using Transformations API. In this walk-through you will
+create a forked iModel and after modifying it, merge it back to the main iModel.
+
+</Introduction>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://code.visualstudio.com/"
+      target="_blank"
+      title="Visual Studio Code"
+      icon={<VSCodeIcon />}
+    />,
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- A tool such as `Postman` that can be used to execute HTTP calls. These calls can also be made using the **Try it out** button in the API documentation or
+  any other http request tool.
+- A created and connected project. You can create a project by following instructions at [Create a new iTwin Project](/tutorials/create-and-query-itwins-guide/).
+- A source iModel with some data for the transformation. You can create an iModel from Bentley Sample by following instructions at [Create an iModel](/tutorials/web-application-quick-start/).
+- A way to modify an existing iModel. This can be achieved by using any existing application or by using Synchronization API. You can modify iModel using
+  Synchronization API by following instructions at [Synchronize a file from iTwin Storage](/tutorials/synchronization-storage-tutorial/).
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+## Understanding iModel Forking and Merging
+
+First we should understand how forking and merging workflow works.
+
+![Diagram illustrating fork and merge](/images/fork-and-merge-explanation.png)
+
+As you can see in the diagram, this workflow involves 2 iModels. The first iModel is the main one and is treated as the source of truth. The second iModel is
+the forked iModel. This is a separate iModel, which is a duplicate of the first iModel.
+
+The workflow starts by connecting this duplicate iModel to the main iModel. This is achieved by CreateFork transformation.
+
+Once iModels are connected, you can work with the forked iModel and modify it as needed.
+
+Once all changes are ready, you can transfer those changes to the main iModel by using MergeFork transformation.
+
+After all of this, the main iModel has all the changes which were made in the forked iModel, but it doesn't have intermediate changesets, which might not be approved or
+shouldn't be in the main iModel.
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Fork and Merge"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+To make requests to the API, a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use Client ID generated from previous registration step.
+
+</Alert>
+
+### Grab a user token from Api reference "Try it out" Section
+
+1. Go to [Create Configuration](/apis/transformations/operations/createfork/)
+1. Click "Try it out" button.
+1. On Authorization section select "AuthorizationCode".
+1. After popup closes Authorization header with your user token value should be visible.
+1. Save user token value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Create duplicate iModel
+
+The forked iModel is a duplicate copy which has connection to the main instance. iModel is connected to another one when each element in it has a link to the original
+element in the main iModel. To create a forked iModel you need to duplicate iModel and then connect it by running CreateFork transformation.
+
+You can use iModels API to create exact copy of the main iModel.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language='http' code={`GET https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000/changesets?$top=1&$orderBy=index%20desc HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language='http' code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock language='json' code={`{
+  "changesets": [{
+    "id": "LATEST_CHANGESET_ID",
+    "displayName": "2",
+    "description": "Changeset description",
+    "index": 40,
+    "parentId": "PARENT_CHANGESET_ID",
+    "briefcaseId": 1,
+    "fileSize": 1,
+    "state": "fileUploaded",
+    "containingChanges": 10,
+    "creatorId": "00000000-0000-0000-0000-000000000000",
+    "pushDateTime": "0000-00-00T00:00:00.0000000Z",
+    "_links": {
+      "self": {
+        "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000/changesets/LATEST_CHANGESET_ID"
+      },
+      "creator": {
+        "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000/users/00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }],
+  "_links": {
+    "self": {
+      "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000/changesets?$skip=0&$top=1&$orderBy=index%20desc"
+    },
+    "prev": null,
+    "next": {
+      "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000/changesets?$skip=1&$top=1&$orderBy=index%20desc"
+    }
+  }
+}`} />
+  ]}
+>
+
+### Get iModels latest changeset
+
+To create exact copy of an iModel, first the latest changeset id is required. You can retrieve this by sending GET request to
+https://api.bentley.com/imodels/IMODEL_ID/changesets?$top=1&$orderBy=index%20desc endpoint. You will need to replace `IMODEL_ID` with the id of the main iModel.
+Response body will contain a single changeset instance with the required id.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language='http' code={`POST https://api.bentley.com/imodels HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language='http' code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock language='json' code={`{
+  "projectId": "00000000-0000-0000-0000-000000000000",
+  "name": "COPY_IMODEL_NAME",
+  "template": {
+    "iModelId": "00000000-0000-0000-0000-000000000000",
+    "changesetId": "LATEST_CHANGESET_ID"
+  }
+}`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock language='json' code={`{
+  "iModel": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "displayName": "COPY_IMODEL_NAME",
+    "name": "COPY_IMODEL_NAME",
+    "description": null,
+    "createdDateTime": "0000-00-00T00:00:00.0000000Z",
+    "state": "notInitialized",
+    "projectId": "00000000-0000-0000-0000-000000000000",
+    "extent": null,
+    "_links": {
+      "creator": {
+        "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000/users/00000000-0000-0000-0000-000000000000"
+      },
+      "namedVersions": {
+        "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000/namedversions"
+      },
+      "changesets": {
+        "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000/changesets"
+      },
+      "upload": null,
+      "complete": null
+    }
+  }
+}`} />
+  ]}
+>
+
+### Duplicate iModel using iModels API
+
+iModel can be duplicated by using [Create iModel](/apis/imodels-v2/operations/create-imodel/) endpoint in iModels API. You will need to send POST request to
+https://api.bentley.com/imodels/ endpoint with filled in body payload with this information:
+
+- **iTwinId** - id of the iTwin where iModel should be created.
+- **name** - name of the duplicate iModel.
+- **description** - description of the duplicate iModel.
+- **template**
+  - **iModelId** - id of the main iModel.
+  - **changesetId** - id of the latest changeset. Use `LATEST_CHANGESET_ID` value from the response body of the previous step.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Run CreateFork transformation
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+    <CodeBlock language='http' code={`POST https://api.bentley.com/transformations/configurations/createfork HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language='http' code={`Accept: application/json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock language='json' code={`{
+  "transformName": "Example name",
+  "sourceProjectId": "00000000-0000-0000-0000-000000000000",
+  "sourceIModelId": "00000000-0000-0000-0000-000000000000",
+  "targetProjectId": "00000000-0000-0000-0000-000000000000",
+  "targetIModelId": "00000000-0000-0000-0000-000000000000",
+  "comment": "Example comment"
+}`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock language='json' code={`{
+  "configuration": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "transformName": "Example name",
+    "comment": "Example comment",
+    "createdDateTime": "0000-00-00T00:00:00.0000000Z",
+    "modifiedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "_links": {
+      "sourceIModel": {
+        "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000"
+      },
+      "targetIModel": {
+        "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000"
+      },
+      "sourceProject": {
+        "href": "https://api.bentley.com/projects/00000000-0000-0000-0000-000000000000"
+      },
+      "targetProject": {
+        "href": "https://api.bentley.com/projects/00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
+}`} />
+]}>
+
+### Create configuration for CreateFork transformation
+
+After the iModel is duplicated, it needs to be connected to the main iModel. This is done by Create Fork transformation. To run it you first need to create a configuration
+for it. You can do this by sending POST request to https://api.bentley.com/transformations/configurations/createfork endpoint with filled in body payload with
+this information:
+
+- **transformName** - free form text field so you could name your configuration.
+- **sourceProjectId** - projectId of the main iModel.
+- **sourceIModelId** - iModelId of the main iModel.
+- **targetProjectId** - projectId of the duplicate iModel.
+- **targetIModelId** - iModelId of the duplicate iModel.
+- **comment** - a comment of the transformation.
+
+You can execute the request in [CreateFork](https://developer.bentley.com/apis/transformations/operations/createfork/) page, "Try it out" section.
+
+After executing the request, you should save returned configuration Id from the response as it will be needed in several later steps.
+
+<Alert type="informational">
+
+Use this configuration id to replace FORKING_CONFIGURATION_ID dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language='http' code={`POST https://api.bentley.com/transformations/ HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language='http' code={`Accept: application/json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language='json' code={`{
+  "configurationId": "FORKING_CONFIGURATION_ID"
+}`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language='json' code={`{
+  "transformation": {
+    "errorMessage": "",
+    "processedElementCount": 123,
+    "totalElementCount": 123,
+    "startedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "finishedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "sourceChangeSetId": "1",
+    "lastTargetChangesetPushed": "2",
+    "_links": {
+      "configuration": {
+        "href": "https://dev-api.bentley.com/transformations/configurations/00000000-0000-0000-0000-000000000000"
+      }
+    },
+    "status": "Succeeded",
+    "id": "00000000-0000-0000-0000-000000000000"
+  }
+}`} />
+]}>
+
+### Create CreateFork transformation
+
+You can create transformation by sending POST request to https://api.bentley.com/transformations endpoint with the payload indicating which configuration should be used.
+The request is submitting a transformation job based on the configuration Id value that was provided.
+
+You can execute the request in [Create transformation](/apis/transformations/operations/create-transformation/) page, "Try it out" section.
+
+Response indicates the current status of the transformation. After submitting a transformation the status is "Created" which means that the transformation is enqueued and waiting to start.
+Possible status messages:
+
+- **Created** - transformation is created and waiting to be started. The transformation should start automatically, no additional actions are needed.
+- **Started** - transformation is started and waiting to finish.
+- **Succeeded** - transformation succeeded. You can open the target iModel and inspect the results.
+- **Failed** - transformation failed. Check the errorMessage node for more information on what happened.
+
+After executing the request, save returned transformation Id from the response.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language='http' code={`GET https://api.bentley.com/transformations/{savedTransformationId} HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language='http' code={`Accept: application/json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language='http' code={`Content-Type: application/json`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language='json' code={`{
+  "transformation": {
+    "errorMessage": "",
+    "processedElementCount": 123,
+    "totalElementCount": 123,
+    "startedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "finishedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "sourceChangeSetId": "1",
+    "lastTargetChangesetPushed": "2",
+    "_links": {
+      "configuration": {
+        "href": "https://dev-api.bentley.com/transformations/configurations/00000000-0000-0000-0000-000000000000"
+      }
+    },
+    "status": "Succeeded",
+    "id": "00000000-0000-0000-0000-000000000000"
+  }
+}`} />
+]}>
+
+### Waiting for transformation to finish
+
+Send a GET request to https://api.bentley.com/transformations/TRANSFORMATION_ID endpoint to get an updated transformation status.
+You can execute the request in [Get transformation](/apis/transformations/operations/get-transformation/) page, "Try it out" section.
+
+Query for the transformation multiple times until the **status** changes from **Created** to **Started** and eventually to **Succeeded**.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <LinkButton
+    href="/tutorials/synchronization-storage-tutorial/"
+    target="_blank"
+    title="Synchronize a file from iTwin Storage"
+    buttonText="Open"
+    icon={<ITwinPlatformIcon />}
+  />
+]}>
+
+## 5. Modify forked iModel
+
+After Create Fork transformation succeeds, forked iModel is ready to be modified. You must have at least one new changeset pushed to the forked iModel before it can
+be merged back to the main iModel. There are multiple ways to modify iModel and you can use any of them. If you have no easy way to modify iModel you can follow
+[Synchronize a file from iTwin Storage](/tutorials/synchronization-storage-tutorial/) tutorial from step 4. You will need to use the forked iModel that was created
+in this tutorial instead of creating a new one and you can reuse the registered application and the access token from this tutorial. That tutorial will allow you
+to connect a new file to the iModel and synchronize it, which will bring new changes to the forked iModel and will modify it in the process.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 6. Run MergeFork transformation
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+    <CodeBlock language='http' code={`POST https://api.bentley.com/transformations/configurations/mergefork HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language='http' code={`Accept: application/json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock language='json' code={`{
+  "transformName": "Example name",
+  "sourceProjectId": "00000000-0000-0000-0000-000000000000",
+  "sourceIModelId": "00000000-0000-0000-0000-000000000000",
+  "targetProjectId": "00000000-0000-0000-0000-000000000000",
+  "targetIModelId": "00000000-0000-0000-0000-000000000000",
+  "comment": "Example comment",
+  "transformParameters": {
+    "configurationId": "FORKING_CONFIGURATION_ID"
+  }
+}`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock language='json' code={`{
+  "configuration": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "transformName": "Example name",
+    "comment": "Example comment",
+    "createdDateTime": "0000-00-00T00:00:00.0000000Z",
+    "modifiedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "transformParameters": {
+      "_links": {
+        "configuration": {
+          "href": "https://api.bentley.com/transformations/configurations/FORKING_CONFIGURATION_ID"
+        }
+      }
+    },
+    "_links": {
+      "sourceIModel": {
+        "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000"
+      },
+      "targetIModel": {
+        "href": "https://api.bentley.com/imodels/00000000-0000-0000-0000-000000000000"
+      },
+      "sourceProject": {
+        "href": "https://api.bentley.com/projects/00000000-0000-0000-0000-000000000000"
+      },
+      "targetProject": {
+        "href": "https://api.bentley.com/projects/00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
+}`} />
+]}>
+
+### Create configuration for MergeFork transformation
+
+Once the forked iModel has new changesets it is ready to be merged. Merging the forked iModel back into the main iModel is done by Merge Fork transformation.
+To run it you first need to create a configuration for it. You can do this by sending POST request to
+https://api.bentley.com/transformations/configurations/mergefork endpoint with filled in body payload with this information:
+
+- **transformName** - free form text field so you could name your configuration.
+- **sourceProjectId** - projectId of the forked iModel.
+- **sourceIModelId** - iModelId of the forked iModel.
+- **targetProjectId** - projectId of the main iModel.
+- **targetIModelId** - iModelId of the main iModel.
+- **comment** - a comment of the transformation.
+
+You can execute the request in [MergeFork](https://developer.bentley.com/apis/transformations/operations/mergefork/) page, "Try it out" section.
+
+<Alert type="informational">
+
+Source and target iModels are switched in MergeFork configuration. This means that source project and iModel information comes from the forked iModel and target project and iModel information comes from the main iModel.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language='http' code={`POST https://api.bentley.com/transformations/ HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language='http' code={`Accept: application/json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language='json' code={`{
+  "configurationId": "CONFIGURATION_ID_FROM_LAST_STEP"
+}`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language='json' code={`{
+  "transformation": {
+    "errorMessage": "",
+    "processedElementCount": 123,
+    "totalElementCount": 123,
+    "startedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "finishedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "sourceChangeSetId": "1",
+    "lastTargetChangesetPushed": "2",
+    "_links": {
+      "configuration": {
+        "href": "https://dev-api.bentley.com/transformations/configurations/00000000-0000-0000-0000-000000000000"
+      }
+    },
+    "status": "Succeeded",
+    "id": "00000000-0000-0000-0000-000000000000"
+  }
+}`} />
+]}>
+
+### Create MergeFork transformation
+
+You can create transformation by sending POST request to https://api.bentley.com/transformations endpoint with the payload indicating which configuration should be used.
+The request is submitting a transformation job based on the configuration Id value that was provided.
+
+You can execute the request in [Create transformation](/apis/transformations/operations/create-transformation/) page, "Try it out" section.
+
+Response indicates the current status of the transformation. After submitting a transformation the status is "Created" which means that the transformation is enqueued and waiting to start.
+Possible status messages:
+
+- **Created** - transformation is created and waiting to be started. The transformation should start automatically, no additional actions are needed.
+- **Started** - transformation is started and waiting to finish.
+- **Succeeded** - transformation succeeded. You can open target the iModel and inspect the results.
+- **Failed** - transformation failed. Check the errorMessage node for more information on what happened.
+
+After executing the request, save returned transformation Id from the response.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language='http' code={`GET https://api.bentley.com/transformations/{savedTransformationId} HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language='http' code={`Accept: application/json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language='http' code={`Content-Type: application/json`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language='json' code={`{
+  "transformation": {
+    "errorMessage": "",
+    "processedElementCount": 123,
+    "totalElementCount": 123,
+    "startedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "finishedDateTime": "0000-00-00T00:00:00.0000000Z",
+    "sourceChangeSetId": "1",
+    "lastTargetChangesetPushed": "2",
+    "_links": {
+      "configuration": {
+        "href": "https://dev-api.bentley.com/transformations/configurations/00000000-0000-0000-0000-000000000000"
+      }
+    },
+    "status": "Succeeded",
+    "id": "00000000-0000-0000-0000-000000000000"
+  }
+}`} />
+]}>
+
+### Waiting for transformation to finish
+
+Send a GET request to https://api.bentley.com/transformations/TRANSFORMATION_ID endpoint to get an updated transformation status.
+You can execute the request in [Get transformation](/apis/transformations/operations/get-transformation/) page, "Try it out" section.
+
+Query for the transformation multiple times until the **status** changes from **Created** to **Started** and eventually to **Succeeded**.
+
+Go to [My iTwins](/my-itwins/) and view the target iModel.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 7. Conclusion
+
+We have successfully duplicated the main iModel, created a configuration, ran transformation that connected the forked iModel to the main iModel, waited for the transformation
+to complete. Then after modifying the forked iModel we have successfully created a configuration, ran a transformation that merged back the changes to the main
+iModel and inspected the results.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+<TileList>
+  <Tile
+    name="Synchronize a file from iTwin Storage"
+    thumbnail="/images/synchronizationThumbnail.png"
+    description="Walk-through how to synchronize a file from iTwin Storage to an iModel using Synchronization API."
+    href="/tutorials/synchronization-storage-tutorial/"
+  ></Tile>
+  <Tile
+    name="Synchronize a file from Azure Blob Storage"
+    thumbnail="/images/synchronizationThumbnail.png"
+    description="Walk-through how to synchronize a file from Azure Blob Storage to an iModel using Synchronization API."
+    href="/tutorials/synchronization-blob-tutorial/"
+  ></Tile>
+  <Tile
+    name="Unmap an Azure Blob Storage file from an iModel"
+    thumbnail="/images/synchronizationThumbnail.png"
+    description="Walk-through how to unmap an Azure Blob Storage file from an iModel using Synchronization API."
+    href="/tutorials/synchronization-storage-tutorial/"
+  ></Tile>
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="CreateFork documentation"
+    href="/apis/transformations/operations/createfork/"
+    description="iModel Transformations API CreateFork endpoint documentation."
+  />
+  <LinkCard
+    title="MergeFork documentation"
+    href="/apis/transformations/operations/mergefork/"
+    description="iModel Transformations API MergeFork endpoint documentation."
+  />
+  <LinkCard
+    title="Transformations API documentation"
+    href="/apis/transformations/overview/"
+    description="iModel Transformations API documentation."
+  />
+</TileList>
+
+</ContinueLearningSection>

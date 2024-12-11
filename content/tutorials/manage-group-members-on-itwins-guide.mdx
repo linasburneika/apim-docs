@@ -1,0 +1,265 @@
+---
+title: 'Manage Group Members on iTwins'
+version: 1
+tile:
+  name: 'Manage Group Members on iTwins'
+  description: 'This tutorial will guide you through the process of managing iTwin group members'
+  href: '/tutorials/manage-group-members-on-itwins-guide'
+  durationInMinutes: 15
+  relatedApiIds: ['accesscontrol']
+  showInFirstSteps: false
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="15">
+
+## Introduction
+
+<Alert>
+
+This tutorial is for the [Access Control API V2](/apis/access-control-v2/overview/). To control the API version, [see the API versions documentation](/apis/overview/lifecycle/#api-versions).
+
+</Alert>
+
+This tutorial will take you through the process of adding and retrieving group members for a given iTwin. Members are groups which have been assigned a role, in turn giving them a set of permissions. See [iTwin Groups](/apis/access-control-v2/overview/#accesscontrolgroups) for more information on managing groups of users. Members can be assigned more than one role and the same role can be assigned to more than one member.
+
+By the end of this walk-through, you will be able to utilize the API endpoints in order to invite groups to an iTwin, and retrieve the list of iTwin group members.
+
+</Introduction>
+
+<TutorialSection
+  actions={[
+    <LinkButton
+      href="https://www.google.com/chrome/"
+      target="_blank"
+      title="Google Chrome"
+      icon={<GoogleChromeIcon />}
+    />,
+    <LinkButton
+      href="https://code.visualstudio.com/"
+      target="_blank"
+      title="Visual Studio Code"
+      icon={<VSCodeIcon />}
+    />,
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- A tool, such as `Postman` that can be used to execute HTTP calls. These calls can also be made using the **Try it out** button in the API documentation.
+- If a user is affiliated with an Organization, the user must be an Organization Administrator to create an iTwin. An Organization Administrator must have at least one of the following roles assigned in User Management: Account Administrator, Co-Administrator, or CONNECT Services Administrator. For more information about User Management please visit our Bentley Communities [Licensing, Cloud, and Web Services](https://bentleysystems.service-now.com/community?id=kb_article_view&sys_kb_id=1e5410491b7d8a90f3fc5287624bcb57) wiki page.
+- An iTwin role. For more information on creating an iTwin role, see [create and query iTwins roles guide](/tutorials/create-and-query-itwin-roles-guide/).
+- An iTwin group. For more information on creating an iTwin group, see [create and query iTwins groups guide](/tutorials/create-and-query-itwin-groups-guide/).
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Create and Query iTwins tutorial"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorizesinglepageapplicationsspaanddesktopmobileapplicationsnative) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+Before you can make a request to the APIs, a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use Client ID generated from previous registration step.
+
+</Alert>
+
+### Grab a user token from the iTwins documentation page
+
+1. Go [here](/apis/access-control/operations/get-iTwin-roles/)
+2. Click **Try it out** button.
+3. Under the `Authorization` section, select `authorizationCode` from the dropdown.
+4. After the sign in popup closes, the `Authorization` header with token value should be visible beneath the `HTTP request` dropdown.
+5. Copy & paste the `Authorization` value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`POST https://api.bentley.com/accesscontrol/itwins/{id}/members/groups HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "members": [
+        {
+            "groupId": "149d0860-39e9-4ae9-9b05-0b5dcedd2d4b",
+            "roleId": "85d7734e-d884-4009-bbbe-18bd1e809351"
+        }
+    ]
+}`}
+/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 201 Created
+cache-control: must-revalidate, no-cache, private
+content-encoding: gzip
+content-type: application/json
+date: Wed, 30 Jun 2021 19:30:40 GMT
+mas-request-id: 744155a0-f492-44a9-b78d-3a8c516f53ee
+mas-server: Bentley-WSG/4.0.12,Bentley-WebAPI/2.9
+pragma: no-cache
+request-context: appId=cid-v2:7a353d36-9a8b-423e-965e-9d7f51324584
+vary: Accept-Encoding
+x-correlation-id: d1999ea1-62bd-4e84-8e5d-1a8aac040de4
+x-itwinplatform-media-type: bentley.itwin-platform.v2
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "members": [
+        {
+            "id": "149d0860-39e9-4ae9-9b05-0b5dcedd2d4b",
+            "groupName": "iTwin Administrators",
+            "groupDescription": "This is a group of Administrators for an iTwin",
+            "roles": [{
+                "id": "0af949d5-af90-4eed-84e0-d4d860f723d0",
+                "displayName": "iTwin Administrator",
+                "assignedDateTime": "2022-08-29T18:05:19.537846"
+            }]
+        }
+    ]
+}`}
+/>,
+]}>
+
+## 3. Add iTwin Group Member
+
+The [Add iTwin group member](/apis/access-control/operations/add-iTwin-group-members/) endpoint is used to add group members to a given iTwin.
+
+`iTwin id` is a required parameter. The `role id` from an existing Role (see [create and query iTwins roles guide](/tutorials/create-and-query-itwin-roles-guide/)) is required to create a add an user member to an iTwin. `group id` and the `role id` are required in the POST body.
+
+The POST call will return the added group member(s).
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`GET https://api.bentley.com/accesscontrol/itwins/{id}/members/groups HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+content-length: 480
+content-type: application/json
+date: Wed, 30 Jun 2021 19:46:24 GMT
+request-context: appId=cid-v2:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 7a199ff9-317f-4d4f-ba82-70ba25f31d32
+x-itwinplatform-media-type: bentley.itwin-platform.v2
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "members": [{
+            "id": "149d0860-39e9-4ae9-9b05-0b5dcedd2d4b",
+            "groupName": "iTwin Administrators",
+            "groupDescription": "This is a group of Administrators for an iTwin",
+            "roles": [{
+                "id": "0af949d5-af90-4eed-84e0-d4d860f723d0",
+                "displayName": "iTwin Administrator",
+                "assignedDateTime": "2022-08-29T18:05:19.537846"
+            }]
+        }, {
+            "id": "149d0860-39e9-4ae9-9b05-0b5dcedd2d4b",
+            "groupName": "iTwin Engineers",
+            "groupDescription": "This is a group of engineers",
+            "roles": [{
+                "id": "0af949d5-af90-4eed-84e0-d4d860f723d0",
+                "displayName": "iTwin Editing",
+                "assignedDateTime": "2022-08-29T18:05:19.537846"
+            }]
+        }],
+  "_links":{
+    "self":{
+      "href":"https://api.bentley.com/accesscontrol/efa557b7-ecd7-4a60-9589-2acce11f6cc9/members/groups?$top=100&$skip=0"
+    }
+  }
+}`}
+/>,
+]}>
+
+## 4. Query for Group Members using the iTwin Id
+
+The `Id` query parameter can be used to [retrieve a list of group members](/apis/access-control/operations/get-iTwin-group-members/) using the `iTwin Id`.
+
+The api will return a list of group members for the given iTwin.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Create and Query iTwins Guide"
+    href="/tutorials/create-and-query-itwins-guide/"
+    description="Tutorial for creating and querying iTwins."
+    isExternal={false}
+  />
+  <LinkCard
+    title="Create and Query iTwins Groups Guide"
+    href="/tutorials/create-and-query-itwin-groups-guide/"
+    description="Tutorial for creating and querying iTwin groups."
+    isExternal={false}
+  />
+  <LinkCard
+    title="Create and Query iTwins Roles Guide"
+    href="/tutorials/create-and-query-itwin-roles-guide/"
+    description="Tutorial for creating and querying iTwin roles."
+    isExternal={false}
+  />
+</TileList>
+
+</ContinueLearningSection>

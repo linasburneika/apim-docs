@@ -1,0 +1,591 @@
+---
+title: 'Running the PnID ML Pipeline'
+version: 1
+tile:
+  name: 'Running the PnID ML Pipeline'
+  description: 'Walk-through on how to run the PnID ML Model and get your Results.'
+  href: '/tutorials/running-the-pnid-pipeline/'
+  durationInMinutes: 15
+  relatedApiIds: ['synchronization/pnidtoitwin']
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="15">
+
+## Introduction
+
+Use this quick start to help you understand how to create a PnID inference run and retrieve its results.
+
+By the end of this walk-through, you will have all the tools you need to take any PnID drawings with piping components and
+run it through the PnID interface. You will gain familiarity with the workflow and all APIs
+involved and be able to integrate the PnID model into your iTwin-Powered
+applications.
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+This tutorial assumes that you have:
+
+- Created and configured a project iTwin. For instructions on creating a project iTwin, see
+  [Create and Query iTwins](/tutorials/create-and-query-itwins-guide). You can use an existing Project
+  if you have access to one.
+- Prepared PnID drawings with piping components.
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Design Element Classification client"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+To make requests to this APIs a valid user token is required. There are several ways to get one.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement the
+Authorization Code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use the Client ID generated from previous application registration step.
+
+</Alert>
+
+### Grab a user token from Api reference "Try it" Section
+
+1. Go to the [API Documentation](/apis/pnid-to-itwin-v2/operations/get-itwin-inferences/).
+1. Click the "Try it" button.
+1. For Authorization section select "AuthorizationCode".
+1. After the login popup closes, the Authorization header with your user token value should be visible.
+1. Save your user token value to reuse later.
+
+<Alert type="informational">
+
+Use user token to replace the 'JWT_TOKEN' placeholder parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Choose available PnID Model versions
+
+Select an existing model version to use for your inference Run. See [Model versions](/apis/pnid-to-itwin-v2/model-versions/) to view the supported PnID model versions.
+
+<Alert type="informational">
+
+We recommend using the latest model version; however, if backward compatibility is required, use the appropriate version of the model.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`POST https://api.bentley.com/synchronization/pnidtoitwin/inferences HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json" code={`{
+  "modelVersion":"1.3",
+  "iTwinId":"ea9cb5ab-22c5-4cef-807a-df47f07b01f3",
+}`}/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={'Content-Type: application/json'}/>,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json" code={`{
+    "inference": {
+        "id": "bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3",
+        "modelVersion": "1.3",
+        "lastModifiedDateTime": "2022-01-20T14:45:47.073Z",
+        "createdDateTime": "2022-01-20T14:45:47.073Z",
+        "_links": {
+            "iTwin": {
+                "href": "https://api.bentley.com/itwins/ea9cb5ab-22c5-4cef-807a-df47f07b01f3"
+            },
+            "run": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/run"
+            },
+            "inputs": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/inputs"
+            },
+            "results": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/run/results"
+            }
+        }
+    }
+}`}/>
+]}>
+
+## 4. Create a new PnID inference
+
+Use the [Create Inference](/apis/pnid-to-itwin-v2/operations/create-inference/)
+API to create PnID inference for the provided project.
+
+You have a couple of parameters available for configuring the PnID:
+
+- **modelVersion** - PnID Model version chosen from step 3.
+- **iTwinId** - Id of the iTwin that created the PnID Inference.
+
+<Alert type="informational">
+
+Note the inference ID that is returned when creating a Inference will be needed in later steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`POST https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID/inputs HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/pdf
+Content-Dispposition: attachment; filename="pnid_1.pdf"`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={'Content-Type: application/json'}/>,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json" code={`{
+    "input": {
+        "id": "cG5pZC5wZGY-",
+        "filename": "pnid.pdf",
+        "size": 100,
+        "_links": {
+            "inputs": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/inputs"
+            },
+            "inference": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3"
+            }
+        }
+    }
+}`}/>
+]}>
+
+## 5. Upload data to PnID Inference Input.
+
+Use the [Upload Inference Input Content](/apis/pnid-to-itwin-v2/operations/upload-inference-input-content/)
+API to create or replace one of the PnID Inference Input files on which inference will run.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`POST https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID/run HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={'Content-Type: application/json'}/>,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json" code={`{
+    "run": {
+        "status": "inProgress",
+        "duration": "PT10M",
+        "progress": 0.1,
+        "createdDateTime": "2022-01-20T14:45:47.073Z",
+        "_links": {
+            "inputs": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/inputs"
+            },
+            "results": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/results"
+            },
+            "inference": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3"
+            }
+        }
+    }
+}`}/>
+]}>
+
+## 6. Starts PnID Inference Run after all inputs are uploaded.
+
+Use the [Create Inference Run](/apis/pnid-to-itwin-v2/operations/create-inference-run/)
+API to start PnID inference Run after all inputs are uploaded.
+
+<Alert type="informational">
+
+Run status may be **Queued** for a short time while the process kicks off.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection 
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID/run HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={'Content-Type: application/json'}/>,
+  <Title>Response Body</Title>,
+    <CodeBlock language="json" code={`{
+      "run": {
+          "status": "inProgress",
+          "duration": "PT10M",
+          "progress": 0.1,
+          "createdDateTime": "2022-01-20T14:45:47.073Z",
+          "_links": {
+              "inputs": {
+                  "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/inputs"
+              },
+              "results": {
+                  "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/results"
+              },
+              "inference": {
+                  "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3"
+              }
+          }
+      }
+  }`}/>
+]}>
+
+### Query status
+
+To check the status of a run, use [Get Inference Run Status](/apis/pnid-to-itwin-v2/operations/get-inference-run/).
+
+- **Finished** - Run has successfully completed. Results are ready to be used.
+- **Canceled** - Run was canceled by user.
+- **Failed** - Run failed to complete.
+- **NotStarted** - Run has not been triggered.
+- **Queued** - Run was created, but has not started.
+- **InProgress** - Run was created and has started. Waiting for completion.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 7. Retrieve Run output
+
+Download the results once a PnID Run has successfully completed.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID/run/results HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Headers</Title>,
+    <CodeBlock language="http" code={'Content-Type: application/json'}/>,
+    <Title>Response Body</Title>,
+    <CodeBlock language="json" code={`{
+    "results": [{
+        "id": "cG5pZF9wZGZfcDAwMDAxLmpzb24-",
+        "filename": "pnid_pdf_p00001.json",
+        "size": 100,
+        "_links": {
+            "content": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/run/results/cG5pZF9wZGZfcDAwMDAxLmpzb24-/content"
+            }
+        }
+    }],
+    "_links": {
+        "self": {
+            "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/run/results"
+        },
+        "inference": {
+            "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3"
+        }
+    }
+}`}/>
+]}>
+
+### Get Inference Run Results
+
+Fetch a list of all pipeline results using the [Get Inference Run Results](/apis/pnid-to-itwin-v2/operations/get-inference-run-results/)
+API.
+
+</TutorialSection>
+
+<TutorialSection 
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/pnidtoitwin/inferences/{inferenceId}/run/results/FILE_ID/content HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />
+]}>
+
+### Get Inference Run Result Content
+
+To download a specific file from the Results, use the [Get Inference Run Result Content](/apis/pnid-to-itwin-v2/operations/get-inference-run-result-content/)
+API.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/pnidtoitwin/inferences?iTwinId=ITWIN_ID HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={'Content-Type: application/json'}/>,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json" code={`{
+    "inferences": [{
+        "id": "bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3",
+        "modelVersion": "1.3",
+        "lastModifiedDateTime": "2022-01-20T14:45:47.073Z",
+        "createdDateTime": "2022-01-20T14:45:47.073Z",
+        "_links": {
+            "iTwin": {
+                "href": "https://api.bentley.com/itwins/ea9cb5ab-22c5-4cef-807a-df47f07b01f3"
+            },
+            "run": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/run"
+            },
+            "inputs": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/inputs"
+            },
+            "results": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/run/results"
+            }
+        }
+    }],
+    "_links": {
+        "next": {
+            "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences?iTwinId=ea9cb5ab-22c5-4cef-807a-df47f07b01f3&$top=100&$continuationToken=eyJOZXh0UGFydGl0aW9uS2V5IjoiMSExMDAhT0RnMll6TmlOMlF0TnpNM1pDMDBOakUwTFRsaE4yTXROV1JsTlRobE5qTm1OVGc0WHpBNFlqZzROVEV3TFdNek1tTXRORGt4WWkwNVpqZGhMVEZpTXpBd016azFPV1F6TlEtLSIsIk5leHRSb3dLZXkiOiIxASD4IU56Y3dNREU1T1RFdFl6UmpZeSAbTUdKaUxUa3dOMlV0WXpPrewtSmhZV0k0WlRBMSIsIk5leHRUYWJsZU5hbWUiOm51bGwsIlLncmdldExvY2F0aW9uIjowfQ--"
+        },
+        "self": {
+            "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences?iTwinId=ea9cb5ab-22c5-4cef-807a-df47f07b01f3&$top=100"
+        }
+    }
+}`}/>
+]}>
+
+## 8. Get previous inferences in a iTwin
+
+All PnID Runs are associated with a iTwin. To get a history of all Runs
+you can call the [Get iTwin Inferences](/apis/pnid-to-itwin-v2/operations/get-itwin-inferences/)
+API.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 9. Advanced
+
+We provide some additional APIs that provide a little more control and management over your PnID Inferences Runs.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={`DELETE https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID/run HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />
+]}>
+
+### Cancel execution of PnID Inference Run.
+
+PnID Runs are complex and can take a long time to complete. Runs can be cancelled using
+the [Delete Inference Run](/apis/pnid-to-itwin-v2/operations/delete-inference-run/) API
+so you don't have to waste time waiting for Runs to naturally fail or complete when unnecessary.
+
+</TutorialSection>
+
+<TutorialSection 
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={`DELETE https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />
+]}>
+
+### Delete PnID Inference
+
+We strongly recommend deleting canceled Runs. You might also want to clean up a Project of stale or unnecessary
+historical Runs. Use the [Delete Inference](/apis/pnid-to-itwin-v2/operations/delete-inference/)
+API for this.
+
+<Alert type="informational">
+
+Only completed Runs can be deleted. Completed Run statuses: **Failed**, **Canceled**, **Finished**.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection 
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID/inputs HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+    <Title>Response Headers</Title>,
+    <CodeBlock language="http" code={'Content-Type: application/json'}/>,
+    <Title>Response Body</Title>,
+    <CodeBlock language="json" code={`{
+    "inputs": [{
+        "id": "cG5pZC5wZGY-",
+        "filename": "pnid.pdf",
+        "size": 100,
+        "_links": {
+            "input": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/inputs/cG5pZC5wZGY-"
+            },
+            "content": {
+                "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/inputs/cG5pZC5wZGY-/content"
+            }
+        }
+    }],
+    "_links": {
+        "self": {
+            "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/inputs"
+        },
+        "inference": {
+            "href": "https://api.bentley.com/synchronization/pnidtoitwin/inferences/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3"
+        }
+    }
+}`}/>
+]}>
+
+### Get PnID Inference Inputs
+
+Inference can contain several input files. To see the list of added inputs files use the [Get Inference Inputs](/apis/pnid-to-itwin-v2/operations/get-inference-inputs/)
+API.
+
+</TutorialSection>
+
+<TutorialSection 
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID/inputs/FILE_ID/content HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+    <Title>Response Headers</Title>,
+    <CodeBlock language="http" code={'Content-Type: application/json'}/>,
+]}>
+
+### Get PnID Inference Input Content
+
+If there is a need to download the contents of a previously uploaded input file, use the [Get Inference Input Content](/apis/pnid-to-itwin-v2/operations/get-inference-input-content/)
+API.
+
+</TutorialSection>
+
+<TutorialSection 
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={`DELETE https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID/inputs/FILE_ID HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />
+]}>
+
+### Delete PnID Inference Input
+
+If an invalid file was uploaded for inference, it is possible to remove that file. Use the [Delete Inference Input](/apis/pnid-to-itwin-v2/operations/delete-inference-input/)
+API for this.
+
+</TutorialSection>
+
+<TutorialSection 
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/pnidtoitwin/inferences/INFERENCE_ID HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock language="json" code={`{
+      "inference": {
+          "id": "bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3",
+          "modelVersion": "1.3",
+          "lastModifiedDateTime": "2022-01-20T14:45:47.073Z",
+          "createdDateTime": "2022-01-20T14:45:47.073Z",
+          "_links": {
+              "iTwin": {
+                  "href": "https://api.bentley.com/projects/ea9cb5ab-22c5-4cef-807a-df47f07b01f3"
+              },
+              "run": {
+                  "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/run"
+              },
+              "inputs": {
+                  "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/inputs"
+              },
+              "results": {
+                  "href": "https://api.bentley.com/synchronization/pnidtoitwin/bcbc71d4-c4d8-4cf7-b1fe-aaa194cd61c3/run/results"
+              }
+          }
+      }
+  }`}/>
+]}>
+
+### Get PnID Inference by specified Id
+
+In order to get some information about already created inference you should use the [Get Inference](/apis/pnid-to-itwin-v2/operations/get-inference/)
+API for this.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## Conclusion
+
+Congratulations on completing this tutorial, at this point you should have been able to create PnID run for PnID drawings with piping components, query run status and finally download run results.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Reporting & Insights"
+    href="/api-groups/reporting-and-insights"
+    description="An overview and detailed Reporting & Insights API group documentation."
+  />
+</TileList>
+
+</ContinueLearningSection>

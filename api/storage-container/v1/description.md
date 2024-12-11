@@ -1,1 +1,0 @@
-CRUD API for creating and managing Cloud Storage Containers.

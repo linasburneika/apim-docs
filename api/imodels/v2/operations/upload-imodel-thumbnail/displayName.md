@@ -1,1 +1,0 @@
-Upload iModel Thumbnail

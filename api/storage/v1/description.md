@@ -1,1 +1,0 @@
-Storage API allowing quick files managing

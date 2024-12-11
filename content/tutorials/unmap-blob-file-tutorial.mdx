@@ -1,0 +1,221 @@
+---
+title: 'Unmap an Azure Blob Storage file from an iModel'
+version: 1
+tile:
+  name: 'Unmap an Azure Blob Storage file from an iModel'
+  description: 'Walk-through how to unmap an Azure Blob Storage file from an iModel using Synchronization API.'
+  thumbnail: '/images/synchronizationUnmap.png'
+  href: '/tutorials/unmap-blob-file-tutorial/'
+  durationInMinutes: 10
+  relatedApiIds: ['synchronization', 'imodels']
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="10">
+
+## Introduction
+
+This tutorial guides you through deleting the mapping of an Azure Blob Storage file using the Synchronization API. All changes, made by the file, will be removed from an iModel. To delete the mapping of a file, the connection has to be run again with the action set to unmap. That means you should already have a connection.
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+Since deleting a mapping removes a file from an iModel, the following tasks have to be done before attempting this process:
+
+- Create an iModel.
+- Create a connection.
+- Run a connection.
+- (Optional) Get connection run status - to confirm that the file is successfully mapped to the iModel.
+
+For a detailed guide, see [Synchronization tutorial](/tutorials/synchronization-blob-tutorial/). If you have completed these tasks, the next steps will guide you through the workflow of deleting a mapping.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 1. Run the connection with unmap action
+
+This step is similar to simply running the connection for file synchronization, however, the mapping deletion request contains an additional "action" property.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language="http" code={`POST https://api.bentley.com/synchronization/imodels/manifestConnections/CONNECTION_ID/runs HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />
+  ]}
+>
+
+#### Request
+
+To delete a file mapping, send a POST request to the synchronization/imodels/manifestConnections/CONNECTION_ID/runs endpoint with a valid connection ID.
+
+- Authorization header with valid Bearer token is required.
+- CONNECTION_ID which should be started for processing.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock
+  language="json"
+  code={`{
+    "sourceFiles": [{
+        "id": "FILE_ID",
+        "action": "unmap",
+        "connector": "MSTN"
+    }]
+}`}
+/>
+  ]}
+>
+
+#### Request Body
+
+- **sourceFiles** - information about source files
+  - **id** - id of the file
+  - **action** - setting this property to **unmap** will trigger the connection to run the mapping deletion process instead of synchronization
+  - **connector** - file connector identifier.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}
+actions={[
+<CodeBlock language="http" code={`HTTP/1.1 202 Accepted`} />
+]}>
+
+#### Response
+
+On a successful request, the operation returns http status code 202/accepted - the request is accepted for processing and will be executed in the background.
+If there is an active run in progress for this connection, a new run is added to the queue. The response includes a location header pointing to the created run.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get run status
+
+The run from the previous step contains the mapping deletion process status. To track a run and associated status, make a GET request to a link from previous request response location header.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/imodels/manifestConnections/CONNECTION_ID/runs/RUN_ID HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  ]}
+>
+
+#### Request
+
+To get the status of the run, send a GET request to the synchronization/imodels/manifestConnections/CONNECTION_ID/runs/RUN_ID endpoint with a valid connection and run ID. For convenience take a link from previous request response location header.
+
+- Authorization header with valid Bearer token is required.
+- CONNECTION_ID of the run we want to get.
+- RUN_ID of the run we want to get.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock
+  language="json"
+  code={`{
+    "run": {
+        "id": "RUN_ID",
+        "startDateTime": "02/15/2022 08:24:45",
+        "endDateTime": "02/15/2022 08:26:50",
+        "phase": "MasterFile",
+        "jobs": [
+            {
+                "id": "JOB_ID",
+                "startDateTime": "02/15/2022 08:25:58",
+                "endDateTime": "02/15/2022 08:26:28",
+                "state": "Completed",
+                "result": "Success",
+                "connectorType": "MSTN",
+                "tasks": [
+                    {
+                        "id": "TASK_ID",
+                        "startDateTime": "02/15/2022 08:25:58",
+                        "endDateTime": "02/15/2022 08:26:28",
+                        "retryAttempts": 0,
+                        "state": "Completed",
+                        "result": "Success",
+                        "error": null
+                    }
+                ]
+            }
+        ],
+        "state": "Completed",
+        "result": "Success"
+    }
+}`}
+/>
+  ]}
+>
+
+#### Response
+
+After the mapping deletion process is finished, the run state should be "Completed" and result "Success".
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Conclusion
+
+In this tutorial we have gone through the process of deleting the mapping of an Azure Blob Storage file:
+
+- Run the connection with unmap action
+- Get run status.
+
+After a successful run, the iModel should no longer contain the design file.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulations on the completion of your first file mapping deletion process! Now you know a lot on the subject, but there are still possibilities to learn more to unlock the platform capabilities.
+
+<TileList>
+  <Tile
+    name="Create iModel Named Version"
+    description="This quick start is intended to guide you through the steps to create a new iModel Named Version."
+    href="/tutorials/create-named-version"
+  ></Tile>
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Synchronization API documentation"
+    href="/api-groups/synchronization"
+    description="An overview and detailed Synchronization API documentation."
+  />
+  <LinkCard
+    title="Synchronization API code sample"
+    href="https://github.com/iTwin/synchronization-api-sample-app"
+    description="A working code sample showing how Synchronization API can be integrated into a React application."
+    isExternal={true}
+  />
+  <LinkCard
+    title="Data Management API documentation"
+    href="/api-groups/data-management/"
+    description="An overview and detailed Data Management API documentation."
+  />
+</TileList>
+
+</ContinueLearningSection>

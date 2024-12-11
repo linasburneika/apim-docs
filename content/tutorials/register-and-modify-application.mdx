@@ -1,0 +1,376 @@
+---
+title: 'Register and modify an Application'
+version: 1
+tile:
+  name: 'Register and modify an Application'
+  description: 'Before you can start using iTwin Platform REST APIs you need to create an application. This tutorial covers basic application registration and modification steps.'
+  href: '/tutorials/register-and-modify-application/'
+  durationInMinutes: 15
+  relatedApiIds: []
+---
+
+<Introduction skillLevel="Basic" durationInMinutes="15">
+
+## Introduction
+
+Before you can start using iTwin Platform REST APIs you need to create an application. Registered application gives you an ability to access iTwin Platform REST APIs and manage client accesses (scopes). This tutorial covers basic application registration and modification steps.
+
+</Introduction>
+
+<TutorialSection>
+
+## 1. Sign in or sign up for a Bentley account
+
+Before you register your first application you need to have a Bentley account to Sign In to iTwin Platform Portal. Only signed-in users can create, view, edit or delete applications.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>Create Your Account form</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/create-account-form.png"
+     alt="Create Your Account"
+     className="sample-img-m"
+   />,
+  <Title>Email Address verification</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/verify-email-address.png"
+     alt="Verify Email Address"
+     className="sample-img-m"
+   />
+]}>
+
+### 1.1 Create your Bentley account
+
+If you don't have a Bentley account yet, you can create one by following these steps:
+
+1. Go to [https://developer.bentley.com](https://developer.bentley.com)
+1. Click the **Sign In** button. You will be redirected to Sign In page
+1. Click **Don't have an account? Register now** link. You will be redirected to account registration page
+1. Fill in the appropriate information for each of the text boxes
+1. When the form is complete, click **Create Account**. You will be redirected to email verification page
+1. Enter **Verification Code**. You should receive an email from `no-reply@bentley.com` to address you entered in registration form with **Verification Code**
+1. Click **Verify**
+
+Now you can [Sign-in](#sign-in) using your newly created Bentley account credentials.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>Sign in page</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/sign-in-page.png"
+     alt="Sign in"
+     className="sample-img-m"
+   />
+]}>
+
+### 1.2 Sign in
+
+To Sign In to iTwin Platform Portal you need to:
+
+1. Go to [https://developer.bentley.com](https://developer.bentley.com)
+1. Click the **Sign In** button. You will be redirected to Sign In page
+1. Sign-in using your Bentley account credentials
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Application registration form</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/register-your-application-form.png"
+     alt="Application registration form"
+     className="sample-img-l"
+   />
+]}>
+
+## 2. Register an application
+
+<Alert type="informational">
+
+To create an application you must Sign in. Only signed-in users can create, view, edit or delete applications.
+
+</Alert>
+
+Before you can start using iTwin Platform REST APIs you need to create an application. Registered application gives you an ability to access iTwin Platform REST APIs and manage client accesses (scopes).
+
+To register an application follow these instructions:
+
+1. Go to the **[My Apps](/my-apps)** page
+1. Click the **+ Register New** to open new application registration form
+1. Give your application a **Name**
+1. Select **API associations** you are going to use
+   - API association represents set of APIs. Full list of API associations with their APIs you can find on [iTwin Platform Documentation](/apis) page.
+   - Each API endpoint requires certain OAuth scopes. When you select API associations that your application will use, registration form will allow you to chose scopes that are available in these associations.
+1. Change the scope list to give your application appropriate accesses
+   - Make sure you selected correct API associations. You will see only a set of scopes from selected API associations.
+1. Select your **Application type** (SPA, Web App, Service or Desktop/Mobile)
+
+   - **Single Page Application (SPA)** is a web application that runs in a browser and does not require the page to be reloaded.
+   - **Web App** is a traditional web application where every change involves a new request for the server to provide an HTML page.
+   - **Service** represents an automated service with no human interaction.
+   - **Desktop/Mobile** is an application that runs on a desktop computer or mobile device.
+
+     <Alert type="informational">
+
+     Make sure you choose valid Application type. You won't be able to change it later.
+
+     </Alert>
+
+1. Enter **Redirect URIs**
+   - **Redirect URI** specifies the location where the authorization server can send the user once the application has been successfully authorized.
+   - If you create your application to complete some other tutorial, you can use `http://localhost:3000/signin-callback` as a **Redirect URI**.
+1. Enter **Post logout redirect URIs** (Optional)
+   - **Post logout redirect URI** specifies the location where the authorization server can send the user after a logout.
+   - If you create your application to complete some other tutorial, you can leave **Post logout redirect URIs** empty.
+1. Please review and acknowledge the [Terms of Service](https://connect-agreementportal.bentley.com/AgreementApp/Home/Eula/view/readonly/BentleyConnect). By proceeding to register your application, you agree to our [Terms of Service](https://connect-agreementportal.bentley.com/AgreementApp/Home/Eula/view/readonly/BentleyConnect)
+1. Click **Save** to submit application creation
+
+<Alert type="informational">
+
+After registering a **Service** or **Web App** application, you will see the success dialog with your **Client Secret**. Make sure you copy and save it. We don't store it
+and you will not be able to see it again.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>My Apps table</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/my-apps-page.png"
+     alt="My Apps table"
+     className="sample-img-l"
+   />,
+  <Title>Application details page</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/app-details-page.png"
+     alt="Application details page"
+     className="sample-img-l"
+   />
+]}>
+
+## 3. View an application
+
+<Alert type="informational">
+
+To view an application you must Sign in. Only signed-in users can create, view, edit or delete applications.
+
+</Alert>
+
+Now that you have registered an application, you can see it in My Apps table on **[My Apps](/my-apps)** page. To see all application details:
+
+1. Go to **[My Apps](/my-apps)** page
+1. Find application in a table
+1. Click on its title link. You will navigate to selected application details page.
+
+This page has all information about your application:
+
+- **Application name** - A human-readable name for your application.
+- **Application type** - Type of your application. Cannot be changed.
+- **Client ID** - A unique identifier for your application.
+- **Client email** (only for **Service** applications) - fake user email, created for role assignment.
+- **Scopes** - list of accesses granted to the application.
+- **Redirect URIs** (only for **SPA**, **Web App**, **Desktop/Mobile** applications) - the list of locations where the authorization server can send the user once the application has been successfully authorized.
+- **Post logout redirect URIs** (only for **SPA**, **Web App**, **Desktop/Mobile** applications) - the list of locations where the authorization server can send the user after a logout.
+- **Regenerate client secret** button (only for **Service** and **Web App** applications) - a control to regenerate **Client Secret** if the one given during application registration was missed.
+- **Owners** - list of users that can view, edit or delete this application.
+- **API associations** - list of APIs that can be used by your application.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Edit an application
+
+<Alert type="informational">
+
+To edit an application you must Sign in. Only signed-in users can create, view, edit or delete applications.
+
+</Alert>
+
+As an owner of application you can easily change it anytime. To edit an application you need to:
+
+1. Go to **[My Apps](/my-apps)** page
+1. Find application in a table
+1. Click on its title link. You will navigate to selected application details page
+
+Application details that can be changed:
+
+- **Application name** - A human-readable name for your application.
+- **Redirect URIs** (only for **SPA**, **Web App**, **Desktop/Mobile** applications) - the list of locations where the authorization server can send the user once the application has been successfully authorized.
+- **Post logout redirect URIs** (only for **SPA**, **Web App**, **Desktop/Mobile** applications) - the list of locations where the authorization server can send the user after a logout.
+- **Owners** - list of users that can view, edit or delete this application.
+- **API associations** - list of APIs that can be used by your application.
+- **Scopes** - list of accesses granted to the application.
+
+**Application name**, **Redirect URIs**, **Post logout redirect URIs** can be simply changed by editing their content or adding additional values (for URIs) and clicking **Save** button, but other properties require more manipulations.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>API associations card</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/api-associations.png"
+     alt="API associations card"
+     className="sample-img-m"
+   />,
+   <Title>Add APIs dialog</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/add-apis-dialog.png"
+     alt="Add APIs dialog"
+     className="sample-img-m"
+   />
+]}>
+
+### 4.1 Adding or removing APIs
+
+To add or remove API in API associations list, follow these instructions:
+
+1. Scroll down to API associations card
+1. Click **Add APIs** button
+   - You will see a modal window with list of API groups.
+1. Select APIs you want to add by toggling them ON
+   - Some API groups have more than one API. If you want to select single APIs from group - expand the API list and toggle each API separately.
+1. Select APIs you want to remove by toggling them OFF
+1. Click **Save**
+   - Now you can see that your API associations list has changed and all APIs you have selected are in the list.
+   - At this point your changes are not submitted yet. If you refresh the page - changes won't be saved.
+1. To submit your changes (if any have been made) you need to click **Save** button at the bottom of the page
+   - The success toast message will inform that your changes were successfully saved.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>Expanded "Manage your scopes"</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/api-scopes-expanded.png"
+     alt="Manage your scopes"
+     className="sample-img-m"
+   />
+]}>
+
+### 4.2 Changing scopes
+
+Each API in your API associations list has it's own list of scopes that can be changed. To manage API scopes that are assigned to your app, follow these instructions:
+
+1. Scroll down to API associations card
+1. Find API for which you want to manage scopes
+1. Expand **Manage your scopes** of selected API
+1. Toggle ON scopes you want to be granted to your application
+1. Toggle OFF scopes you do not want to be granted to your application
+1. To submit your changes (if any have been made) you need to click **Save** button at the bottom of the page
+   - The success toast message will inform that your changes were successfully saved.
+
+After successful save you can see that your scope list have changed and all scopes you selected are in the list.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 4.3 Managing application Owners
+
+You can add users with Bentley account as an owners of your application. This will allow them to see, edit or delete your application.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+   <img
+     src="/images/tutorials/register-and-modify-application/add-owner.png"
+     alt="Adding owner"
+     className="sample-img-m"
+   />
+]}>
+
+#### Add application owner
+
+To add an additional owner, follow these instructions:
+
+1. Click **Add owner** button. You will get an input for typing an email address
+1. Type in an email of user you want to share ownership with
+1. Click **Add**
+   - The toast message will inform that user is being added to owners list.
+
+After success toast message you will see that user is now added to application owners list. Now user, who was added to owners list should see your application on [My Apps](/my-apps) page.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+   <img
+     src="/images/tutorials/register-and-modify-application/remove-owner.png"
+     alt="Remove application owner"
+     className="sample-img-m"
+   />
+]}>
+
+#### Remove application owner
+
+To remove an additional owner, follow these instructions:
+
+1. Click **x** (cross) button near user you want to remove from owners list
+   - The toast message will inform that user is being removed from owners list.
+
+After success toast message you will see that user is now removed from application owners list. Now user, who was removed from owners list won't see your application on [My Apps](/my-apps) page anymore.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+  <Title>Application details with "Regenerate client secret" button</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/app-details.png"
+     alt='Application details with "Regenerate client secret" button'
+     className="sample-img-m"
+   />,
+  <Title>Client Secret regeneration confirmation dialog</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/regenerate-client-secret-confirm-dialog.png"
+     alt='Client Secret regeneration confirmation dialog'
+     className="sample-img-m"
+   />,
+  <Title>New Client Secret</Title>,
+   <img
+     src="/images/tutorials/register-and-modify-application/regenerate-client-secret-success-dialog.png"
+     alt='New Client Secret'
+     className="sample-img-m"
+   />
+]}>
+
+### 4.4 Regenerating Client Secret (only for Service and Web App applications)
+
+If you missed your **Client Secret** you can always regenerate it.
+
+To regenerate **Client Secret**:
+
+1. Click **Regenerate client secret** button
+1. In **Confirmation** dialog click **Regenerate**
+1. Wait for **Client Secret** regeneration process completion
+1. In **Success!** dialog you will see new **Client Secret**
+
+Make sure you copy and save your new **Client Secret**. We don't store it and you will not be able to see it again.
+
+<Alert type="informational">
+
+After **Client Secret** regeneration previous secret becomes invalid. Make sure to replace old **Client Secret** by new one.
+
+</Alert>
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Register your application"
+    href="/register/"
+    description="New application registration form."
+  />
+  <LinkCard
+    title="My Apps"
+    href="/my-apps/"
+    description="List of all applications owned by you."
+  />
+</TileList>
+
+</ContinueLearningSection>

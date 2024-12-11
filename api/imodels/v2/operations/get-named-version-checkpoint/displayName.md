@@ -1,1 +1,0 @@
-Get Named Version Checkpoint

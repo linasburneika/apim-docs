@@ -1,0 +1,589 @@
+---
+title: 'Create a Component'
+version: 1
+tile:
+  name: 'Create a Component'
+  description: 'This tutorial will guide you through the process of creating a component in an organization.'
+  href: '/tutorials/create-a-component'
+  durationInMinutes: 20
+  relatedApiIds: ['library']
+  showInFirstSteps: false
+  firstStepsSequenceNumber: 3
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="20">
+
+## Introduction
+
+This tutorial will take you through the process of creating a component in an organization.
+
+By the end of this walk-through, you will be able to utilize the API endpoints in order to create a component and its variations, documents and webLinks.
+
+</Introduction>
+
+<TutorialSection
+  actions={[
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- A tool such as `Postman` that can be used to execute http calls. These calls can also be made using the `TryIt` button in the API documentation.
+- User must be affiliated with an Organization and should either be an Organization Administrator or have 'Upload' and 'Read' permission at Organization level to upload components to catalog.
+- For more information about User Management please visit our Bentley Communities [Licensing, Cloud, and Web Services](https://bentleysystems.service-now.com/community?id=kb_article_view&sys_kb_id=1e5410491b7d8a90f3fc5287624bcb57) wiki page.
+- Most of the time, a component should have a design file associated to the component as part of design document. Design file is a CAD file, used in CAD applications i.e. MicroStation, Revit etc. Library API supports all types of design files to create components. You should have a design file to associate
+  to component as a design document. Theoretically a component can exist without any files, but that may not be beneficial. In this example we will use rfa design file.
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Upload component to catalog tutorial"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+Before you can make a request to the APIs, a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use Client ID generated from previous registration step.
+
+</Alert>
+
+### Grab a user token from Api reference "Try it" Section
+
+1. Go [here](/apis/library/operations/upload-component/)
+2. Click `Try it` button.
+3. Under the `Authorization` section, select `authorizationCode` from the dropdown.
+4. After the sign in popup closes, the `Authorization` header with token value should be visible beneath the `HTTP request` dropdown.
+5. Copy & paste the `Authorization` value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`POST https://api.bentley.com/library/catalogs HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "displayName": "Tutorial Sample Catalog",
+    "description": "Tutorial Sample Description",
+    "region": "US",
+    "hashtags": ["SampleHashtag1", "SampleHashtag2"]
+}`}/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 201 Created
+content-length: 937
+content-type: application/json
+date: Thu, 24 Jun 2021 14:44:18 GMT
+request-context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 5262b13f-394e-49b8-95ea-a5361d2513a3
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "catalog": {
+      "id": "7f427c30-8dce-4803-81dc-e8681a3bd757",
+      "displayName": "Tutorial Sample Catalog",
+      "description": "Tutorial Sample Description",
+      "region": "US",
+      "createdDateTime": "2021-09-06T06:03:56.1923267Z",
+      "lastModifiedDateTime": "2021-09-06T06:03:56.1923267Z",
+      "hashtags": ["SampleHashtag1", "SampleHashtag2"]
+    }
+}`}/>,
+]}>
+
+## 3. Difference Between Upload Component and Create Component
+
+The Library API provides two options to add components in an organization repository i.e. Upload Component and Create Component.
+
+Upload Component expects a design file should be uploaded in the system and upload background job extracts information from the design file i.e. thumbnail image, variations, manufacturer, category and application etc.
+upload activity uses all this information to create a component and associate all this metadata to the component. This saves from the effort of making multiple requests to add the information to the component. Currently Upload Component support only three types of design files i.e. rfa, dgn and cel files.
+
+Instructions to upload components to a catalog can be found [here](/tutorials/upload-component-to-catalog)
+
+We can add component without using upload workflow explained above but this needs more effort in terms of calling API endpoints since we have to make additional requests for adding thumbnail document, creating
+manufacturer, application, category, if required and also adding variations in the components. So it is recommended to use upload workflow if the design file is rfa, dgn or cel. In this tutorial we will create
+component without upload workflow.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Referenced Entities
+
+A component can have referenced entities i.e. Catalog, Category, Application and Manufacturer. These are optional properties of a component to be created, but provide useful information. Manufacturer as the name specifies, is manufacturer of the component.
+Application specifies the CAD application, a component can be consumed for different purposes. Similarly category and catalogs are used to group the components. You need to have the `id` property value of each of these entities to be used for component
+creation.
+If you don't already have, the Library API provides endpoints to create and manage these referenced entities. You can create these entities if applicable to the component and may save the `id` property of each to be used in next steps.
+
+You can use following TryIt options in the Library API documentation to create these entities.
+
+[Library API documentation to create Catalog](/apis/library/operations/create-catalog)
+
+[Library API documentation to create Category](/apis/library/operations/create-category)
+
+[Library API documentation to create Application](/apis/library/operations/create-application)
+
+[Library API documentation to create Manufacturer](/apis/library/operations/create-manufacturer)
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`POST https://api.bentley.com/library/upload-component HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json" code={`{
+    "displayName": "Tutorial Sample Door",
+    "description": "Tutorial Sample Door",
+    "state": "Draft",
+    "catalogs": ["7f427c30-8dce-4803-81dc-e8681a3bd757"],
+    "category": "63b7d70a-a426-4530-8c0f-3efd6a6c0da7",
+    "application": "1418693a-8f60-4719-af0b-ceee1ad41e33",
+    "manufacturer": "d4485150-ad6d-4d76-a3e2-50a0f690afc9",
+    "hashtags": [
+        "samplehashtag1",
+        "samplehashtag2"
+    ]
+}`}/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 202 Accepted
+content-length: 776
+content-type: application/json
+date: Thu, 09 Sep 2021 13:34:53 GMT
+location: https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f
+odata-version: 4.0
+request-context: appId=cid-v1:6ee7c246-23f0-43be-ac34-bbbb36da72e9
+x-correlation-id: 8c0daea7-c45b-4d01-b4c5-29e99278316a
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json" code={`{
+    "component": {
+        "id": "afd712cf-db65-46fa-a05d-9c6bc8be0d1f",
+        "displayName": "Tutorial Sample Door",
+        "description": "Tutorial Sample Door",
+        "state": "Draft",
+        "createdDateTime": "2021-09-09T13:34:54.6310298Z",
+        "lastModifiedDateTime": "2021-09-09T13:34:54.6310298Z",
+        "supportedFileTypes": [],
+        "hashtags": ["samplehashtag1", "samplehashtag2"],
+        "_links": {
+            "catalogs": [{
+                "href": "https://api.bentley.com/library/catalogs/7f427c30-8dce-4803-81dc-e8681a3bd757"
+            }],
+            "application": {
+                "href": "https://api.bentley.com/library/applications/1418693a-8f60-4719-af0b-ceee1ad41e33"
+            },
+            "manufacturer": {
+                "href": "https://api.bentley.com/library/manufacturers/d4485150-ad6d-4d76-a3e2-50a0f690afc9"
+            },
+            "category": {
+                "href": "https://api.bentley.com/library/categories/63b7d70a-a426-4530-8c0f-3efd6a6c0da7"
+            }
+        }
+    }
+}`}/>,
+]}>
+
+## 5. Create Component
+
+To create a component, prepare request body and make a POST call to `https://api.bentley.com/library/create-component` endpoint. `displayName` and `state` are required properties.
+Provide appropriate `displayName` value, We have rfa file of a digital door, so let's set `displayName` as 'Tutorial Sample Door'. `state` property can have enum values Draft, Published, Checked, Approved and Archived, which are used during different stages of component life cycle.
+For now we assign the value 'Draft'. We already have `id` property of referenced entities, so we will provide these values to manufacturer, catalog, category and application respectively.
+
+See the [Library API documentation](/apis/library/operations/create-component) for descriptions of the different properties.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 6. Add Documents
+
+At this stage a component is created but it doesn't have any documents. You can associate Design, Reference, Thumbnail and GalleryImage documents to the component. In this example we will associate a design document
+to the component, other documents can also be associated with same steps, the only difference is setting the value of 'purpose' property in document request body. You should have corresponding images, reference files to upload
+during the document creation process, depending upon which document you are creating.
+
+See the [Library API documentation](/apis/library/operations/create-component-document) for descriptions of the different properties.
+
+Adding document is a multi-step process, we will go through these steps next.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`POST https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/documents HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "displayName": "Tutorial Sample Design Document",
+    "extension": "rfa",
+    "purpose": "Design",
+    "available": false,
+    "isActive": true,
+    "version": null,
+    "previousVersionId": null,
+    "associatedDesignDocument": null
+}`}/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 201 Created
+content-length: 719
+content-type: application/json
+date: Thu, 09 Sep 2021 15:29:08 GMT
+location: https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/documents/648486bf-6f04-4750-aa67-7fe521d01896
+odata-version: 4.0
+request-context: appId=cid-v1:6ee7c246-23f0-43be-ac34-bbbb36da72e9
+x-correlation-id: e4912dc9-983e-4f31-bd50-87423fd21ad2
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "document": {
+        "id": "648486bf-6f04-4750-aa67-7fe521d01896",
+        "displayName": "Tutorial Sample Design Document",
+        "extension": "rfa",
+        "version": "1",
+        "previousVersionId": null,
+        "purpose": "Design",
+        "size": -1,
+        "available": false,
+        "isActive": true,
+        "createdDateTime": "2021-09-09T15:29:08.3172685Z",
+        "lastModifiedDateTime": "2021-09-09T15:29:08.3172685Z",
+        "_links": {
+            "fileUrl": {
+                "href": "https://componentscenprodeussa01.blob.core.windows.net/private-5a7b3c7c-03af-49f0-b1df-115ddc0e0048/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/648486bf-6f04-4750-aa67-7fe521d01896.rfa?sv=2018-03-28&sr=b&sig=03LfBtIfpFgpOnQPp4YaEj%2BbSsNBXQE1XOd83J6tXrA%3D&se=2021-09-09T16%3A29%3A08Z&sp=rcw&rscd=attachment%3B%20filename%3DTutorial%2BSample%2BDesign%2BDocument.rfa"
+            }
+        }
+    }
+}`}/>,
+]}>
+
+### 6.1 Create Document Instance
+
+A POST call to `https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/documents` endpoint will create a new document instance for the component. `displayName`, `purpose` and `extension` are required properties. `purpose` can have enum values Design, Thumbnail, Reference, GalleryImage and TypeCatalog, depending upon which type of document you want
+to associate to a component. As we are associating a design document, `purpose` should be set to 'Design'.
+
+The POST call will return a new document instance. The `id` will be used in next steps, you may want to save this Id. At this moment a document instance has been associated
+to the component but there is no actual file attached to this document. We will do that in the next step.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock language="http" code={"PUT https://componentscenprodeussa01.blob.core.windows.net/private-5a7b3c7c-03af-49f0-b1df-115ddc0e0048/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/648486bf-6f04-4750-aa67-7fe521d01896.rfa?sv=2018-03-28&sr=b&sig=03LfBtIfpFgpOnQPp4YaEj%2BbSsNBXQE1XOd83J6tXrA%3D&se=2021-09-09T16%3A29%3A08Z&sp=rcw&rscd=attachment%3B%20filename%3DTutorial%2BSample%2BDesign%2BDocument.rfa HTTP/1.1"}/>,
+    <Title>Request Headers</Title>,
+    <CodeBlock language="http" code={"x-ms-blob-type: BlockBlob"} />,
+    <Title>Request Body</Title>,
+    <CodeBlock language="http" code={"File Binary Content"}
+    />
+  ]}>
+
+### 6.2 Upload Document File
+
+Create Document response from the previous step contains a url in `_links->fileUrl->href` property. File upload can be done by making a Http PUT request on the provided url via tool such as `Postman` or programmatically use Azure libraries to upload file (https://docs.microsoft.com/en-us/rest/api/storageservices/put-blob).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true} 
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`PUT https://api.bentley.com/library/components/57fefe11-df1d-40c7-ae1a-02e233b9a7c7/documents/afd712cf-db65-46fa-a05d-9c6bc8be0d1f HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "displayName": "Tutorial Sample Design Document",
+    "extension": "rfa",
+    "version": "1",
+    "previousVersionId": null,
+    "purpose": "Design",
+    "available": true,
+    "isActive": true
+}`}/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 201 Created
+content-encoding: gzip
+content-type: application/json
+date: Fri, 10 Sep 2021 05:28:03 GMT
+odata-version: 4.0
+request-context: appId=cid-v1:6ee7c246-23f0-43be-ac34-bbbb36da72e9
+vary: Accept-Encoding
+x-correlation-id: 3b4b2e41-3ea6-4597-bda0-6db60a038320
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "document": {
+        "id": "648486bf-6f04-4750-aa67-7fe521d01896",
+        "displayName": "Tutorial Sample Design Document",
+        "extension": "rfa",
+        "version": "1",
+        "previousVersionId": null,
+        "purpose": "Design",
+        "size": 0,
+        "available": true,
+        "isActive": true,
+        "createdDateTime": "2021-09-09T15:29:08.3172685Z",
+        "lastModifiedDateTime": "2021-09-10T05:28:03.4442503Z",
+        "_links": {
+            "fileUrl": {
+                "href": "https://componentscenprodeussa01.blob.core.windows.net/private-5a7b3c7c-03af-49f0-b1df-115ddc0e0048/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/648486bf-6f04-4750-aa67-7fe521d01896.rfa?sv=2018-03-28&sr=b&sig=lTnFsfrQmEqIdEMqLD%2FQ%2FjEQTAjL5T5Y8mFsR8idPQ4%3D&se=2021-09-10T06%3A28%3A03Z&sp=r&rscd=attachment%3B%20filename%3DTutorial%2BSample%2BDesign%2BDocument.rfa"
+            }
+        }
+    }
+}`}/>,
+]}>
+
+### 6.3 Update Document Instance
+
+The last step in associating a document to component is to notify the system that file has been uploaded. This is achieved by setting 'available' property of the document instance to true.
+Make a PUT call to `https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/documents/648486bf-6f04-4750-aa67-7fe521d01896` endpoint to update the document. Update request expects
+request body must contain all the desired properties since this will replace existing document with current document definition.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`POST https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/variations HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "associatedDesignDocument": "648486bf-6f04-4750-aa67-7fe521d01896",
+    "displayName": "Sample Variation for Door",
+    "adHocProperties": [{
+        "displayName": "Width",
+        "value": "50",
+        "type": "DoubleType",
+        "unitOfMeasure": "Millimeters"
+    }, {
+        "displayName": "Height",
+        "value": "2200",
+        "type": "DoubleType",
+        "unitOfMeasure": "Millimeters"
+    }, {
+        "displayName": "Length",
+        "value": "900",
+        "type": "DoubleType",
+        "unitOfMeasure": "Millimeters"
+    }, {
+        "displayName": "Material",
+        "value": "Wood",
+        "type": "StringType",
+        "unitOfMeasure": ""
+    }]
+}`}/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 201 Created
+content-length: 749
+content-type: application/json
+date: Fri, 10 Sep 2021 06:47:25 GMT
+location: https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/variations/99e5cb56-0057-47af-86da-9c8f793a296f
+odata-version: 4.0
+request-context: appId=cid-v1:6ee7c246-23f0-43be-ac34-bbbb36da72e9
+x-correlation-id: 7e5f1fe2-f813-4711-914f-0f5b9826ffd9
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "variation": {
+        "id": "99e5cb56-0057-47af-86da-9c8f793a296f",
+        "displayName": "Sample Variation for Door",
+        "createdDateTime": "2021-09-10T06:47:25.728234Z",
+        "lastModifiedDateTime": "2021-09-10T06:47:25.728234Z",
+        "adHocProperties": [{
+            "displayName": "Width",
+            "value": "50",
+            "type": "DoubleType",
+            "unitOfMeasure": "Millimeters"
+        }, {
+            "displayName": "Height",
+            "value": "2200",
+            "type": "DoubleType",
+            "unitOfMeasure": "Millimeters"
+        }, {
+            "displayName": "Length",
+            "value": "900",
+            "type": "DoubleType",
+            "unitOfMeasure": "Millimeters"
+        }, {
+            "displayName": "Material",
+            "value": "Wood",
+            "type": "StringType",
+            "unitOfMeasure": ""
+        }],
+        "_links": {
+            "associatedDesignDocument": {
+                "href": "https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/documents/648486bf-6f04-4750-aa67-7fe521d01896"
+            }
+        }
+    }
+}`}/>,
+]}>
+
+## 7. Add Variations
+
+A component can have different variations, a variation essentially is different models, sizes, types of the same component. Since component itself has fixed schema, variation can also be used to add other metadata related to the component. Even if there are not
+multiple variations available, a default variation can be created to add any additional properties which can't be added in a component directly. The core of the component is design file, since component can have multiple design files, each design file can have its
+own variations. `associatedDesignDocument` property is used to set the corresponding design file `id` to make a connection of the variation to design file in the component.
+
+A POST call to `https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/variations` endpoint will create a new variation. Let's add a variation for the component we have created in this example, we will assign `id` of the design document
+created in the previous steps to `associatedDesignDocument` in the request Body. Add an appropriate `displayName` for the variation. A variation has list of adhoc properties containing `displayName`, `value`, `type` and `unitOfMeasure`. `type` is enum and can have StringType, IntegerType, DoubleType, FloatType and BooleanType. Adhoc properties give you more control to add
+any type of metadata/properties to a component. In case of our example, a door, we can add adhoc properties by adding door dimensions and its material. In case of material, `unitOfMeasure` is not applicable, so we can
+leave that field empty for this case.
+
+See the [Library API documentation to create variation](/apis/library/operations/create-component-variation) for descriptions of the different properties.
+
+See the [Library API documentation to get variations](/apis/library/operations/get-component-variations)
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`POST https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/weblinks HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "displayName": "Tutorial sample webLink",
+    "uri": "https://www.sampleweblink.com/sampleweblink"
+}`}/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 201 Created
+content-length: 252
+content-type: application/json
+date: Fri, 10 Sep 2021 09:55:29 GMT
+location: https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/weblinks/2e3e34d1-b01c-42c8-9669-beef6a2e843b
+odata-version: 4.0
+request-context: appId=cid-v1:6ee7c246-23f0-43be-ac34-bbbb36da72e9
+x-correlation-id: f6452b93-a875-4496-b73b-633c82f500c5
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "webLink": {
+        "id": "2e3e34d1-b01c-42c8-9669-beef6a2e843b",
+        "displayName": "Tutorial sample webLink",
+        "uri": "https://www.sampleweblink.com/sampleweblink",
+        "createdDateTime": "2021-09-10T09:55:28.5295325Z",
+        "lastModifiedDateTime": "2021-09-10T09:55:28.5295325Z"
+    }
+}`}/>,
+]}>
+
+## 8. Add WebLinks
+
+Another optional related entity you can add in a component is webLink. Component can have some related material over the web, some specification document, description or any related information. You can add the web url to a component as a webLink.
+A POST call to `https://api.bentley.com/library/components/afd712cf-db65-46fa-a05d-9c6bc8be0d1f/weblinks` endpoint will create a new webLink.
+
+See the [Library API documentation to create webLink](/apis/library/operations/create-component-weblink) for descriptions of the different properties.
+
+See the [Library API documentation to get webLinks](/apis/library/operations/get-component-weblinks)
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulation for completing Creating Component tutorial! You should be able to create components and associate related variations, documents and webLinks to the component.
+
+<TileList>
+  <Tile
+    name="Query and Download Component from a Catalog"
+    description="Guide on querying and downloading component from a catalog."
+    href="/tutorials/query-and-download-component-from-catalog/"
+  ></Tile>
+  <Tile
+    name="Upload Component to a Catalog"
+    description="Guide on uploading component to a catalog."
+    href="/tutorials/upload-component-to-catalog/"
+  ></Tile>
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Library API"
+    href="/apis/library/"
+    description="There are more capabilities, which could be used for managing components in library."
+  />
+  <LinkCard
+    title="iTwin Library Sample App"
+    href="https://github.com/iTwin/library-api-sample-app"
+    description="Sample application that uses the Library API to create, upload and query components."
+    isExternal={true}
+  />
+</TileList>
+
+</ContinueLearningSection>

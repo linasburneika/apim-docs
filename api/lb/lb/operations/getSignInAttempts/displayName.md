@@ -1,1 +1,0 @@
-Retrieves sign-in attempts

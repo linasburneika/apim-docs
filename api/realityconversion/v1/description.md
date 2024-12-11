@@ -1,1 +1,0 @@
-Convert mentioned point cloud formats to web-friendly Orbit Point Cloud.

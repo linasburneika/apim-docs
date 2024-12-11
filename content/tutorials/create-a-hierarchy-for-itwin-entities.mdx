@@ -1,0 +1,360 @@
+---
+title: 'Create a Hierarchy For iTwin Entities'
+version: 1
+tile:
+  name: 'Create a Hierarchy For iTwin Entities'
+  description: 'This tutorial will guide you through the process of creating a named hierarchy for entities, adding nodes under the hierarchy and to query the hierarchy nodes'
+  href: '/tutorials/create-a-hierarchy-for-itwin-entities'
+  durationInMinutes: 25
+  relatedApiIds: ['itwin-entities']
+  showInFirstSteps: false
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="25">
+
+## Introduction
+
+This tutorial will guide you through the process of creating a named hierarchy for entities, adding nodes under the hierarchy and to query the hierarchy nodes.
+
+By the end of this walk-through, you will be able to utilize the API endpoints to create or query hiearachy and hierarchy nodes.
+
+</Introduction>
+
+<TutorialSection
+  actions={[
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />,
+  ]}
+>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- A tool, such as `Postman` that can be used to execute HTTP calls. These calls can also be made using the **Try it out** button in the API documentation.
+- The user should be a member of the iTwin for which they want to create an entity. You would need to know the `iTwin id` GUID for the iTwin. If you don't have an iTwin to work with, you can create one using the instructions [Create and Query an iTwin](/tutorials/create-and-query-itwins-guide/).
+- The user should also have created some entities and know their `federationIds` to be able to add these entities to the hierarchy. You can create new entities by following the instructions in the [Create and Query iTwin Entities](/tutorials/create-and-query-itwin-entities) tutorial.
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Create and Query Entities"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+Before you can make a request to the APIs, a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use Client ID generated from previous registration step.
+
+</Alert>
+
+### Grab a user token from the iTwin Entities documentation page
+
+1. Go [here](/apis/itwin-entities/operations/create-hierarchy/)
+2. Click **Try it out** button.
+3. Under the `Authorization` section, select `authorizationCode` from the dropdown.
+4. After the sign in popup closes, the `Authorization` header with token value should be visible beneath the `HTTP request` dropdown.
+5. Copy & paste the `Authorization` value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`POST https://api.bentley.com/itwin-entities/iTwins/{ITWIN_ID}/entities/ HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "class": "CentrifugalPump",
+    "classification": "CentrifugalPump",
+    "bisClassPath": "bis:Element;bis:RoleElement;func:FunctionalElement;func:FunctionalComponentElement;pfunc:PLANT_BASE_OBJECT;pfunc:NAMED_ITEM;pfunc:DEVICE;pfunc:EQUIPMENT;pfunc:ROTATING_EQUIPMENT;pfunc:PUMP;pfunc:DYNAMIC_PUMP;pfunc:CENTRIFUGAL_PUMP",
+    "code": "CodeSpecId:CodeScopeId:P-101",
+    "name": "P-101",
+    "type": "GE CP T22a",
+    "geospatialLocation": {
+        "type": "Point",
+        "coordinates": [
+            12.1,
+            13.2
+        ]
+    },
+    "tags": [
+        "Pump"
+    ],
+    "federationId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}`}
+/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 201 Created
+content-length: 937
+content-type: application/json
+date: Thu, 24 Jun 2021 14:44:18 GMT
+request-context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 5262b13f-394e-49b8-95ea-a5361d2513a3
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "entity": {
+        "class": "CentrifugalPump",
+        "classification": "CentrifugalPump",
+        "bisClassPath": "bis:Element;bis:RoleElement;func:FunctionalElement;func:FunctionalComponentElement;pfunc:PLANT_BASE_OBJECT;pfunc:NAMED_ITEM;pfunc:DEVICE;pfunc:EQUIPMENT;pfunc:ROTATING_EQUIPMENT;pfunc:PUMP;pfunc:DYNAMIC_PUMP;pfunc:CENTRIFUGAL_PUMP",
+        "code": "CodeSpecId:CodeScopeId:P-101",
+        "name": "P-101",
+        "type": "GE CP T22a",
+        "geospatialLocation": {
+            "type": "Point",
+            "coordinates": [
+                12.1,
+                13.2
+            ]
+        },
+        "tags": [
+            "Pump"
+        ],
+        "federationId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "links": [],
+        "createdDateTime": "2023-01-18T21:03:00.3704659",
+        "createdByUser": "user@bentley.com",
+        "LastModifiedDateTime": "2023-01-18T21:03:00.3704659",
+        "LastModifiedByUser": "user@bentley.com"
+    }
+}`}
+/>,
+]}>
+
+## 3. Create a named Hierarchy
+
+The iTwin Entities API is used to create and manage entities. A POST call to the entities endpoint will create a new entity for the iTwin specified by the iTwinId. You would need to replace the ITWIN_ID with the correct iTwinId in the request as mentioned in the [Prerequisites](#prerequisites) section.
+
+At minimum, `class` and `code` are required for creating a new entity. The `code` property should be unique. If you already have a `federationId` for the entity also specify it, otherwise a new federationId would be created for the new entity. If you get a conflict error then you will need to replace the federationId with a unique value. See the [iTwin Entities API documentation](/apis/itwin-entities/operations/create-entity/) for descriptions of the different properties, including default values.
+
+The POST call will return a new entity instance. The `federationId` can be used to query for the entity. The federationId is also used by in many other iTwin-Entities APIs. You may want to save this federationId to use in other tutorials.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`GET https://api.bentley.com/itwins/{ITWIN_ID}/entities/3fa85f64-5717-4562-b3fc-2c963f66afa6 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+content-length: 936
+content-type: application/json
+date: Thu, 24 Jun 2021 18:10:04 GMT
+request-context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: fed95960-ea7c-43b5-a9af-66ab5353d073
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "entity": {
+        "class": "CentrifugalPump",
+        "classification": "CentrifugalPump",
+        "bisClassPath": "bis:Element;bis:RoleElement;func:FunctionalElement;func:FunctionalComponentElement;pfunc:PLANT_BASE_OBJECT;pfunc:NAMED_ITEM;pfunc:DEVICE;pfunc:EQUIPMENT;pfunc:ROTATING_EQUIPMENT;pfunc:PUMP;pfunc:DYNAMIC_PUMP;pfunc:CENTRIFUGAL_PUMP",
+        "code": "CodeSpecId:CodeScopeId:P-101",
+        "name": "P-101",
+        "type": "GE CP T22a",
+        "geospatialLocation": {
+            "type": "Point",
+            "coordinates": [
+                12.1,
+                13.2
+            ]
+        },
+        "tags": [
+            "Pump"
+        ],
+        "federationId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "links": [],
+        "createdDateTime": "2023-01-18T21:03:00.3704659",
+        "createdByUser": "user@bentley.com",
+        "LastModifiedDateTime": "2023-01-18T21:03:00.3704659",
+        "LastModifiedByUser": "user@bentley.com"
+    }
+}`}
+/>,
+]}>
+
+## 4. Query for an entity using the federationId
+
+The federationId of an entity can be used to [query for a specific entity](/apis/itwin-entities/operations/get-entity/). In addition to the federationId, you would also need to know the iTwinId for the entity and you would need to replace the ITWIN_ID with the correct iTwinId in the request as mentioned in the [Prerequisites](#prerequisites) section.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`GET https://api.bentley.com/itwins/{ITWIN_ID}/entities?code=CodeSpecId:CodeScopeId:P-101 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`Prefer: return=representation
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK 
+cache-control: must-revalidate, no-cache, private
+content-encoding: gzip
+content-type: application/json
+date: Thu, 24 Jun 2021 18:20:43 GMT
+request-context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: dd4d68c9-614d-4d67-8e51-7147c18513f8
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "entities": [{
+        "class": "CentrifugalPump",
+        "classification": "CentrifugalPump",
+        "bisClassPath": "bis:Element;bis:RoleElement;func:FunctionalElement;func:FunctionalComponentElement;pfunc:PLANT_BASE_OBJECT;pfunc:NAMED_ITEM;pfunc:DEVICE;pfunc:EQUIPMENT;pfunc:ROTATING_EQUIPMENT;pfunc:PUMP;pfunc:DYNAMIC_PUMP;pfunc:CENTRIFUGAL_PUMP",
+        "code": "CodeSpecId:CodeScopeId:P-101",
+        "name": "P-101",
+        "type": "GE CP T22a",
+        "geospatialLocation": {
+            "type": "Point",
+            "coordinates": [
+                12.1,
+                13.2
+            ]
+        },
+        "tags": [
+            "Pump"
+        ],
+        "federationId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "links": [],
+        "createdDateTime": "2016-01-18T21:03:00.3704659",
+        "createdByUser": "user@bentley.com",
+        "LastModifiedDateTime": "2016-01-18T21:03:00.3704659",
+        "LastModifiedByUser": "user@bentley.com"
+    }]
+}`}
+/>,
+]}>
+
+## 5. Query for entities using code (or name, class etc.)
+
+The `code` query parameter can be used to [find entities](/apis/itwin-entities/operations/get-entities/). Because this is a query, the response will be a list of entities that will usually contain only one element. The coe should be unique within an iTwin, however this is not strictly enforced and you can theoratically get multiple entities with the same code value. Again, the iTwinId would need to be specified in the request.
+
+Similarly you can use the `name` or `class` (or the rest of the query parameter listed for the [get entities API](/apis/itwin-entities/operations/get-entities/)) to search for entities by these values.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`GET https://api.bentley.com/itwins/{ITWIN_ID}/entities?code=P-1&partialMatchFiltersList=code HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`Prefer: return=minimal
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK 
+cache-control: must-revalidate, no-cache, private
+content-encoding: gzip
+content-type: application/json
+date: Thu, 24 Jun 2021 18:40:47 GMT
+request-context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 86bc760f-d0c4-4292-b72d-97a078ce1c7a
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "entities": [{
+        "class": "CentrifugalPump",
+        "classification": "CentrifugalPump",
+        "bisClassPath": "bis:Element;bis:RoleElement;func:FunctionalElement;func:FunctionalComponentElement;pfunc:PLANT_BASE_OBJECT;pfunc:NAMED_ITEM;pfunc:DEVICE;pfunc:EQUIPMENT;pfunc:ROTATING_EQUIPMENT;pfunc:PUMP;pfunc:DYNAMIC_PUMP;pfunc:CENTRIFUGAL_PUMP",
+        "code": "CodeSpecId:CodeScopeId:P-101",
+        "name": "P-101",
+        "type": "GE CP T22a",
+        "geospatialLocation": {
+            "type": "Point",
+            "coordinates": [
+                12.1,
+                13.2
+            ]
+        },
+        "tags": [
+            "Pump"
+        ],
+        "federationId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "links": [],
+        "createdDateTime": "2016-01-18T21:03:00.3704659",
+        "createdByUser": "user@bentley.com",
+        "LastModifiedDateTime": "2016-01-18T21:03:00.3704659",
+        "LastModifiedByUser": "user@bentley.com"
+    }]
+}`}
+/>,
+]}>
+
+## 6. Query for entities using partial code
+
+The `partialMatchFiltersList` query parameter can be used to [find entities](/apis/itwin-entities/operations/get-entities/) using a query string that will return entities for which the property values partially match the provided filter. For example, if we provide a `code` value of "P-1" in the query parameter and specify the "code" property in the PartialMatchFiltersList query parameter, then we can search for all entities that have the property code with a value that contain the substring "P-1". So, the entity that we created in the step 3 with code value "CodeSpecId:CodeScopeId:P-101" should be retuend in this example. The query is not case sensitive and you should not add wildcard characters to the query string. This example is the SQL equivalent of `code like '%P-1%'`.
+
+Because this is a query, the response will be a list that could contain many entities.
+
+Similary, the `partiamMatchFiltersList` can be used for other properties of entities. See the [get entities API](/apis/itwin-entities/operations/get-entities/) for details.
+
+</TutorialSection>

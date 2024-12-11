@@ -1,0 +1,617 @@
+---
+title: 'Get started with Reality Modeling API'
+version: 1
+tile:
+  name: 'Get started with Reality Modeling API'
+  description: 'This tutorial is an introduction to Reality Modeling API, explaining the basic workflows.'
+  thumbnail: '/images/cccs-quick-start-thumb.jpg'
+  href: '/tutorials/contextcapture-api-quick-start/'
+  durationInMinutes: 30
+  relatedApiIds: ['contextcapture']
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="30"
+  summaryImageSrc="/images/cccs-quick-start-header.jpg">
+
+## Introduction
+
+This quick start tutorial is going to help you work with Reality Modeling, and also understand the basic objects of Reality Modeling: workspaces and jobs.
+
+In this tutorial, we will create a new workspace, submit a simple job, track its progress and check its result.
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- Project created. Try the [create and query itwins guide](/tutorials/create-and-query-itwins-guide/).
+- Knowledge of the _Reality Management_ API. Try [Reality Management API](/apis/reality-management).
+- Knowledge of the _CCImageCollection_ and the _CCOrientations_ formats. Try [CCImageCollection format](/apis/contextcapture/cc-ic/) or [CCOrientations format](/apis/contextcapture/cc-ori/)
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="CC basic tutorial"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+To make request to the API, a user token is needed. There are several ways to get it. Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Create a workspace
+
+In order to process jobs, we first need to [create a workspace](/apis/contextcapture/operations/workspaces-create/).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language='http' 
+      code={`POST https://api.bentley.com/contextcapture/workspaces HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+#### Request
+
+A new workspace is created by sending a HTTP POST message to https://api.bentley.com/contextcapture/workspaces endpoint with the payload describing the workspace.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "iTwinId":"ITWIN_ID",
+  "name":"My first Reality Modeling workspace"
+}`}
+    />,
+  ]}
+>
+
+#### Request Body
+
+The request body handles two properties:
+
+- **name** - Workspace name (_mandatory_)
+- **iTwinId** - Project associated with the workspace
+
+<Alert type="informational">
+
+Note that unless you have an Enterprise admin role within your organization, you will need to provide a `iTwinId`. For easier project management, we highly recommend you always use an `iTwinId`.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "workspace":{
+    "id":"WORKSPACE_ID",
+    "creationDateTime":"2020-09-14T13:46:11Z",
+    "name":"My first Reality Modeling workspace",
+    "iTwinId":"ITWIN_ID"
+  }
+}`}
+    />,
+  ]}
+>
+
+#### Response body
+
+The API will respond with a `201 Created` status code if the call is successful.
+Note that creating a workspace will also create a new reality data (accessible through the Reality Management API), with a similar id to `WORKSPACE_ID`.
+Though it is not useful in our current tutorial, this reality data becomes necessary for advanced workflows.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Create a job
+
+In order to [create a job](/apis/contextcapture/operations/jobs-create/), we need inputs. Reality Modeling supports 3 types of Reality Data as inputs:
+
+- [CCImageCollection](/apis/contextcapture/cc-ic)
+- ScanCollection
+- [CCOrientations](/apis/contextcapture/cc-ori)
+
+Currently, the only way to create ScanCollection is through a _Reality Modeling_ desktop application.
+
+Reality data need to be stored in the same region as the project selected for the workspace, and must be accessible to the user for processing.
+We highly recommend you use the same project for your inputs and for your workspace.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language='http' code={`POST https://api.bentley.com/contextcapture/jobs HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+#### Request
+
+A new job is created by sending a HTTP POST message to https://api.bentley.com/contextcapture/jobs endpoint with the payload describing the job.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "type":"Full",
+  "name":"My first Reality Modeling job",
+  "workspaceId":"WORKSPACE_ID",
+  "costEstimationParameters":{
+    "gigaPixels":2.5,
+    "megaPoints":1.5,
+    "meshQuality":"Extra"
+  },
+  "inputs":[
+    {
+      "id":"IMAGECOLLECTION_RD_ID",
+      "description":"Drone ImageCollection"
+    },
+    {
+      "id":"CCORIENTATIONS_RD_ID",
+      "description":"Drone CCOrientations"
+    }
+  ],
+  "settings":{
+    "quality":"Extra",
+    "processingEngines":0,
+    "outputs":[
+      "OBJ"
+    ]
+  }
+}`}
+    />,
+  ]}
+>
+
+#### Request Body
+
+The request body handles multiple properties
+
+- **type** - Job type, can be _Full_, _Reconstruction_ or _Calibration_
+- **name** - Name of the job
+- **workspaceId** - Workspace linked to the job
+- **costEstimationParameters** - Parameters to be passed to estimate the cost of the job
+- **inputs** - List of inputs, consisting of the reality data ids and descriptions of the inputs
+- **settings** - High level processing settings
+
+There are three types of job:
+
+- Calibration
+- Reconstruction
+- Full
+
+A calibration job will take images and point clouds and calibrate them in 3D.
+A reconstruction job will start from calibrated images and/or point clouds and reconstruct them (that is, create a mesh or an orthophoto).
+A full job will do a calibration and reconstruction at once.
+
+You need to specify one and only one _CCOrientations_ in your input list for the job to be valid.
+The *CCImageCollection*s and *ScanCollection*s are the ones used in the _CCOrientations_, though the service won't checked the correspondence right away.
+
+Regarding settings:
+
+- Mesh quality can be _Draft_, _Medium_ and _Extra_
+- Processing engines can not be higher than 20 in a normal case. Check the actual limit for your account with the limit endpoint. If set to 0, the service will use the limit of your account.
+- Outputs is a list of the format you want to produce
+  - In case of calibration job, only _CCOrientations_ is an acceptable output
+  - In case of full/reconstruction job, at least one output must be specified for the job to be valid
+
+Small note on outputs: most of the time, an output is generated during the reconstruction phase of the job.
+The exception is the _CCOrientations_ format, that is produced during the calibration phase of the job.
+Therefore, _CCOrientations_ can be produced only with a _Full_ or _Calibration_ job, while other formats can be produced only with a _Full_ or _Reconstruction_ job.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "job":{
+    "id":"JOB_ID",
+    "name":"My first Reality Modeling job",
+    "type":"Full",
+    "state":"unsubmitted",
+    "createdDateTime": "2020-09-14T14:29:55Z",
+    "lastModifiedDateTime":"2020-09-14T14:29:55Z",
+    "location":"EastUs",
+    "iTwinId": "ITWIN_ID",
+    "workspaceId":"WORKSPACE_ID",
+    "email":"john.doe@example.com",
+    "executionInformation":null,
+    "costEstimationParameters":{
+    "gigaPixels":2.5,
+    "megaPoints":1.5,
+    "meshQuality":"Extra"
+    },
+    "estimatedCost": 3.5,
+    "inputs":[
+      {
+        "id":"IMAGECOLLECTION_RD_ID",
+        "description":"Drone ImageCollection"
+      },
+      {
+        "id":"CCORIENTATIONS_RD_ID",
+        "description":"Drone CCOrientations"
+      }
+    ],
+    "jobSettings":{
+      "quality":"Extra",
+      "processingEngines":20,
+      "cacheSettings":null,
+      "outputs":[
+        {
+          "format":"OBJ",
+          "id":"OBJ_RD_ID"
+        }
+      ]
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+#### Response body
+
+The API will respond with a `201 Created` status code if the call is successful.
+
+You can see the job is in state _New_, meaning that it has been created but not yet submitted.
+This is the only state where you can still delete a job. Once a job is submitted, it cannot be deleted anymore.
+
+`location` indicates the region in which the job will be submitted. It is determined thanks to the project linked in your workspace.
+
+Outputs now have two properties: the `format` and the `realityDataId`.
+Creating a job automatically creates output reality data for your formats.
+Creating a job calculates its estimated cost from the 'costEstimationParameters' provided.
+Once the job is completed and successful, you will be able to download your output from _Reality Management API_ thanks to this id.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 5. Submit a job
+
+Now that the job is created, we will [submit it for processing](/apis/contextcapture/operations/jobs-patch/).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language='http' code={`PATCH https://api.bentley.com/contextcapture/jobs/JOB_ID HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+#### Request
+
+Submit an existing job by sending a HTTP PATCH message to https://api.bentley.com/contextcapture/jobs/JOB_ID endpoint with the payload describing to change to apply.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "state":"active"
+}`}
+    />,
+  ]}
+>
+
+#### Request Body
+
+To submit a job, the request body should only contain one property
+
+- **state** - State of the job, should be _active_ in order to submit the job
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "job":{
+    "id":"JOB_ID",
+    "name":"My first Reality Modeling job",
+    "type":"Full",
+    "state":"active",
+    "createdDateTime":"2020-09-14T14:29:55Z",
+    "lastModifiedDateTime":"2020-09-14T14:29:55Z",
+    "location":"EastUs",
+    "iTwinId": "ITWIN_ID",
+    "workspaceId":"WORKSPACE_ID",
+    "email":"john.doe@example.com",
+    "costEstimationParameters":{
+    "gigaPixels":2.5,
+    "megaPoints":1.5,
+    "meshQuality":"Extra"
+    },
+    "estimatedCost": 3.5,
+    "executionInformation":{
+      "submittedDateTime":"2020-09-14T14:34:20Z",
+      "startedDateTime":null,
+      "endedDateTime":null,
+      "outcome":null,
+      "estimatedUnits":null
+    },
+    "inputs":[
+      {
+        "id":"IMAGECOLLECTION_RD_ID",
+        "description":"Drone ImageCollection"
+      },
+      {
+        "id":"CCORIENTATIONS_RD_ID",
+        "description":"Drone CCOrientations"
+      }
+    ],
+    "jobSettings":{
+      "quality":"Extra",
+      "processingEngines":20,
+      "cacheSettings":null,
+      "outputs":[
+        {
+          "format":"OBJ",
+          "id":"OBJ_RD_ID"
+        }
+      ]
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+#### Response body
+
+The API will respond with a `200 OK` status code if the call is successful.
+
+The job is now in state _active_, meaning that it is awaiting to be processed or being processed.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 6. Track a job progress
+
+In order to follow your [job progress](/apis/contextcapture/operations/jobs-progress/), we have a specific endpoint you can call.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language='http' code={`GET https://api.bentley.com/contextcapture/jobs/JOB_ID/progress HTTP/1.\n
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+#### Request
+
+Job tracking is done by sending a HTTP GET message to https://api.bentley.com/contextcapture/jobs/JOB_ID/progress endpoint.
+
+In order to reduce stress on the service, we ask you to query with backoff intervals of [15, 30, 60, 120] seconds.
+The interval between the first and second query is 15 sec and then 30 sec... If the percentage changes the sequence is restarted.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "jobProgress":{
+    "percentage":98,
+    "state":"Active",
+    "step":"Reconstruction"
+  }
+}`}
+    />,
+    <CodeBlock
+      language="json"
+      code={`{
+  "jobProgress":{
+    "percentage":100,
+    "state":"Completed",
+    "step":""
+  }
+}`}
+    />
+  ]}
+>
+
+#### Response body
+
+The response will give you progress percentage of the job, with its state and the current processing step.
+
+Once the job is completed, you will see the state as _Completed_. It doesn't mean the job is successful, it states the job cannot evolve anymore.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 7. Retrieve a job result
+
+Once the job is completed, you can ask for the [complete job result](/apis/contextcapture/operations/jobs-get/).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language='http' code={`GET https://api.bentley.com/contextcapture/jobs/JOB_ID HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+#### Request
+
+Job information is retrieved by sending a HTTP GET message to https://api.bentley.com/contextcapture/jobs/JOB_ID endpoint.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "job":{
+    "id":"JOB_ID",
+    "name":"My first Reality Modeling job",
+    "type":"Full",
+    "state":"New",
+    "createdDateTime":"2020-09-14T14:29:55Z",
+    "lastModifiedDateTime":"2020-09-14T14:29:55Z",
+    "location":"EastUs",
+    "iTwinId": "ITWIN_ID",
+    "workspaceId":"WORKSPACE_ID",
+    "email":"john.doe@example.com",
+    "costEstimationParameters":{
+    "gigaPixels":2.5,
+    "megaPoints":1.5,
+    "meshQuality":"Extra"
+    },
+    "estimatedCost": 3.5,
+    "executionInformation":{
+      "submittedDateTime":"2020-09-14T14:34:20Z",
+      "startedDateTime":"2020-09-14T14:34:28Z",
+      "endedDateTime":"2020-09-14T14:41:49Z",
+      "outcome":"Success",
+      "estimatedUnits":0.05297
+    },
+    "inputs":[
+      {
+        "id":"IMAGECOLLECTION_RD_ID",
+        "description":"Drone ImageCollection"
+      },
+      {
+        "id":"CCORIENTATIONS_RD_ID",
+        "description":"Drone CCOrientations"
+      }
+    ],
+    "jobSettings":{
+      "quality":"Extra",
+      "processingEngines":20,
+      "cacheSettings":null,
+      "outputs":[
+        {
+          "format":"OBJ",
+          "id":"OBJ_RD_ID"
+        }
+      ]
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+#### Response body
+
+The API will respond with a `200 OK` status code if the call is successful.
+
+You can see the job outcome in the `executionInformation` section.
+If it is _Success_, you can retrieve the job outputs based on their reality data id.
+Outcome can also be _Failed_ or _Cancelled_
+
+You have some more information about the execution, namely the start time (when your job was picked up by a worker) and the end time.
+`estimatedUnits` are an estimate of the units billed for this job. They hold no legal value compared to billing.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulations for completing the _Reality Modeling REST API_ tutorial! You should now be able to create a workspace and a job, submit and track a job inside _Reality Modeling_.
+To go further and use _Reality Modeling_ to its maximum potential, you can check the following tutorials.
+
+<TileList>
+  <Tile
+    name="Using cache in Reality Modeling"
+    description="This tutorial focuses on using cache for faster processing in Reality Modeling"
+    thumbnail="/images/cccs-cache-thumb.png"
+    href="/tutorials/contextcapture-api-how-to-use-cache"
+  ></Tile>
+  <Tile
+    name="Better calibration in Reality Modeling"
+    description="Learn how to specify calibration settings in Reality Modeling, and download the result of a calibration"
+    thumbnail="/images/cccs-calibration-thumb.jpg"
+    href="/tutorials/contextcapture-api-better-calibration"
+  ></Tile>
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="iTwins API"
+    href="/apis/itwins/"
+    description="An iTwin is necessary for using Reality Modeling API. You can check its possibilities."
+  />
+  <LinkCard
+    title="Reality Data API"
+    href="/apis/realitydata/"
+    description="Reality Data API is necessary for uploading inputs for Reality Modeling, and downloading outputs."
+  />
+  <LinkCard
+    title="Reality Management API"
+    href="/apis/reality-management/"
+    description="Reality Management API is necessary for uploading inputs for Reality Modeling, and downloading outputs."
+  />
+</TileList>
+
+</ContinueLearningSection>

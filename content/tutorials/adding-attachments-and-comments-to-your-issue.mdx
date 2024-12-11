@@ -1,0 +1,272 @@
+---
+title: 'Adding Attachments and Comments to Your Issue'
+version: 1
+tile:
+  name: 'Adding Attachments and Comments to Your Issue'
+  description: 'Use the Issues REST API to add documents, images, and comments to an issue.'
+  href: '/tutorials/adding-attachments-and-comments-to-your-issue/'
+  durationInMinutes: 15
+  relatedApiIds: ['issues']
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="15">
+
+## Introduction
+
+Attachments and comments provide a great way for your team to discuss and collaborate on solving an issue. Attachments let you provide files with more details about an issue, and comments let multiple people ask questions and talk about an issue without overwriting each others' changes.
+
+In this tutorial, you will learn how to use the Issues REST API to add comments to an already-existing issue and view all of the issue's comments. You will also use the API to attach a file to the issue and then download it.
+
+## Prerequisites
+
+You will need to create an issue in your project so that you can add comments and attachments to it. Please complete the tutorial [Creating Your First Issue](../creating-your-first-issue/) if you haven't already.
+
+Once you have created an issue, note its `id` property. You will need to use that anytime you see **&lt;your-issue-id&gt;** in this tutorial.
+
+</Introduction>
+
+<TutorialSection>
+
+## 1. Comments
+
+Comments are simple text posts that are associated with a single issue. Many different users in your project can comment on an issue, and anyone who can view the issue will be able to see who said what and when. They're a useful tool for asking questions or providing clarification.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+<LinkButton
+  href="/apis/issues-v1/operations/add-comment-to-issue/"
+  target="_blank"
+  title="Try the Add Comment to Issue endpoint"
+  buttonText="Go"
+/>,
+<Title>Method, sample URL, and headers</Title>,
+<CodeBlock language='http' code={`POST https://api.bentley.com/issues/<your-issue-id>/comments HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+<Title>Sample body</Title>,
+<CodeBlock language='json' 
+  code={`{
+  "text": "This has been noted and will be fixed in version 1.3."
+}`} />,
+<Title>Sample response</Title>,
+<CodeBlock language='http' code={`HTTP/1.1 201 Created`} />
+]}>
+
+### 1.1. Creating a Comment
+
+Creating a comment is simple! Make a POST request to the [Add Comment to Issue](/apis/issues-v1/operations/add-comment-to-issue/) endpoint. The body is a JSON object containing just one property--`text`--whose string value is the contents of the message you want to send. The server will automatically generate and save metadata, including when the comment was posted and who made the request.
+
+#### URL
+
+The path includes your issue `id` followed by `/comments`, i.e. `https://api.bentley.com/issues/<your-issue-id>/comments`
+
+#### Body
+
+Provide a JSON object with a `text` property containing your message, and no other properties.
+
+#### Response
+
+If the request succeeds, the response will just consist of the `201 Created` status code (and some headers) without a body.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+<LinkButton
+  href="/apis/issues-v1/operations/get-issue-comments/"
+  target="_blank"
+  title="Try the Get Issue Comments endpoint"
+  buttonText="Go"
+/>,
+<Title>Sample request</Title>,
+<CodeBlock language='http' code={`GET https://api.bentley.com/issues/<your-issue-id>/comments HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+<Title>Sample response</Title>,
+<CodeBlock language='http' code={`HTTP/1.1 200 OK
+Content-Type: application/json\n
+{
+  "comments":[
+    {
+      "id":"xospFt7H20-9uSSLOwfBeO7IKKXOvh1Nkl344vJ_s_E",
+      "text":"This has been noted and will be fixed in version 1.3.",
+      "authorDisplayName":"Andrew Menzies",
+      "_links":{
+        "author":{
+          "href":"https://api.bentley.com/projects/16ab8bc6-c7de-4fdb-bdb9-248b3b07c178/members/9e543213-2457-466d-9de3-8d8a186b4189"
+        }
+      },
+      "createdDateTime":"2021-06-14T20:34:33.9220455Z"
+    }
+  ]
+}`} />
+]}>
+
+### 1.2. Viewing an Issue's Comments
+
+You can read the comment you added by making a GET request to the [Get Issue Comments](/apis/issues-v1/operations/get-issue-comments/) endpoint.
+
+#### URL
+
+The URL for this request is exactly the same as it is for creating a comment: `https://api.bentley.com/issues/<your-issue-id>/comments`
+
+#### Response
+
+The response consists of an array of comments. For each comment, the author's display name and the comment's creation time are provided, even though you didn't manually set them in your request.
+
+Each comment in the response also includes a link that can be followed to request additional information about the comment's author from the [Get iTwin Team Member Details](/apis/access-control-v2/operations/get-itwin-user-member/) endpoint of the **Access Control** API, assuming you have access to it.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Attachments
+
+The Issues API supports attaching files of many different types to issues--nearly any non-executable file type is supported. These can include documents, images (like a problem at the project's physical site or a screenshot of an iModel), and even short videos (up to 30MB). Adding an attachment to an issue right after you create it can be an excellent way of providing more context than words alone.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+<LinkButton
+  href="/apis/issues-v1/operations/add-attachment-to-issue/"
+  target="_blank"
+  title="Try the Add Attachment to Issue endpoint"
+  buttonText="Go"
+/>,
+<Title>Method, sample URL, and header</Title>,
+<CodeBlock
+  language="http"
+  code={`POST https://api.bentley.com/issues/<your-issue-id>/attachments HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}
+/>,
+<Title>Sample body</Title>,
+<CodeBlock
+  language="json"
+  code={`{
+  "fileName":"ExampleDoc.txt",
+  "caption":"Document related to the issue"
+}`}
+/>,
+<Title>Sample response</Title>,
+<CodeBlock
+  language="http"
+  code={`HTTP/1.1 201 Created
+Location: https://api.bentley.com/issues/xospFt7H20-9uSSLOwfBeBs-UbbpqxhKgAL4wWWajpw/attachments/xospFt7H20-9uSSLOwfBeM-a1K5hBDdNtT9MMU6U2dI`}
+/>,
+<LinkButton
+  href="/apis/issues-v1/operations/upload-attachment-file/"
+  target="_blank"
+  title="Try the Upload Attachment File endpoint"
+  buttonText="Go"
+/>,
+<Title>Sample request (you will also need to include the file's bytes)</Title>,
+<CodeBlock
+  language="http"
+  code={`PUT https://api.bentley.com/issues/xospFt7H20-9uSSLOwfBeBs-UbbpqxhKgAL4wWWajpw/attachments/xospFt7H20-9uSSLOwfBeM-a1K5hBDdNtT9MMU6U2dI HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`}
+/>
+]}>
+
+### 2.1. Adding an Attachment
+
+Adding an attachment is a two-step process. First, make a POST request to the [Add Attachment to Issue](/apis/issues-v1/operations/add-attachment-to-issue/) endpoint to create metadata for the file you're about to upload.
+
+#### URL
+
+The URL path includes the issue's `id` property followed by `/attachments`, i.e. `https://api.bentley.com/issues/<id>/attachments`.
+
+#### Body
+
+The request body is a JSON object. It must contain a **fileName** property which can be any valid filename (without a directory path). The file extension should be accurate for the type of file you are about to upload to ensure that users who download the file will be able to open it.
+
+You may also add a **caption** property. It just contains simple text that can provide additional context to users who look up the issue's attachments.
+
+#### Response
+
+If successful, the response will include a **Location** header with a URL. Now, for the second step: Upload your raw file (plus the Authorization header, as usual) via PUT request to that URL to complete the process.
+
+You can upload the file using the [Upload Attachment File](/apis/issues-v1/operations/upload-attachment-file/) endpoint. The `attachmentId` URL parameter is equal to the final segment of the URL that was returned in the `Location` header. (That is, the segment after `/attachments/`. For example, in the response shown under **Sample response**, the attachment id would be `xospFt7H20-9uSSLOwfBeM-a1K5hBDdNtT9MMU6U2dI`, but it'll be different for your attachment.)
+
+<Alert type="informational">
+
+Note: To upload a file using the Try It feature of our documentation site, choose the **Binary** radio button under **Body**.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+<LinkButton
+  href="/apis/issues-v1/operations/get-issue-attachments/"
+  target="_blank"
+  title="Try the Get Issue Attachments endpoint"
+  buttonText="Go"
+/>,
+<Title>Sample request to get attachment list</Title>,
+<CodeBlock language='http' code={`GET https://api.bentley.com/issues/<your-issue-id>/attachments HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+<Title>Sample attachment list response</Title>,
+<CodeBlock language='http' code={`HTTP/1.1 200 OK
+Content-Type: application/json\n
+{
+  "attachments":[
+    {
+      "id":"xospFt7H20-9uSSLOwfBeM-a1K5hBDdNtT9MMU6U2dI",
+      "fileName":"ExampleDoc.txt",
+      "createdDateTime":"2021-06-16T19:11:21.2722577Z",
+      "size":405,
+      "caption":"Document related to the issue",
+      "binding":null,
+      "type":"txt"
+    }
+  ]
+}`} />,
+<LinkButton
+  href="/apis/issues-v1/operations/get-attachment-by-id/"
+  target="_blank"
+  title="Try the Get Attachment File endpoint"
+  buttonText="Go"
+/>,
+<Title>Sample request to get file</Title>,
+<CodeBlock language='http' code={`GET https://api.bentley.com/issues/<your-issue-id>/attachments/<your-attachment-id> HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />
+]}>
+
+### 2.2. Getting the Issue's Attachments
+
+Make a GET request to the [Get Issue Attachments](/apis/issues-v1/operations/get-issue-attachments/) endpoint, passing your issue's `id` as the **id** parameter, to get a list of all files attached to the issue.
+
+This will return a JSON array of attachment metadata, including **fileName**, **id**, and the auto-populated **size** (in bytes) and **createdDateTime**. Find your attachment and take note of its `id`.
+
+Make a GET request to the [Get Attachment File by ID](/apis/issues-v1/operations/get-attachment-by-id/) endpoint, passing the same issue `id` as the **id** parameter and passing the attachment `id` as the **attachmentId** parameter. This will return the file you uploaded earlier. (If using the Try It feature, our developer site will attempt to display the file's bytes as text, so it may not work well for images. It might be better to try attaching a plain .txt file for purposes of this tutorial.)
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+<TileList>
+  <Tile
+    name="Adding Attachments and Comments to Your Issue"
+    description="Upload images and documents, and post comments, to make your issue more detailed."
+    href="/tutorials/adding-attachments-and-comments-to-your-issue"
+  />
+  <Tile
+    name="Model Issues Interactive Sample"
+    description="See the Issues API in action in an iTwin Viewer app."
+    href="https://www.itwinjs.org/sandboxes/iTwinPlatform/Issues"
+    isExternal={true}
+  />
+</TileList>
+
+</ContinueLearningSection>

@@ -1,0 +1,241 @@
+---
+title: 'Get Started!'
+version: 1
+tile:
+  name: 'Start building a Viewer App'
+  description: 'This quick start is intended to help you get started with using iTwin Platform visualization components. By the end of this walk-through, you will be able to build and run a web application for viewing an infrastructure digital twin (iTwin).'
+  thumbnail: '/images/retail-tutorial-sample-small.png'
+  href: '/tutorials/web-application-quick-start/'
+  durationInMinutes: 30
+  relatedApiIds: ['visualization']
+  showInFirstSteps: true
+  firstStepsSequenceNumber: 1
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="30" 
+  summaryImageSrc="/images/retail-tutorial-sample.png">
+
+## Introduction
+
+This quick start is intended to help you get started with using iTwin Platform visualization components. In this walk-through, you will be introduced to the **iTwin Viewer**, a customizable viewer that offers basic tooling and widgets for viewing an infrastructure digital twin and can be further extended with iTwin.js extensions.
+
+By the end of this walk-through, you will be able to build and run a web application for viewing an infrastructure digital twin (iTwin).
+
+</Introduction>
+
+<TutorialSection>
+
+## 1. Set up your environment
+
+Before you start this walk-through, you will need to download and install the following software on your machine.
+
+</TutorialSection>
+<TutorialSection 
+  subSection={true}
+  actions={[
+  <LinkButton
+    href="https://nodejs.org"
+    target="_blank"
+    title="Node.js"
+    icon={<NodeJsIcon />}
+  />,
+  <LinkButton
+    href="https://git-scm.com/downloads"
+    target="_blank"
+    title="Git"
+    icon={<GitIcon />}
+  />
+]}>
+
+### 1.1 Required materials
+
+##### [Node.js (LTS version)](https://nodejs.org)
+
+This tool provides the backend JavaScript runtime necessary for your computer to read and render code appropriately. It also allows you to run NPM command line (required for every iTwin project).
+
+##### [Git](https://git-scm.com/downloads)
+
+This is the source code control system for the iTwin repositories.
+
+</TutorialSection>
+
+<TutorialSection 
+  subSection={true}
+  actions={[
+  <LinkButton
+    href="https://www.google.com/chrome/"
+    target="_blank"
+    title="Google Chrome"
+    icon={<GoogleChromeIcon />}
+  />,
+  <LinkButton
+    href="https://code.visualstudio.com/"
+    target="_blank"
+    title="Visual Studio Code"
+    icon={<VSCodeIcon />}
+  />
+]}>
+
+### 1.2 Suggested materials
+
+##### [Google Chrome](https://www.google.com/chrome/)
+
+This software can help you to develop and debug frontend JavaScript problems.
+
+##### [Visual Studio Code](https://code.visualstudio.com/)
+
+This is our recommended editor and debugger tool for developing iTwin.js applications. It is free, open source and includes a GUI for working with GIT.
+
+</TutorialSection>
+
+<TutorialSection actions={[<CodeBlock language="bash" code="npx create-react-app your-app-name --template @itwin/web-viewer --scripts-version @bentley/react-scripts" />]}>
+
+## 2. Get the code
+
+The iTwin Viewer is available on GitHub at [link](https://github.com/iTwin/viewer/tree/master/packages/modules/web-viewer-react). To download the iTwin Viewer code:
+
+1. Open Terminal or a Command Prompt.
+1. In the terminal, run the following command:
+   `npx create-react-app your-app-name --template @itwin/web-viewer --scripts-version @bentley/react-scripts`
+   - This will generate a new application based on the iTwin Viewer React component.
+   - By default, the viewer will be stored in a directory called **your-app-name**
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Web Application Quick Start tutorial"/>]}>
+
+## 3. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to use the iTwin Viewer with the iModel you will generate next.
+
+Once generated, you will be shown a few lines of code under the button. You will need to copy them in the **.env** file from the application folder downloaded in the previous step.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Create an iModel
+
+To view your engineering design content, you will first need to synchronize your design files into an iModel. An iModel is a distributed relational database holding information about an infrastructure asset defined in a common schema. To learn more, click <a href="https://www.itwinjs.org/learning/imodel-connectors/?term=connectors" target="_blank">here</a>.
+
+### iModel creation process
+
+To create a Test iTwin and iModel:
+
+1. Go to https://developer.bentley.com
+1. Click the **Sign In** button and sign-in using your Bentley account credentials
+   - If you have not already registered, click **Register now** and complete the registration process.
+1. Click on your user icon and navigate to the **My iTwins** page
+1. Click the **Create** button
+1. Give your iModel a name
+1. Select **Create iModel from Bentley Sample** and choose the **Retail Building Sample** template
+   - If you have your own engineering design files, you can select **Empty** and then choose the **File Synchronization** tile from iModel Home. From there you will be able to synchronize your design files.
+1. Click the **Save** button and wait until your iModel is created
+
+<Alert type="informational">
+
+Note that after completing this step, you will be provided with both an iTwinId and an iModelID which will be required in a later step.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 5. Run the code
+
+After you have successfully downloaded the code, you are ready to run the sample. To run the sample:
+
+<Alert type="informational">
+
+Note: the following instructions show how to run the code using VS Code, but the same commands can be completed in a terminal.
+
+</Alert>
+
+1. Launch Visual Studio Code
+1. Click File > Open Folder and open the **your-app-name** directory that was created in the previous step.
+
+Next, you will need to configure the application with the client and iModel information that you created in the previous steps or any other SPA [app](/my-apps) and [iModel](/my-itwins) from your account.
+
+1. Open the .env file
+1. Enter the appropriate values for:
+   - `IMJS_AUTH_CLIENT_CLIENT_ID`: Enter the ClientID for the client you registered during the **Register a Client** step
+   - `IMJS_AUTH_CLIENT_REDIRECT_URI`: Enter the Redirect URI for the client you registered during the **Register a Client** step
+   - `IMJS_AUTH_CLIENT_LOGOUT_URI`: Enter the Post Logout Redirect URI for the client you registered during the **Register a Client** step
+   - `IMJS_AUTH_CLIENT_SCOPES`: Enter the Scopes for the client you registered during the **Register a Client** step
+   - `IMJS_ITWIN_ID`: Enter the iTwinId that was generated during the **Create an iModel** step
+   - `IMJS_IMODEL_ID`: Enter the iModelID that was generated during the **Create an iModel** step
+1. Open a terminal from the menu bar View > Terminal.
+1. In the terminal window, enter `npm start`. This will serve the application with live reloading.
+
+<Alert type="informational">
+
+Note: You can add/update/remove files as needed. If running `npm start` while making changes, your application will automatically recompile and reload.
+
+</Alert>
+
+Congratulations, running npm start should launch a web browser and display your iModel in the iTwin Viewer Starter App. If you use your own file, this may take a few minutes to load depending on the file size you used.
+
+If the iTwin Viewer does not automatically open, you can open a browser and load the URL `http://localhost:3000`.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulations for the completion of your first viewer app! You've now know a lot on the subject, but there's still possibilities to learn more to unleash the platform capabilities.
+
+<TileList>
+  <Tile
+    name='Customizing the iTwin Viewer - "The Basics"'
+    thumbnail="/images/itwin-viewer-hello-world-sample-small.png"
+    description="This tutorial will take you through the first steps of customizing your iTwin Web Viewer. First you will learn how to add a new user interface component. Later you will customize that component to change the background color of your viewer."
+    href="/tutorials/itwin-viewer-hello-world"
+  ></Tile>
+  <Tile
+    name="Adding showcase widgets to your iTwin Viewer"
+    thumbnail="/images/view_attributes_ported_results.png"
+    description="This tutorial will take widgets from the sample showcase and add them into your iTwin Viewer using the `uiProviders` prop."
+    href="/tutorials/adding-showcase-widgets-to-your-itwin-viewer/"
+  ></Tile>
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Create React App"
+    href="https://create-react-app.dev"
+    description="Set up a modern web app by running one command."
+    isExternal={true}
+  />
+  <LinkCard
+    title="iTwin Viewer React"
+    href="https://www.npmjs.com/package/@itwin/web-viewer-react"
+    description="The iTwin Viewer is a configurable iTwin.js viewer that offers basic tooling and widgets out-of-the-box and can be further extended through the use of iTwin.js extensions. This package contains the Viewer as a React component and some additional Typescript APIs."
+    isExternal={true}
+  />
+  <LinkCard
+    title="iTwin Viewer Create React App Template"
+    href="https://www.npmjs.com/package/@itwin/cra-template-web-viewer"
+    description="This is a template for applications that are based on the iTwin Viewer for Create React App."
+    isExternal={true}
+  />
+  <LinkCard
+    title="Bentley React Scripts"
+    href="https://www.npmjs.com/package/@bentley/react-scripts"
+    description="This is the iTwin.js fork of react-scripts."
+    isExternal={true}
+  />
+</TileList>
+</ContinueLearningSection>

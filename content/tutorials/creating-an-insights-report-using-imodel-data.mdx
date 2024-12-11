@@ -1,0 +1,735 @@
+---
+title: 'Creating an Insights Report using iModel Data'
+version: 1
+tile:
+  name: 'Creating an Insights Report using iModel Data'
+  description: 'This tutorial will teach you how to create an Insights Report using iModel data.'
+  href: '/tutorials/creating-an-insights-report-using-imodel-data'
+  durationInMinutes: 45
+  relatedApiIds: ['insights', 'insights/reporting']
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="45">
+
+## Introduction
+
+The Reporting API is a tool for aggregating digital twin data from multiple sources
+into one unified format and place. With the Reporting API, consuming your data through
+business intelligence applications such as Power BI or your own custom-built
+application is dramatically simplified.
+
+This tutorial will cover all the fundamental steps to a typical workflow of creating
+an Insights Report using iModel data. We will first go through a step by step guide
+on how to use the Reporting APIs to configure and generate a simple Report. We will also
+briefly cover a small sample NodeJS application that goes through the same steps to help
+you get started writing an application of your own to build Reports on your own iModels.
+
+</Introduction>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Creating an insights report using imodel data tutorial"/>]}>
+
+## 1. Set up your environment
+
+This tutorial expects that you have access to a registered application and have access to a project as owner/administrator or know someone who has owner/admin privileges. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+Use of the Reporting APIs requires some iModel/Project level Permissions.
+For these Permissions, you must be an Organization Administrator for the Organization
+that owns a given Project or have `administration_manage_roles` Permission assigned at
+the Project level. If you do not have admin access to the Project or iModel you would
+like to use, contact somebody who is a Project Administrator. As a Project Administrator,
+you can use APIs described in the [Manage Project Team Members](/tutorials/manage-user-members-on-itwins-guide/)
+tutorial to create a Role and update it with `"permissions": ["REPORTINGVIEW", "REPORTINGEDIT", "imodels_read", "imodels_write"]`.
+Once this is done and the Role is assigned to you, you can use any iModel inside your
+Project to finish this tutorial.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://nodejs.org"
+      target="_blank"
+      title="Node.js"
+      icon={<NodeJsIcon />}
+    />,
+    <LinkButton
+      href="https://git-scm.com/downloads"
+      target="_blank"
+      title="Git"
+      icon={<GitIcon />}
+    />,
+    <Title>Clone our TypeScript Sample</Title>,
+    <CodeBlock language="bash"
+      code={`git clone https://github.com/iTwin/insights-api-sample-console-app`} />,
+  ]}>
+
+### 1.1 Required materials
+
+##### <a href="https://nodejs.org" target="_blank">Node.js v12 (must be greater than 12.10.x)</a>
+
+This tool provides the backend JavaScript runtime necessary for your computer to read and
+render code appropriately. It also allows you to run NPM command line (required for every
+iTwin project).
+
+##### <a href="https://git-scm.com/downloads" target="_blank">Git</a>
+
+This is the source code control system for the iTwin repositories.
+
+##### <a href="https://github.com/iTwin/changed-elements-tutorial" target="_blank">Tutorial Repository</a>
+
+This is the github repository containing the prebuilt sample that you will use in this
+tutorial.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://www.google.com/chrome/"
+      target="_blank"
+      title="Google Chrome"
+      icon={<GoogleChromeIcon />}
+    />,
+    <LinkButton
+      href="https://code.visualstudio.com/"
+      target="_blank"
+      title="Visual Studio Code"
+      icon={<VSCodeIcon />}
+    />,
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+### 1.2 Suggested materials
+
+##### <a href="https://www.google.com/chrome/" target="_blank">Google Chrome</a>
+
+This software can help you to develop and debug frontend JavaScript problems.
+
+##### <a href="https://code.visualstudio.com/" target="_blank">Visual Studio Code</a>
+
+This is our recommended editor and debugger tool for developing iTwin.js applications.
+It is free, open source and includes a GUI for working with GIT.
+
+##### <a href="https://www.postman.com/downloads/" target="_blank">Postman</a>
+
+If you want to test the REST API calls directly, you can use
+[Postman](https://www.postman.com/downloads/) or any other application capable of sending
+HTTP requests. If you do it this way, you will require an authorization token for the HTTP
+requests to work.
+
+To learn more about how authentication and authorization works in an iTwin powered
+application, check out the full
+[documentation](/apis/overview/authorization/) on how to obtain
+a valid token.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Step-by-Step Guide to Create a Report through the Reporting APIs
+
+Before diving into the code to create an Insights Report based on iModel data, let's take
+some time to understand the workflow and the API calls that are involved.
+
+### Workflow for iModel Reports
+
+- Create a new Report.
+- Create an empty iModel Mapping.
+- Assign the Mapping created to the new Report (create a report mapping).
+- Create one or more Groups under that Mapping.
+- Create one or more GroupProperties for each Group.
+- Extract your data from the iModel.
+- Ensure your Extraction has completed.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 2.1 Create a Report
+
+In this section, we will introduce what a report is and how to create a report using our API.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+#### 2.1.1 What is a Report?
+
+A Report represents a collection of data. The way the Reporting API views a Report is as a
+collection of Mappings. With the Reporting API, you will assign one or more Mappings to a
+Report to be consumed by some application such as Power BI as a single data source.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP Request to Create Report</Title>,
+    <CodeBlock language="http" code={`POST https://api.bentley.com/insights/reporting/reports/ HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json
+{
+    "displayName": "myReport",
+    "description": "myReportDescription",
+    "projectId": "myProjectId"
+}`}/>,
+    <Title>Example result from the Create Report Operation</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "report":{
+    "id":"myReportId",
+    "displayName":"myReport",
+    "description":"myReportDescription",
+    "deleted":false,
+    "_links":{
+      "project":{
+        "href":"https://api.bentley.com/projects/myProjectId"
+      }
+    }
+  }
+}`} />,
+]}>
+
+#### 2.1.2 How do I create a Report using the Reporting API?
+
+First of all, you need a Bearer Token to run all the APIs in this tutorial. In order to do
+so, go to our [documentation](/apis/insights/operations/create-report/),
+click on `Try it out` button. Under **Authorization**, select `authorizationCode` of second
+dropdown button and wait for the token to be generated.
+
+For this API request, you need to specify your report name, description and projectId in the
+request body. See the sample for details.
+
+You can also execute the request directly at the [Create Report API documentation](/apis/insights/operations/create-report/)
+page using the 'Try It' button.
+
+Take note of the `id` in the response. This will be used later as `reportId`.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 2.2 Create a Mapping
+
+In this section, we will introduce what a mapping is and how to create a mapping using our API.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+#### 2.2.1 What is a Mapping?
+
+The Reporting story begins with Mapping. Mapping is a configuration process where all desired
+data sources are identified. These Mappings also will help describe what data is desired
+from each data source and how to structure it for Insights. The Mapping process will be unique
+for each type of data source. For example, a Mapping for data from an iModel may not look the
+same as a Mapping for data from Validation, but ultimately all that data needs to arrive at
+one place and that is what Mapping orchestrates for you.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP Request to Create Mapping</Title>,
+    <CodeBlock language="http" code={`POST https://api.bentley.com/insights/reporting/datasources/iModels/myIModelId/mappings HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json
+{
+  "displayName":"myMappingName",
+  "description":"myMappingDescription"
+}`}/>,
+    <Title>Example result from the Create Report Operation</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "mapping":{
+    id":"myMappingId",
+    "displayName":"myMappingName",
+    "description":"myMappingDescription",
+    "extractionEnabled": true,
+    "createdOn": "2021-09-03T10:48:45+00:00",
+    "createdBy": "hanson.deck@cohesivecompanies.com",
+    "modifiedOn": "2021-09-03T10:48:45+00:00",
+    "modifiedBy": "hanson.deck@cohesivecompanies.com",
+    "_links":{
+      "imodel":{
+        "href":"https://api.bentley.com/imodels/myIModelId"
+    }
+  }
+}`} />,
+]}>
+
+#### 2.2.2 How do I create a Mapping using the Reporting API?
+
+Creating a Mapping is simple. All you need to provide is a `displayName` and a `description`.
+See the sample for details.
+
+You can also execute the request directly at the [Create Mapping API documentation](/apis/insights/operations/create-mapping/)
+page using the 'Try It' button.
+
+Take note of the `id` in the response. This will be used later as `mappingId`.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 2.3 Link your Mapping to your Report
+
+In this section, we will introduce what a report mapping is and how to create a report mapping
+using our API.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+#### 2.3.1 What is a Report Mapping?
+
+Report Mappings are used to assign a Mapping to a Report. This relationship is many-to-many.
+One report can have many mappings, and one mapping can be assigned to many reports. When generating
+the Report data, our API will find all the Mappings assigned to this Report and collect data from
+each data source defined by the Mappings.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP Request to Create Report Mapping</Title>,
+    <CodeBlock language="http" code={`POST https://api.bentley.com/insights/reporting/reports/myReportId/datasources/iModelMappings HTTP/1.1
+    Authorization: Bearer JWT_TOKEN
+Content-Type: application/json
+{
+  "mappingId": "myMappingId",
+  "imodelId": "myIModelId"
+}
+}`}/>,
+    <Title>Example result from the Create Report Mapping Operation</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "mapping":{
+    "reportId": "myReportId",
+    "mappingId": "myMappingId",
+    "imodelId": "myIModelId",
+    "_links": {
+      "report": {
+        "href": "https://api.bentley.com/insights/reporting/reports/myReportId"
+      },
+      "mapping": {
+        "href": "https://api.bentley.com/insights/reporting/datasources/iModels/myIModelId/mappings/myMappingId" 
+      },
+      "imodel": {
+        "href": "https://api.bentley.com/imodels/myIModelId"
+      }
+    }
+  }
+}`} />,
+  ]}>
+
+#### 2.3.2 How do I create a Report Mapping using the Reporting API?
+
+See the sample for details.
+
+You can also execute the request directly at the [Create Report Mapping API documentation](/apis/insights/operations/create-report-mapping/)
+page using the 'Try It' button.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 2.4 Create a Group
+
+In this section, we will introduce what a group is and how to create a group using our API.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+#### 2.4.1 What is a Group?
+
+A Group is a collection of data defined by a given query or other constraints. In this tutorial,
+you can consider a Group as a collection of iModel elements.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP Request to Create Group</Title>,
+    <CodeBlock language="http" code={`POST https://api.bentley.com/insights/reporting/datasources/iModels/myIModelId/mappings/myMappingId/groups HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json
+{
+  "displayName":"myGroupName",
+  "description":"myGroupDescription",
+  "query": "SELECT * FROM BisCore.PhysicalElement"
+}`}/>,
+    <Title>Example result from the Create Group Operation</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "group":{
+    "id": "myGroupId",
+    "displayName":"myGroupName",
+    "description":"myGroupDescription", 
+    "query": "SELECT * FROM BisCore.PhysicalElement",
+    "_links": {
+      "imodel": {
+        "href": "https://api.bentley.com/imodels/myIModelId"
+      },
+      "mapping": {
+        "href": "https://api.bentley.com/insights/reporting/datasources/iModels/myIModelId/mappings/myMappingId"
+      }
+    }
+}`} />,
+  ]}>
+
+#### 2.4.2 How do I create a Group using the Reporting API?
+
+The `query` needs to be a valid [ECSQL](https://www.itwinjs.org/learning/ecsql/) query that will
+be executed against the target iModel to build this group. If you are unfamiliar with ECSQL, a
+great starter query to get you through this tutorial is `SELECT * FROM bis.physicalelement`. You
+can use the [iModel Console](https://imodelconsole.bentley.com) to explore your iModel in detail
+using ECSQL.
+
+You can also execute the request directly at the [Create Group API documentation](/apis/insights/operations/create-group/)
+page using the 'Try It' button.
+
+Take note of the `id` in the response. This will be used later as `groupId`.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 2.5 Create a GroupProperty
+
+In this section, we will introduce what a GroupProperty is and how to create a GroupProperty
+using our API.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+#### 2.5.1 What is a GroupProperty?
+
+A GroupProperty is a property to be extracted from the iModel elements and how it should be
+identified in your Report.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP Request to Create GroupProperties</Title>,
+    <CodeBlock language="http" code={`POST https://api.bentley.com/insights/reporting/datasources/iModels/myIModelId/mappings/myMappingId/groups/myGroupId/properties HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json
+{
+  "displayName": "Code",
+  "dataType": "String",
+  "quantityType": "Undefined",
+  "ecProperties": [
+    {
+      "ecSchemaName": "Generic",
+      "ecClassName": "PhysicalObject",
+      "ecPropertyName": "Category.CodeValue",
+      "ecPropertyType": "String"
+    }
+  ]
+}`}/>,
+    <Title>Example result from the Create GroupProperty Operation</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "property":{
+    "id": "myPropertyId",
+    "displayName": "Code",
+    "dataType": "String",
+    "quantityType": "Undefined",
+    "ecProperties": [
+      {
+        "ecSchemaName": "Generic",
+        "ecClassName": "PhysicalObject",
+        "ecPropertyName": "Category.CodeValue",
+        "ecPropertyType": "String"
+      }
+    ],
+    "_links": {
+      "imodel": {
+        "href": "https://api.bentley.com/imodels/myIModelId"
+      },
+      "mapping": {
+        "href": "https://api.bentley.com/insights/reporting/datasources/imodels/myIModelId/mappings/myMappingId"
+      },
+      "group": {
+        "href": "https://api.bentley.com/insights/reporting/datasources/imodels/myIModelId/mappings/myMappingId/groups/myGroupId"
+      }
+    }
+  }
+}`} />,
+  ]}>
+
+#### 2.5.2 How do I create a GroupProperty using the Reporting API?
+
+You need to define one or multiple properties you want to extract from the each row of data
+returned by the `query` defined in your Group - each row is an element in the iModel. There
+are some restrictions on the property parameters:
+
+- dataType options: `"Boolean"`, `"Number"`, `"String"`
+- quantityType options: `"Undefined"`, `"Area"`, `"Distance"`, `"Force"`, `"Mass"`, `"Monetary"`, `"Time"`, `"Volume"`
+- ecPropertyType is a dataType
+- ECProperties are specific to each iModel so check on the iModel before defining them.
+
+Again a great resource to help you understand this configuration and what properties to select
+is the [iModel Console](https://imodelconsole.bentley.com). Navigate to your target iModel and
+enter the `query` you defined earlier when creating a Group. This will provide you with the
+information you need to fill the fields like `ecSchemaName`, `ecClassName`, `ecPropertyName`,
+etc. If you aren't able to find any meaningful properties to map for your iModel elements,
+`Yaw`, `Pitch`, and `Roll` are always a safe bet when it comes to 3D geometric elements.
+
+You can also execute the request directly at the [Create GroupProperty API documentation](/apis/insights/operations/create-groupproperty/)
+page using the 'Try It' button.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 2.6 Run a Data Extraction
+
+In this section, we will introduce what a data extraction is and how to create a data extraction and check extraction status using our API.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+#### 2.6.1 What is a data Extraction?
+
+More often than not, some preprocessing will be required before the data defined in a Mapping
+is actually available to be consumed as a Report. Endpoints are provided in the Reporting API
+to trigger the data Extraction process. Depending on the data source this may be a one-time
+action, required for data syncs, or not required at all. See data source specific
+[documentation](/apis/insights/overview) to find out more.
+
+For iModels as a data source, data Extraction is a background process that runs the queries
+defined by each Group in each Mapping to extract iModel elements and the specified properties.
+Each data Extraction will run all the Mappings linked to all Reports associated with an iModel.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP Request to run a data extraction</Title>,
+    <CodeBlock language="http" code={`POST https://api.bentley.com/insights/reporting/datasources/iModels/myIModelId/extraction/run HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>,
+    <Title>Example result from the run data extraction Operation</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "run":{
+    "id": "myExtractionJobId",
+    "_links": {
+      "status": {
+        "href": "https://api.bentley.com/insights/reporting/datasources/extraction/status/myRunId"
+      }
+    }
+  }
+}`} />,
+  ]}>
+
+#### 2.6.2 How do I run a data Extraction using the Reporting API?
+
+See the sample for more details.
+
+You can also execute the request directly at the [Run Extraction API documentation](/apis/insights/operations/run-extraction/)
+page using the 'Try It' button.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Example HTTP Request to get extraction status</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/insights/reporting/datasources/iModels/myIModelId/extraction/status/myExtractionJobId HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>,
+    <Title>Example result from the get extraction status Operation</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "status":{
+    "state": "Succeeded",
+      "reason": "Completed",
+      "containsIssues": true,
+      "_links": {
+        "logs": {
+          "href": "https://api.bentley.com/insights/reporting/datasources/extraction/status/myRunId/logs"
+        }
+      }
+  }
+}`} />,
+  ]}>
+
+#### 2.6.3 How do I check the status of an Extraction using the Reporting API?
+
+Run this GET request with `run.id` from response of the last step. See the sample for more
+details.
+
+You can also execute the request directly at the [Get Extraction Status API documentation](/apis/insights/operations/get-extraction-status/)
+page using the 'Try It' button.
+
+<Alert type="informational">
+
+The returned state could be Pending, Running, Succeeded, or Failed.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. A Sample TypeScript Console Application
+
+Please download the [sample app](https://github.com/iTwin/insights-api-sample-console-app). We
+will be walking you through how to configure the application to programmatically configure and
+prepare a Report.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 3.1 Project Structure
+
+The full project structure of this app is explained below:
+
+| Name             | Description                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| .vscode:         | Contains VS Code specific settings                                                           |
+| .github:         | Contains Github related files                                                                |
+| lib:             | Contains the distributable (or output) from your TypeScript build. This is the code you ship |
+| src:             | Contains source code that will be compiled to the dist dir                                   |
+| **src/Main.ts**: | Main entry point for executing API requests to create report based on iModel data            |
+| package.json:    | File that contains npm dependencies as well as build scripts                                 |
+| tsconfig.json:   | Config settings for compiling server code written in TypeScript                              |
+| config.json:     | Config settings for authentication and iModel data extraction related configurations         |
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>Sample Config File</Title>,
+    <CodeBlock language={"json"}
+      code={`{
+  "projectId":"myProjectId",
+  "iModelId":"myIModelId",
+  "reportName":"SampleReport",
+  "mappingName":"SampleMapping",
+  "groupName":"SampleGroup",
+  "groupCreateQuery": "SELECT * FROM BisCore.PhysicalElement",
+  "groupProperty": {
+    "displayName":"SampleGroupProperty",
+    "dataType": "String",
+    "quantityType": "Undefined",
+    "ecProperties": [{
+      "ecSchemaName": "Generic",
+      "ecClassName": "PhysicalObject",
+      "ecPropertyName": "Category.CodeValue",
+      "ecPropertyType": "String"
+      }]
+  },
+  "authorization": {
+    "clientId": "",
+    "issuerUrl": "https://ims.bentley.com",
+    "redirectUri": "http://localhost:3000/signin-callback",
+    "scope": "itwin-platform"
+  },
+  "timeoutMS": 600000
+}`}
+    />,
+  ]}
+>
+
+### 3.2 Configuration
+
+#### How to setup `config.json`
+
+The entire sample application can be controlled using the configuration file located at
+`src/config.json`. What is provided is a sample configuration file and you will have to replace
+most values with your parameters for your own setup. Most of the key concepts have been
+explained in the earlier step-by-step breakdown of the workflow.
+
+| Name       | Description                                                                                                             |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| clientId:  | You should have obtained this from the [preparation step](#1-set-up-your-environment).                                  |
+| scope:     | Must have `itwin-platform` scope for Reporting platform APIs.                                                           |
+| timeoutMS: | This is a safeguard parameter to prevent the sample app from running indefinitely if an error occurs during Extraction. |
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 3.3 Run the app
+
+Open a terminal/console window and navigate to the folder containing the
+`insights-api-sample-console-app` project.
+
+```sh
+cd insights-api-sample-console-app
+```
+
+- Install dependencies
+
+  ```sh
+  npm install
+  ```
+
+- Build and run the project
+
+  ```sh
+  npm run build
+  npm run start
+  ```
+
+</TutorialSection>
+
+<TutorialSection>
+
+## Conclusion
+
+Congratulations on completing this tutorial, at this point you should have been able to run
+the typical report creation and data extraction workflow using the Reporting API! Now you can
+take the Reporting API and create your own customized Groups and GroupProperties and map
+them to your own customized Reports. You can run Extractions based on the Groups and Mappings
+you defined and generate Reports which can be consumed through other application such as Power
+BI.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Reporting API Documentation"
+    href="/apis/insights/"
+    description="This is the official documentation of Reporting API."
+  />
+</TileList>
+
+</ContinueLearningSection>

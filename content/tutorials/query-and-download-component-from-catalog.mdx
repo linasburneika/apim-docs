@@ -1,0 +1,565 @@
+---
+title: 'Query and Download Component from a Catalog'
+version: 1
+tile:
+  name: 'Query and Download Component from a Catalog'
+  description: 'This tutorial will guide you through the process of querying a component from a catalog in an organization.'
+  href: '/tutorials/query-and-download-component-from-catalog'
+  durationInMinutes: 10
+  relatedApiIds: ['library']
+  showInFirstSteps: false
+  firstStepsSequenceNumber: 3
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="10">
+
+## Introduction
+
+This tutorial will take you through the process of querying a component from a catalog in an organization.
+
+By the end of this walk-through, you will be able to utilize the API endpoints in order to query components from a catalog and download associated files from the component.
+
+</Introduction>
+
+<TutorialSection
+  actions={[
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- A tool such as `Postman` that can be used to execute http calls. These calls can also be made using the `TryIt` button in the API documentation.
+- User must be affiliated with an Organization and should either be an Organization Administrator or have 'Read' permission at Organization level to upload components to catalog.
+- For more information about User Management please visit our Bentley Communities [Licensing, Cloud, and Web Services](https://bentleysystems.service-now.com/community?id=kb_article_view&sys_kb_id=1e5410491b7d8a90f3fc5287624bcb57) wiki page.
+- A catalog containing few components already exists and User has the `id` of the catalog.
+  - Instructions to upload components to a catalog can be found [here](/tutorials/upload-component-to-catalog)
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Upload component to catalog tutorial"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+Before you can make a request to the APIs, a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use Client ID generated from previous registration step.
+
+</Alert>
+
+### Grab a user token from Api reference "Try it" Section
+
+1. Go [here](/apis/library/operations/upload-component/)
+2. Click `Try it` button.
+3. Under the `Authorization` section, select `authorizationCode` from the dropdown.
+4. After the sign in popup closes, the `Authorization` header with token value should be visible beneath the `HTTP request` dropdown.
+5. Copy & paste the `Authorization` value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Query Components From a Catalog
+
+Library API provides `https://api.bentley.com/library/components` endpoint to query components. When no query parameter is provided in the
+request, all the components from the organization are returned. You can set `$top` and `$skip` query parameters to specify specific page and number of components in the response.
+Query parameter `projectId` is used in case query is made to a project context but we will not use this, since in this tutorial we are dealing with organization context.
+In next steps we will use two query parameters of this endpoint `catalogs` and `$search` to query components from a catalog.
+
+See the [Library API documentation to get components](/apis/library/operations/get-components) for more details.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`GET https://api.bentley.com/library/components?catalogs=7f427c30-8dce-4803-81dc-e8681a3bd757 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Prefer: return=representation
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 200 OK 
+cache-control: no-cache
+content-encoding: gzip
+content-type: application/json
+date: Thu, 09 Sep 2021 08:14:47 GMT
+elapsed-time: 276
+expires: -1
+odata-version: 4.0
+pragma: no-cache
+preference-applied: odata.include-annotations="*"
+request-context: appId=cid-v1:6ee7c246-23f0-43be-ac34-bbbb36da72e9
+request-id: 58ea777e-2615-4f7c-9f3f-0c85e882e9fa
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-correlation-id: 1dd1cd38-4b6c-42b2-9104-2ae0353f4a63
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "components": [{
+        "id": "404f7540-63c7-49b5-be77-21b56074e58c",
+        "displayName": "Sample Door",
+        "description": "Tutorial sample door",
+        "state": "Draft",
+        "createdDateTime": "2021-09-09T07:27:07.055Z",
+        "lastModifiedDateTime": "2021-09-09T09:09:34.225Z",
+        "supportedFileTypes": ["RFA"],
+        "hashtags": ["tutorialsampledoor", "wooden"],
+        "_links": {
+            "catalogs": [{
+                "href": "https://api.bentley.com/library/catalogs/7f427c30-8dce-4803-81dc-e8681a3bd757"
+            }],
+            "application": {
+                "href": "https://api.bentley.com/library/applications/3c18a35e-2524-4afb-b8cc-ac0447aa26dd"
+            },
+            "manufacturer": {
+                "href": "https://api.bentley.com/library/manufacturers/83d16fc5-7193-4726-bd6f-4a5a95c01ba1"
+            },
+            "category": {
+                "href": "https://api.bentley.com/library/categories/d41ad7d4-12cb-44ee-912d-8ff24936fd4a"
+            }
+        }
+    }, {
+        "id": "a0aff8bb-1d8e-4227-9cee-a1b87a646e34",
+        "displayName": "Sample Window",
+        "description": "A sample window",
+        "state": "Draft",
+        "createdDateTime": "2021-09-09T09:09:11.145Z",
+        "lastModifiedDateTime": "2021-09-09T09:09:11.543Z",
+        "supportedFileTypes": ["RFA"],
+        "hashtags": ["wooden"],
+        "_links": {
+            "catalogs": [{
+                "href": "https://api.bentley.com/library/catalogs/7f427c30-8dce-4803-81dc-e8681a3bd757"
+            }],
+            "application": {
+                "href": "https://api.bentley.com/library/applications/3c18a35e-2524-4afb-b8cc-ac0447aa26dd"
+            },
+            "manufacturer": {
+                "href": null
+            },
+            "category": {
+                "href": "https://api.bentley.com/library/categories/d41ad7d4-12cb-44ee-912d-8ff24936fd4a"
+            }
+        }
+    }, {
+        "id": "57fefe11-df1d-40c7-ae1a-02e233b9a7c7",
+        "displayName": "Tutorial Sample Component",
+        "description": "Tutorial Sample Description",
+        "state": "Published",
+        "createdDateTime": "2021-09-06T15:17:45.883Z",
+        "lastModifiedDateTime": "2021-09-06T15:37:06.137Z",
+        "supportedFileTypes": ["RFA"],
+        "hashtags": ["SampleTag1", "SampleTag2"],
+        "_links": {
+            "catalogs": [{
+                "href": "https://api.bentley.com/library/catalogs/7f427c30-8dce-4803-81dc-e8681a3bd757"
+            }],
+            "application": {
+                "href": "https://api.bentley.com/library/applications/1418693a-8f60-4719-af0b-ceee1ad41e33"
+            },
+            "manufacturer": {
+                "href": "https://api.bentley.com/library/manufacturers/d4485150-ad6d-4d76-a3e2-50a0f690afc9"
+            },
+            "category": {
+                "href": "https://api.bentley.com/library/categories/63b7d70a-a426-4530-8c0f-3efd6a6c0da7"
+            }
+        }
+    }],
+    "_links": {
+        "self": {
+            "href": "https://api.bentley.com/library/components?$skip=0&$top=100"
+        },
+        "prev": {
+            "href": "https://api.bentley.com/library/components?$skip=0&$top=100"
+        },
+        "next": {
+            "href": "https://api.bentley.com/library/components?$skip=100&$top=100"
+        }
+    }
+}`}/>,
+]}>
+
+### 3.1 Query All Components From a Catalog
+
+We already have a catalog with `id` 7f427c30-8dce-4803-81dc-e8681a3bd757 and it has three components. By providing catalog Id to `catalogs` query parameters, you can get
+all the components in the catalog. `catalogs` query parameter can accept a comma separated string of multiple catalog Ids to return components from more than one catalogs but for this tutorial
+we will use a single catalog Id. Let's make a GET call to `https://api.bentley.com/library/components?catalogs=7f427c30-8dce-4803-81dc-e8681a3bd757` endpoint. Response contains all the components
+from this catalog, in this case there are three components.
+
+By default, `Prefer` header is set to 'return=minimal' to return only `id` and `displayName` of the components in the response, We have changed this value to 'return=representation'
+to get all the properties of the component in the response.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`GET https://api.bentley.com/library/components?$search=Door&catalogs=7f427c30-8dce-4803-81dc-e8681a3bd757 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Prefer: return=representation
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 200 OK 
+cache-control: no-cache
+content-encoding: gzip
+content-type: application/json
+date: Thu, 09 Sep 2021 08:14:47 GMT
+elapsed-time: 276
+expires: -1
+odata-version: 4.0
+pragma: no-cache
+preference-applied: odata.include-annotations="*"
+request-context: appId=cid-v1:6ee7c246-23f0-43be-ac34-bbbb36da72e9
+request-id: 58ea777e-2615-4f7c-9f3f-0c85e882e9fa
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-correlation-id: 1dd1cd38-4b6c-42b2-9104-2ae0353f4a63
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "components": [{
+        "id": "404f7540-63c7-49b5-be77-21b56074e58c",
+        "displayName": "Sample Door",
+        "description": "Tutorial sample door",
+        "state": "Draft",
+        "createdDateTime": "2021-09-09T07:27:07.055Z",
+        "lastModifiedDateTime": "2021-09-09T07:27:07.493Z",
+        "supportedFileTypes": ["RFA"],
+        "hashtags": ["tutorialsampledoor"],
+        "_links": {
+            "catalogs": [{
+                "href": "https://api.bentley.com/library/catalogs/7f427c30-8dce-4803-81dc-e8681a3bd757"
+            }],
+            "application": {
+                "href": "https://api.bentley.com/library/applications/3c18a35e-2524-4afb-b8cc-ac0447aa26dd"
+            },
+            "manufacturer": {
+                "href": "https://api.bentley.com/library/manufacturers/83d16fc5-7193-4726-bd6f-4a5a95c01ba1"
+            },
+            "category": {
+                "href": "https://api.bentley.com/library/categories/d41ad7d4-12cb-44ee-912d-8ff24936fd4a"
+            }
+        }
+    }],
+    "_links": {
+        "self": {
+            "href": "https://api.bentley.com/library/components?$skip=0&$top=100"
+        },
+        "prev": {
+            "href": "https://api.bentley.com/library/components?$skip=0&$top=100"
+        },
+        "next": {
+            "href": "https://api.bentley.com/library/components?$skip=100&$top=100"
+        }
+    }
+}`}/>,
+]}>
+
+### 3.2 Search Components by Display Name From a Catalog
+
+We can also search specific components from a catalog by applying `$search` query parameter in addition to `catalogs` query parameter. `$search` searches for the string in the `displayName` and `hashtags` property values
+of the components. One of the components, we retrieved from the catalog in previous steps has a `displayName` value 'Sample Door'. We can use a substring from this displayName value 'Door' to search this particular component.
+Make a GET call to `https://api.bentley.com/library/components?$search=Door&catalogs=7f427c30-8dce-4803-81dc-e8681a3bd757` endpoint, this time the response contains only single component that has `$search` query parameter value
+in the `displayName` property.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`GET https://api.bentley.com/library/components?$search=wooden&catalogs=7f427c30-8dce-4803-81dc-e8681a3bd757 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Prefer: return=representation
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 200 OK 
+cache-control: no-cache
+content-encoding: gzip
+content-type: application/json
+date: Thu, 09 Sep 2021 08:14:47 GMT
+elapsed-time: 276
+expires: -1
+odata-version: 4.0
+pragma: no-cache
+preference-applied: odata.include-annotations="*"
+request-context: appId=cid-v1:6ee7c246-23f0-43be-ac34-bbbb36da72e9
+request-id: 58ea777e-2615-4f7c-9f3f-0c85e882e9fa
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-correlation-id: 1dd1cd38-4b6c-42b2-9104-2ae0353f4a63
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "components": [{
+        "id": "a0aff8bb-1d8e-4227-9cee-a1b87a646e34",
+        "displayName": "Sample Window",
+        "description": "A sample window",
+        "state": "Draft",
+        "createdDateTime": "2021-09-09T09:09:11.145Z",
+        "lastModifiedDateTime": "2021-09-09T09:09:11.543Z",
+        "supportedFileTypes": ["RFA"],
+        "hashtags": ["wooden"],
+        "_links": {
+            "catalogs": [{
+                "href": "https://api.bentley.com/library/catalogs/7f427c30-8dce-4803-81dc-e8681a3bd757"
+            }],
+            "application": {
+                "href": "https://api.bentley.com/library/applications/3c18a35e-2524-4afb-b8cc-ac0447aa26dd"
+            },
+            "manufacturer": {
+                "href": null
+            },
+            "category": {
+                "href": "https://api.bentley.com/library/categories/d41ad7d4-12cb-44ee-912d-8ff24936fd4a"
+            }
+        }
+    }, {
+        "id": "404f7540-63c7-49b5-be77-21b56074e58c",
+        "displayName": "Sample Door",
+        "description": "Tutorial sample door",
+        "state": "Draft",
+        "createdDateTime": "2021-09-09T07:27:07.055Z",
+        "lastModifiedDateTime": "2021-09-09T09:09:34.225Z",
+        "supportedFileTypes": ["RFA"],
+        "hashtags": ["tutorialsampledoor", "wooden"],
+        "_links": {
+            "catalogs": [{
+                "href": "https://api.bentley.com/library/catalogs/7f427c30-8dce-4803-81dc-e8681a3bd757"
+            }],
+            "application": {
+                "href": "https://api.bentley.com/library/applications/3c18a35e-2524-4afb-b8cc-ac0447aa26dd"
+            },
+            "manufacturer": {
+                "href": "https://api.bentley.com/library/manufacturers/83d16fc5-7193-4726-bd6f-4a5a95c01ba1"
+            },
+            "category": {
+                "href": "https://api.bentley.com/library/categories/d41ad7d4-12cb-44ee-912d-8ff24936fd4a"
+            }
+        }
+    }],
+    "_links": {
+        "self": {
+            "href": "https://api.bentley.com/library/components?$skip=0&$top=100"
+        },
+        "prev": {
+            "href": "https://api.bentley.com/library/components?$skip=0&$top=100"
+        },
+        "next": {
+            "href": "https://api.bentley.com/library/components?$skip=100&$top=100"
+        }
+    }
+}`}/>,
+]}>
+
+### 3.3 Search Components by Hashtags From a Catalog
+
+In the previous step, we searched a component by applying a string value from the `displayName`. We will use `$search` query parameter again but this time, we will use a string from the `hashtags` property value.
+Couple of components, we retrieved from the catalog in previous steps has one of the `hashtags` value 'wooden'. We can use this value to search components having this hashtag value.
+Make a GET call to `https://api.bentley.com/library/components?$search=wooden&catalogs=7f427c30-8dce-4803-81dc-e8681a3bd757` endpoint, this time the response contains both the components containing 'wooden'
+in the `hashtags` property.
+
+</TutorialSection>
+
+<TutorialSection 
+  actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock language="http" code={`GET https://api.bentley.com/library/components/57fefe11-df1d-40c7-ae1a-02e233b9a7c7/documents HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock language="http" code={`HTTP/1.1 200 OK 
+content-encoding: gzip
+content-type: application/json
+date: Wed, 08 Sep 2021 09:51:02 GMT
+odata-version: 4.0
+request-context: appId=cid-v1:6ee7c246-23f0-43be-ac34-bbbb36da72e9
+vary: Accept-Encoding
+x-correlation-id: 2c094e5a-b770-4240-9aeb-67bca189263a
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "documents": [{
+        "id": "3938de7f-ebf2-470f-b41a-d314fdb90ec7",
+        "displayName": "TutorialSampleFile",
+        "extension": "rfa",
+        "version": "1",
+        "previousVersionId": null,
+        "purpose": "Design",
+        "size": 749568,
+        "available": true,
+        "isActive": true,
+        "createdDateTime": "2021-09-06T15:17:46.0180736Z",
+        "lastModifiedDateTime": "2021-09-06T15:17:46.1465969Z",
+        "_links": {
+            "associatedDesignDocument": {
+                "href": null
+            },
+            "fileUrl": {
+                "href": "https://componentscenprodeussa01.blob.core.windows.net/private-5a7b3c7c-03af-49f0-b1df-115ddc0e0048/57fefe11-df1d-40c7-ae1a-02e233b9a7c7/3938de7f-ebf2-470f-b41a-d314fdb90ec7.rfa?sv=2018-03-28&sr=b&sig=Smec6HJrZCKZGXYARrGkU1RWJuaO3jqmXKs3%2B5irnak%3D&se=2021-09-08T10%3A51%3A03Z&sp=r&rscd=attachment%3B%20filename%3DTutorialSampleFile.rfa"
+            }
+        }
+    }, {
+        "id": "4f618030-ba8c-4144-872e-c61842c3d90e",
+        "displayName": "TutorialSampleFile.png",
+        "extension": "png",
+        "version": null,
+        "previousVersionId": null,
+        "purpose": "Thumbnail",
+        "size": 0,
+        "available": true,
+        "isActive": true,
+        "createdDateTime": "2021-09-06T15:17:46.2226747Z",
+        "lastModifiedDateTime": "2021-09-06T15:17:46.3093526Z",
+        "_links": {
+            "associatedDesignDocument": {
+                "href": "https://api.bentley.com/library/components/57fefe11-df1d-40c7-ae1a-02e233b9a7c7/documents/3938de7f-ebf2-470f-b41a-d314fdb90ec7"
+            },
+            "fileUrl": {
+                "href": "https://componentscenprodeussa01.blob.core.windows.net/public-5a7b3c7c-03af-49f0-b1df-115ddc0e0048/57fefe11-df1d-40c7-ae1a-02e233b9a7c7/4f618030-ba8c-4144-872e-c61842c3d90e.png"
+            }
+        }
+    }, {
+        "id": "f9d9f7ce-a014-4b54-b0a6-e351482ec3a5",
+        "displayName": "TutorialSampleFile",
+        "extension": "txt",
+        "version": null,
+        "previousVersionId": null,
+        "purpose": "TypeCatalog",
+        "size": 760,
+        "available": true,
+        "isActive": true,
+        "createdDateTime": "2021-09-06T15:17:46.4256707Z",
+        "lastModifiedDateTime": "2021-09-06T15:17:46.510613Z",
+        "_links": {
+            "associatedDesignDocument": {
+                "href": "https://api.bentley.com/library/components/57fefe11-df1d-40c7-ae1a-02e233b9a7c7/documents/3938de7f-ebf2-470f-b41a-d314fdb90ec7"
+            },
+            "fileUrl": {
+                "href": "https://componentscenprodeussa01.blob.core.windows.net/private-5a7b3c7c-03af-49f0-b1df-115ddc0e0048/57fefe11-df1d-40c7-ae1a-02e233b9a7c7/f9d9f7ce-a014-4b54-b0a6-e351482ec3a5.txt?sv=2018-03-28&sr=b&sig=1yb19XFDPtuEl6rYiFDLuCjz%2FO8a3r7h89KAHdFwvw8%3D&se=2021-09-08T10%3A51%3A03Z&sp=r&rscd=attachment%3B%20filename%3DTutorialSampleFile.txt"
+            }
+        }
+    }, {
+        "id": "bf15e508-3b59-49d5-a1b5-ea9ef9d66515",
+        "displayName": "Tutorial Sample Document",
+        "extension": "pdf",
+        "version": "1",
+        "previousVersionId": null,
+        "purpose": "Reference",
+        "size": 388077,
+        "available": true,
+        "isActive": true,
+        "createdDateTime": "2021-09-06T15:46:51.5524663Z",
+        "lastModifiedDateTime": "2021-09-06T15:54:47.206787Z",
+        "_links": {
+            "associatedDesignDocument": {
+                "href": null
+            },
+            "fileUrl": {
+                "href": "https://componentscenprodeussa01.blob.core.windows.net/private-5a7b3c7c-03af-49f0-b1df-115ddc0e0048/57fefe11-df1d-40c7-ae1a-02e233b9a7c7/bf15e508-3b59-49d5-a1b5-ea9ef9d66515.pdf?sv=2018-03-28&sr=b&sig=oft6xWrKourfRl5Nemd03duMS9pmi8zkiaPSE8Pynzw%3D&se=2021-09-08T10%3A51%3A03Z&sp=r&rscd=attachment%3B%20filename%3DTutorial%2BSample%2BDocument.pdf"
+            }
+        }
+    }]
+}`}/>,
+]}>
+
+## 4. Get Component Documents and Download Files
+
+So far, we have already learnt how to search components from a catalog. Once we have the component, We can use `id` and make a GET call to `https://api.bentley.com/library/components/57fefe11-df1d-40c7-ae1a-02e233b9a7c7/documents` endpoint
+to get all the documents associated to the component. `_links->fileUrl-href` property value in each document instance in the response, provides the url of the file associated with the document. File download can be done
+by making a Http GET request on the provided url via tool such as `Postman` or programmatically use Azure libraries to download file (https://docs.microsoft.com/en-us/rest/api/storageservices/get-blob).
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulation for completing Query and Download Component from Catalog tutorial! You should be able to query components from a catalog and download files associated to component documents.
+
+<TileList>
+  <Tile
+    name="Upload Component to a Catalog"
+    description="Guide on uploading component to a catalog."
+    href="/tutorials/upload-component-to-catalog/"
+  ></Tile>
+  <Tile
+    name="Create a Component"
+    description="Guide on creating a new component in an organization."
+    href="/tutorials/create-a-component/"
+  ></Tile>
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Library API"
+    href="/apis/library/"
+    description="There are more capabilities, which could be used for managing components in library."
+  />
+  <LinkCard
+    title="iTwin Library Sample App"
+    href="https://github.com/iTwin/library-api-sample-app"
+    description="Sample application that uses the Library API to create, upload and query components."
+    isExternal={true}
+  />
+</TileList>
+
+</ContinueLearningSection>

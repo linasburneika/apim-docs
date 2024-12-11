@@ -1,0 +1,235 @@
+---
+title: 'Get started with Synchronization Configurations API'
+version: 1
+tile:
+  name: 'Get started with Synchronization Configurations API'
+  description: 'An introduction to Synchronization Configurations API explaining main workflows and operations.'
+  thumbnail: '/images/synchronizationConfiguration.png'
+  href: '/tutorials/synchronization-configurations-api-tutorial/'
+  durationInMinutes: 50
+  relatedApiIds: ['synchronization']
+---
+
+<Introduction 
+  skillLevel="Intermediate" 
+  durationInMinutes="50">
+
+## Introduction
+
+This tutorial guides you through synchronizing a file using different configurations with the Synchronization API. Many configurations could be set on three scopes: iTwin, iModel, or Connection. In this example, you will learn how to enable sheets and drawings processing that are not synchronized by default.
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+Perform all the actions defined in the [Synchronize a file from Azure Blob Storage](/tutorials/synchronization-blob-tutorial/) tutorial, which covers all the fundamental steps to a typical synchronization workflow with various data types. As a result, you will have an iTwin, an iModel, and a Connection created with a successful connection run that did not process 2D data.
+
+In this tutorial, we will only cover the workflow for creating and running a connection with a specific **enableSheetsAndDrawings** configuration set. A .dgn or .revit file with sheets or drawings is required to follow the steps.
+
+## 1. Guide to Synchronization Configuration API
+
+Before diving into the code to apply configurations to your synchronizations, let’s take some time to understand the workflow and the involved API calls.
+
+Synchronization Configuration API provides multiple flags which apply to different scopes:
+
+- **iTwin** - all supported iTwin scope flags can be found at [Create iTwin configuration](/apis/synchronization/operations/create-itwin-configuration/)
+- **iModel** - all supported iModel scope flags can be found at [Create iModel configuration](/apis/synchronization/operations/create-imodel-configuration/)
+- **Connection** - all supported Connection scope flags can be found at [Create Connection configuration](/apis/synchronization/operations/create-connection-configuration/)
+
+## Workflow for setting configurations
+
+1. Identify configurations that require the default value changed per your synchronization workflow.
+1. Create a Connection that establishes links from design files to iModel.
+1. Depending on the supported scope, use Create Connection Configuration, Create iModel Configurations or Create iTwin Configurations, where you specify how data should be processed.
+1. Proceed with synchronization by Running a Connection
+1. Modify configurations for the next synchronization runs if required.
+
+> In this tutorial, enableSheetsAndDrawings will be used as an example, but the workflow patterns are the same for any configuration.
+
+## enableSheetsAndDrawings
+
+Controls sheets and drawings synchronization. If enabled, all sheet models and
+relayed drawings will be synchronized to an iModel. The default value is
+**false**.
+
+> **Typical use case:** As you are synchronizing Revit files, there could be sheets with multiple drawings on them. You can choose to synchronize those or not. If a file contains drawings not used in any of the sheets, those will not be processed.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Create a configuration with the "enableSheetsAndDrawings" flag
+
+To enable 2D data processing, we need to create a configuration for connection with the **enableSheetsAndDrawings** flag.
+
+</TutorialSection>
+
+<TutorialSection
+  hasTitle={false}
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/synchronization/configurations/connections/CONNECTION_ID HTTP/1.1
+ContentType: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+"enableSheetsAndDrawings": "true"
+}`}
+    />,
+    <Title>Response Body</Title>,
+      <CodeBlock
+        language="json"
+        code={`{
+  "configuration": {
+    "scopeId": CONNECTION_ID,
+    "settings": { "enableSheetsAndDrawings": "true" },
+    "resolvedSettings": {
+      "uploadDgnRealityData": "true",
+      "convertDgnTerrainModels": "false",
+      "createRvtDrawings": "false",
+      "squashIntermediateRevisions": "false",
+      "skipRvtReprojection": "false",
+      "convertDgnHyperModelingSections": "true",
+      "clampZExtent": "false",
+      "overrideRvtReprojectionDistance": "0",
+      "reclassifyDgnElements": "false",
+      "ignoreDgnAttachments": "true"
+    }
+}`}
+      />,
+  ]}
+>
+
+### Request
+
+A Synchronization connection configuration is created by sending an HTTP POST request to https://api.bentley.com/synchronization/configurations/connections/CONNECTION_ID endpoint. Where CONNECTION_ID is a connection id retrieved from prerequisites connection.
+
+### Request Body
+
+There is one required property for the create configuration payload.
+
+**enableSheetsAndDrawings: true**
+
+### Response
+
+All the applicable flags are set and the **enableSheetsAndDrawings** configuration is set to true.
+
+</TutorialSection>
+
+<TutorialSection hasTitle={false}>
+
+## 3. Run a configured connection with the "enableSheetsAndDrawings" flag set to true
+
+Perform connection run steps defined in the [Synchronize a file from Azure Blob Storage](/tutorials/synchronization-blob-tutorial/)
+for the configured connection. The result will be a connection run with 2D data synchronized.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Update of configuration with "enableSheetsAndDrawings" flag to false (Optional)
+
+If you no longer want to synchronize 2D data, update the configured connection configuration setting enableSheetsAndDrawings flag to false. Next time this connection will run 2D data will not be updated, but existing sheets and drawings processed before will remain in an iModel.
+
+</TutorialSection>
+
+<TutorialSection
+  hasTitle={false}
+  actions={[
+    <Title>HTTP request</Title>,
+      <CodeBlock
+      language="http"
+      code={`PATCH https://api.bentley.com/synchronization/configurations/connections/CONNECTION_ID HTTP/1.1
+ContentType: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+      <Title>Request Body</Title>,
+      <CodeBlock
+        language="json"
+        code={`{
+"enableSheetsAndDrawings": "false"
+}`}
+    />,
+    <Title>Response Body</Title>,
+      <CodeBlock
+        language="json"
+        code={`{
+  "configuration": {
+    "scopeId": CONNECTION_ID,
+    "settings": { "enableSheetsAndDrawings": "false" },
+    "resolvedSettings": {
+      "uploadDgnRealityData": "true",
+      "convertDgnTerrainModels": "false",
+      "createRvtDrawings": "false",
+      "squashIntermediateRevisions": "false",
+      "skipRvtReprojection": "false",
+      "convertDgnHyperModelingSections": "true",
+      "clampZExtent": "false",
+      "overrideRvtReprojectionDistance": "0",
+      "reclassifyDgnElements": "false",
+      "ignoreDgnAttachments": "true"
+    }
+  }
+}`}
+      />,
+  ]}
+>
+
+### Request
+
+Synchronization Connection configuration settings are updated by sending an HTTP PATCH request to https://api.bentley.com/synchronization/configurations/connections/CONNECTION_ID endpoint. Where CONNECTION_ID is a connection id retrieved from prerequisites connection.
+
+### Request Body
+
+There is one required property for the create configuration payload.
+
+**enableSheetsAndDrawings: false**
+
+### Response
+
+All the applicable flags are set and the **enableSheetsAndDrawings** configuration is set to false.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## 5. Run a configured connection with the "enableSheetsAndDrawings" flag set to false (Optional)
+
+Perform connection run steps defined in the [Synchronize a file from Azure Blob Storage](/tutorials/synchronization-blob-tutorial/) for the configured connection. The result will be a connection run without 2D data changes synchronized. Sheets and drawings synchronized previously will remain in an iModel.
+
+## Continue learning
+
+Congratulation on completing the Synchronization Configuration API tutorial! Find more about each [iTwin](/apis/synchronization/operations/create-itwin-configuration/), [iModel](/apis/synchronization/operations/create-imodel-configuration/), and [connection](/apis/synchronization/operations/create-connection-configuration/) configuration.
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="iTwins API"
+    href="/apis/itwins/"
+    description="The iTwins API provides a full encompassing suite of functionality to manage your digital twins."
+  />
+  <LinkCard
+    title="Synchronization API"
+    href="/api-groups/synchronization/"
+    description="Files can be synchronized to iModel via Synchronization API."
+  />
+  <LinkCard
+    title="Changed Elements API"
+    href="/tutorials/changed-elements-api/"
+    description="The Changed Elements API is a REST API that allows the consumer to inspect what elements have changed in an iModel between two versions of the iModel."
+  />
+  <LinkCard
+    title="Create iModel Named Version"
+    href="/tutorials/create-named-version/"
+    description="This quick start is intended to guide you through the steps to create a new iModel Named Version."
+  />
+</TileList>
+
+</ContinueLearningSection>

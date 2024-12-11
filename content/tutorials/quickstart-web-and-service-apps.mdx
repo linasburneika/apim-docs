@@ -1,0 +1,183 @@
+---
+title: 'Quickstart - Web and Service Apps'
+version: 2
+tile:
+  name: 'Quickstart - Web and Service Apps'
+  description: 'This guide introduces you to some of the basic concepts of the Bentley iTwin Platform and helps you get your applications set up quickly.'
+  href: '/tutorials/quickstart-web-and-service-apps/'
+  relatedApiIds: []
+---
+
+## Introduction
+
+This guide introduces you to some of the basic concepts of the Bentley iTwin Platform and helps you get your applications set up quickly.
+
+There are four application types supported by the iTwin Platform service.
+
+- **SPA** - a single-page application where everything runs from a single web page
+- **Web Apps** - a traditional web app
+- **Service** - a machine-to-machine application requiring no user interaction
+- **Desktop/Mobile** - an application that runs natively on a user's device.
+
+<Alert>
+
+**Note:** If you are implementing a Single Page Application (SPA) Bentley provides an open source Viewer template. Please see the [Get Started](/tutorials/web-application-quick-start/) tutorial in
+our list of tutorials.
+
+</Alert>
+
+This guide assumes we are creating a _Web app_ or a _Service app_. Differences are noted where applicable.
+
+## Prerequisites
+
+- You must have a working development environment that is able to make REST calls to the iTwin Platform services.
+
+## 1. Enable your Application
+
+This section guides you through setting up your digital twin application so it is visible to iTwin Platform services. Once completed, you are ready to begin working with your iTwin.
+
+<Section level={2}>
+
+### 1.1 Log in to your Bentley Account
+
+All users accessing the iTwin Platform services must have a profile set up.
+
+</Section>
+
+<Section level={3}>
+
+#### If you have an existing Bentley account
+
+1.  Enter your email address, click **Next**.
+2.  Enter your password, click **Next**.
+    The developer portal home page displays.
+
+</Section>
+
+<Section level={3}>
+
+#### If you do not have an existing Bentley account
+
+1.  Click the **Don't have an account? Register now** link.
+    The **Create Account** page displays.
+2.  Enter the requested information and click **Create account**.
+3.  Verify your email using the code sent to the email you provided. {/* Additional details on the steps should be added. Recreate for screenshots. */}
+4.  If you are redirected to the sign in page, sign in with your new credentials.
+
+</Section>
+
+<Section level={2}>
+
+### 1.2 Register your application
+
+You must register all applications connecting to and sending data through the iTwin platform. Registration identifies your app to other services and specifies what resources it can access, such as iModels, iModelHub, reality data, user information, and more.
+
+1.  Click your **Profile** button in the upper-right corner of the page and select **My Apps** from the drop-down.
+    If you do not see your profile button, please return to [1.1 Log in to your Bentley Account](#11-log-in-to-your-bentley-account)
+2.  Click **Register New**.
+3.  Enter the name of your app.
+    There is a 128-character limit for the app name unless you are registering a Service app. Service apps are limited to 60 characters. In all cases, the following characters are not allowed: <code>,;[]=>\<?"{}|+!@#$%^\*`~</code>
+4.  Select the type of app you are registering.
+    - Web App
+    - Service
+5.  Enter one or more **Redirect URIs**.
+    Users are redirected to this page after signing in.
+6.  (Optional) Enter one or more **Post logout redirect URIs**. Users are redirected to this page after signing out.
+7.  Click **Save**.
+
+When saving the registration for either a Web app or Service app, the client secret is displayed. Click **Copy** to copy this information.
+
+<img
+  src="/images/tutorials/quickstart-web-and-service-apps/client-secret.jpg"
+  alt=""
+/>
+
+<Alert>
+
+**IMPORTANT** The client secret is displayed once. Make sure you copy it and place it in a secure location. You will need it in a later step.
+
+</Alert>
+
+</Section>
+
+<Section level={2}>
+
+### 1.3 Create an iModel
+
+An iModel holds information about a single infrastructure asset with a schema defined by _Base Infrastructure Schemas (BIS)_. BIS {/* link to glossary page when available */}are a family of domain-specific class definitions that represent the properties and relationships of entities within an iModel. All information held in an iModel is an instance of a class defined in BIS. iModels may contain physical and functional models, drawings, specifications, analytical models, etc. {/* move this additional info to BIS topics when available and link */}
+
+Bentley allows you to create iModels using a few different methods,
+
+- **Bentley sample file:** Create a new iModel by copying one of the existing Bentley-supplied samples.
+
+- **Local File:** Create a new iModel by converting a single file uploaded from your computer, most commonly a design file. {/* Need supported file types */}
+
+- **Empty iModel:** Use [iTwin Synchronizer](https://www.bentley.com/software/itwin-synchronizer) to populate the iModel by converting a set of files from your local computer. {/* Per PM, remove this from guide for now. Add back in after sync work. */}
+
+For this guide, we're importing a Local File or using a Bentley sample model.
+
+1.  Click your **Profile** button in the upper-right corner of the page and select **My iTwins** from the drop-down.
+    If you do not see your profile button, please return to [1.1 Log in to your Bentley Account](#11-log-in-to-your-bentley-account)
+2.  Click **New**.
+3.  Enter a name for your Test iTwin in the **Name** field.<br/>
+    There is a 255-character limit for the iTwin name. The following characters are not allowed: <code>,;[]=>\<?"{}|+!@#$%^\*`~</code>
+4.  Click **Save** <br/>
+    A Test iTwin will be created for you. There will be no iModels in it initially.
+5.  Select the iModel workflow you want to use.
+
+</Section>
+
+<Section level={3}>
+
+#### If you want to use a sample iModel
+
+1. Click **New** in the iModels list
+1. Click **Bentley Sample**.<br/>
+1. Select the sample to use in the **Bentley iModel template** drop-down.<br/>
+1. Click **Save**
+
+</Section>
+
+<Section level={3}>
+
+#### If you have your own design files
+
+1. Click **New** in the iModels list
+1. Click **Empty iModel File**.<br/>
+1. Click **Save**
+1. From the iModel Home grid, select the **File Synchronization** tile
+1. Click **Upload file(s)** and upload your file(s)
+
+</Section>
+
+## 2. Retrieve an Access Token
+
+Bentley iTwin Platform APIs and SDKs use OAuth 2.0 to support authentication to the platform. If your application is web-based, the authentication process requires the end-user to consent to it retrieving and using data on their behalf. This step is not required for Service apps.
+
+A _Bearer_ token is used to manage access to the APIs. Click the appropriate application type below to review the steps for authorizing your application.
+
+[Authorize a web application](/tutorials/authorize-webapp/#2-get-an-access-token)
+
+[Authorize a service application](/tutorials/authorize-service/#2-get-access-token)
+
+For more in-depth information regarding authentication on the iTwin Platform, see [Authentication and Authorization](/apis/overview/authorization/).
+
+## 3. Connecting the App and the iModel
+
+Bentley uses Projects, also called iTwins, to manage access to the iModel you created.
+
+When you created your iModel, you were provided with an iTwinID and an iModelID, The iTwinID equates to your projectID. To validate this, run GET on the iTwins API.
+
+```
+GET https://api.bentley.com/itwins/{id}
+```
+
+Notice that the iModel associated with that project (iTwin) is the same as displayed in the **My iTwins** page.
+
+```
+"imodels": {"href": "https://api.bentley.com/imodels?projectId=1183b0f0-f2a5-4776-8fa8-83366eda2c45"}
+```
+
+Other details about the project are also returned in the response such as status, location, any issues, etc.
+
+For more details regarding using the iTwins API, see the [iTwins API](/apis/itwins/) page.

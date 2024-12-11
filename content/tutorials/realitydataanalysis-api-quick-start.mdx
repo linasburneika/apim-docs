@@ -1,0 +1,707 @@
+---
+title: 'Get started with the Reality Analysis API'
+version: 1
+tile:
+  name: 'Get started with the Reality Analysis API'
+  description: 'This tutorial is an introduction to Reality Analysis API, explaining the basic workflows.'
+  thumbnail: '/images/rda/quick-start-thumb.jpg'
+  href: '/tutorials/realitydataanalysis-api-quick-start/'
+  durationInMinutes: 60
+  relatedApiIds: ['realitydataanalysis']
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="60"
+  summaryImageSrc="/images/rda/quick-start-header.jpg">
+
+## Important notice
+
+The following tutorial is a step by step detailed description of the low level calls needed for an analysis.
+It involves using other services, understanding authorizations and creating different json files. It might not be the best way to discover Reality Analysis.
+We encourage using our Python or TypeScript [iTwin Capture SDKs](https://github.com/iTwin/reality-capture/) and the included examples
+if you plan to develop a Python or TypeScript application or for a first discovery even if you plan to use a different language.
+
+## Introduction
+
+This quick start tutorial is going to help you work with Reality Analysis.
+
+In this tutorial, you will submit a simple job to detect objects in images.
+
+It is assumed that you already have:
+
+- Knowledge of the [Reality Management API](/apis/reality-management).
+- Knowledge of the _Reality Analysis_ concepts. Check [Reality Analysis](/apis/realitydataanalysis/) and read the _Overview_, _Context Scenes_, _Context Detectors_ and _Job Types_ sections.
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+- A small set of photos to analyse.
+- A _photo object detector_. You may download the Coco 2D object detector from the [library page](https://bentleysystems.service-now.com/community?id=kb_article_view&sysparm_article=KB0107801).
+- An iTwin and its ID. For instance you can create a iTwin of ID "ITwinID". Check the [create and query iTwins guide](/tutorials/create-and-query-itwins-guide/).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+### Suggested Tools
+
+##### <a href="https://www.postman.com/downloads/" target="_blank">Postman</a>
+
+If you want to test the REST API calls directly, you can use [Postman](https://www.postman.com/downloads/) or any other solution capable of sending HTTP requests. If you do it this way, you will require an authorization token for the requests to work. This is covered in the "Get a token" section below.
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Reality Analysis basic tutorial"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+To make a request to the API, you need a user token. There are several ways to get it. You can consult the
+[Authorization API documentation](/apis/overview/authorization/)
+or you can use a [sample powershell script](https://github.com/iTwin/platform-api-samples/tree/main/Authorization) to use in your app.
+
+In the following, JWT_TOKEN will stand for this token.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Upload data
+
+- Upload your photos to Reality Management API as _CCImageCollection_ attached to your iTwin project using the [Reality Management API](/apis/reality-management).
+- Upload your detector to Reality Management API as _ContextDetector_ attached to your iTwin project using the [Reality Management API](/apis/reality-management).
+
+In the following, _ITwinID_ stands for the iTwin project id, _ImageCollectionID_ for the CCImageCollection entry id and _DetectorID_ for the ContextDetector entry id.
+
+Note that your iTwin project will usually store some detectors and all your _raw_ reality data (photos, point clouds, etc.).
+They are not intended to be uploaded for each Reality Analysis jobs. In many cases, they will have been uploaded previously and probably by someone else.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+    "version" : "5.0",
+    "PhotoCollection" : {
+        "Photos" : {
+            "0" : {
+                "ImagePath" : "0:IMAGE_1059.JPG",
+            },
+            "1" : {
+                "ImagePath" : "0:IMAGE_1060.JPG",
+            },
+            "2" : {
+                "ImagePath" : "0:IMAGE_1061.JPG",
+            }
+        }
+    },
+    "References" : {
+        "0" : {
+            "Path" : "rds:ImageCollectionID"
+        }
+    }
+  }`}
+    />,
+  ]}
+>
+
+## 4. Prepare job input
+
+You will now chose on which reality data the job will be applied, creating the _ContextScene_ pointing to them.
+It will be very simple in our case, a few photos in a _CCImageCollection_ but remember it could be more complex: pointing to several Reality Management API entries, adding metadata like orientation, etc.
+
+- Create _ContextScene_ file pointing to the photos your want to analyze. It should look like the file besides.
+- Upload it to Reality Management API as _ContextScene_ entry. Remember to name the file `ContextScene.json` as should be any _ContextScene_ uploaded on Reality Management API. In the following, PhotosID stands for its id.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 5. Create job
+
+Your next step will be to create the job.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language='http' 
+      code={`POST https://api.bentley.com/realitydataanalysis/jobs HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+### Request
+
+The job is created sending an HTTP POST message to https://api.bentley.com/realitydataanalysis/jobs endpoint with the payload describing the job. Be sure to replace JWT_TOKEN by its value.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "type": "objects2D",
+  "name": "O2D job sample",
+  "iTwinId": "ITwinID",
+  "inputs": [
+    {
+      "type": "photos",
+      "id": "PhotosID"
+    },
+    {
+      "type": "photoObjectDetector",
+      "id": "DetectorID"
+    }
+  ],
+  "outputs": [
+    "objects2D"
+  ],
+  "options": {}
+}`
+}
+    />,
+  ]}
+>
+
+### Request Body
+
+The request body defines the job configuration. Be sure to replace ITwinID, PhotosID and DetectorID by their values.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "state": "unsubmitted",
+  "dataCenter": "EastUs",
+  "id": "JobID",
+  "createdDateTime": "2024-02-21T08:37:51Z",
+  "lastModifiedDateTime": "2024-02-21T08:37:51Z",
+  "email": "name@bentley.com",
+  "costEstimation": {
+    "estimatedCost": 0
+  },
+  "outputs": [{
+    "type": "objects2D"
+  }],
+  "iTwinId": "ITwinID",
+  "type": "objects2D",
+  "name": "O2D job sample",
+  "inputs": [{
+    "id": "PhotosID",
+    "type": "photos"
+  }, {
+    "id": "DetectorID",
+    "type": "photoObjectDetector"
+  }],
+  "options": {
+    "exportSrs": "",
+    "minPhotos": 0,
+    "maxDist": 0,
+    "useTiePoints": false
+  }
+}`}
+    />,
+  ]}
+>
+
+### Response body
+
+The API will respond with a `201 Created` status code if the call is successful.
+The most important entry of this response is the `id` which you will use to refer to the job in following steps.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 6. Estimate job cost
+
+You can optionally provide relevant quantities about the input to get an estimation of the job cost before deciding to submit it.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language='http' 
+      code={`PATCH https://api.bentley.com/realitydataanalysis/jobs/JobID HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+### Request
+
+Send an HTTP PATCH message to https://api.bentley.com/realitydataanalysis/jobs/JobID endpoint with the payload describing the quantities.
+Be sure to replace JWT_TOKEN and JobID by their values.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "costEstimationParameters": {
+    "numberOfPhotos": 3,
+    "gigaPixels": 12
+  }
+}`
+}
+    />,
+  ]}
+>
+
+### Request Body
+
+For an 2D object detection job type, these quantities are the number of photos and the total number of gigapixels that will be analyzed.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "state": "unsubmitted",
+  "dataCenter": "EastUs",
+  "id": "JobID",
+  "createdDateTime": "2024-02-21T08:37:51Z",
+  "lastModifiedDateTime": "2024-02-21T08:40:51Z",
+  "email": "name@bentley.com",
+  "costEstimation": {
+    "numberOfPhotos": 3,
+    "gigaPixels": 12.0,
+    "estimatedCost": 2.4
+  },
+  "outputs": [{
+    "type": "objects2D"
+  }],
+  "iTwinId": "ITwinID",
+  "type": "objects2D",
+  "name": "O2D job sample",
+  "inputs": [{
+    "id": "PhotosID",
+    "type": "photos"
+  }, {
+    "id": "DetectorID",
+    "type": "photoObjectDetector"
+  }],
+  "options": {
+    "exportSrs": "",
+    "minPhotos": 0,
+    "maxDist": 0,
+    "useTiePoints": false
+  }
+}`}
+    />,
+  ]}
+>
+
+### Response body
+
+The API will respond with a `200 OK` status code if the call is successful.
+The `estimatedCost` is now set.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 7. Submit job
+
+To submit your job, simply change its state to _active_.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language='http' 
+      code={`PATCH https://api.bentley.com/realitydataanalysis/jobs/JobID HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+### Request
+
+Send an HTTP PATCH message to https://api.bentley.com/realitydataanalysis/jobs/JobID endpoint with the payload to change its state to _active_.
+Be sure to replace JWT_TOKEN and JobID by their values.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "state": "active"
+}`
+}
+    />,
+  ]}
+>
+
+### Request Body
+
+The only entry to patch is the state of the job.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "state": "active",
+  "executionInformation": {
+    "submissionDateTime": "2024-02-21T08:55:46Z"
+  },
+  "dataCenter": "EastUs",
+  "id": "JobID",
+  "createdDateTime": "2024-02-21T08:37:51Z",
+  "lastModifiedDateTime": "2024-02-21T08:37:51Z",
+  "email": "name@bentley.com",
+  "costEstimation": {
+    "numberOfPhotos": 3,
+    "gigaPixels": 12.0,
+    "estimatedCost": 2.4
+  },
+  "outputs": [{
+    "type": "objects2D",
+    "id": "OutputID"
+  }],
+  "iTwinId": "ITwinID",
+  "type": "objects2D",
+  "name": "O2D job sample",
+  "inputs": [{
+    "id": "PhotosID",
+    "type": "photos"
+  }, {
+    "id": "DetectorID",
+    "type": "photoObjectDetector"
+  }],
+  "options": {
+    "exportSrs": "",
+    "minPhotos": 0,
+    "maxDist": 0,
+    "useTiePoints": false
+  }
+}`}
+    />,
+  ]}
+>
+
+### Response body
+
+The API will respond with a `200 OK` status code if the call is successful.
+The response indicates that the state has changed to _active_ and adds an `executionInformation` section, filled so far with a submission time.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 8. Monitor job
+
+You will probably want to monitor your job to check its state and advancement.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language='http' 
+      code={`PATCH https://api.bentley.com/realitydataanalysis/jobs/JobID/progress HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+### Request
+
+To monitor the job, send an HTTP GET message to https://api.bentley.com/realitydataanalysis/jobs/JobID/progress endpoint.
+Be sure to replace JWT_TOKEN and JobID by their values.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "progress": {
+    "percentage": 25,
+    "state": "active",
+    "step": "Run_Production"
+  }
+}`}
+    />,
+  ]}
+>
+
+### Response body
+
+The response give you the job advancement, state and a step name.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 9. Get results
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language='http' 
+      code={`PATCH https://api.bentley.com/realitydataanalysis/jobs/JobID HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+### Request
+
+At any time, you can get all job information sending an HTTP GET message to https://api.bentley.com/realitydataanalysis/jobs/JobID endpoint.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "state": "completed",
+  "executionInformation": {
+    "submissionDateTime": "2024-02-21T08:55:46Z",
+    "startedDateTime": "2024-02-21T09:05:01Z",
+    "endedDateTime": "2024-02-21T09:21:39Z",
+    "exitCode": 0,
+    "estimatedUnits": 2.5
+  },
+  "dataCenter": "EastUs",
+  "id": "JobID",
+  "createdDateTime": "2024-02-21T08:37:51Z",
+  "lastModifiedDateTime": "2024-02-21T08:37:51Z",
+  "email": "name@bentley.com",
+  "costEstimation": {
+    "numberOfPhotos": 3,
+    "gigaPixels": 12.0,
+    "estimatedCost": 2.4
+  },
+  "outputs": [{
+    "type": "objects2D",
+    "id": "OutputID"
+  }],
+  "iTwinId": "ITwinID",
+  "type": "objects2D",
+  "name": "O2D job sample",
+  "inputs": [{
+    "id": "PhotosID",
+    "type": "photos"
+  }, {
+    "id": "DetectorID",
+    "type": "photoObjectDetector"
+  }],
+  "options": {
+    "exportSrs": "",
+    "minPhotos": 0,
+    "maxDist": 0,
+    "useTiePoints": false
+  }
+}`}
+    />,
+  ]}
+>
+
+### Response body
+
+Once the job is over, your can get its final state and check success.
+The `executionInformation` section is also filled with more useful data.
+Your will also get an id in Reality Management API for every output entry. This will allow you to download the results using the [Reality Management API](/apis/reality-management).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+    "version" : "5.0",
+    "PhotoCollection" : {
+        "Photos" : {
+            "0" : {
+                "ImagePath" : "0:IMAGE_1059.JPG"
+            },
+            "1" : {
+                "ImagePath" : "0:IMAGE_1060.JPG"
+            },
+            "2" : {
+                "ImagePath" : "0:IMAGE_1061.JPG"
+            }
+        }
+    },
+    "Annotations" : {
+        "Labels" : {
+            "3" : {
+                "Name" : "car"
+            },
+            "4" : {
+                "Name" : "motorcycle"
+            }
+        },
+        "Objects2D" : {
+            "0" : {
+                "e256276a-d478-476d-a654-195dbc23d1d9" : {
+                    "LabelInfo" : {
+                        "Confidence" : 0.998534977436066,
+                        "LabelId" : 3
+                    },
+                    "Box2D" : {
+                        "xmin" : 0.0319100245833397,
+                        "ymin" : 0.537032723426819,
+                        "xmax" : 0.374318659305573,
+                        "ymax" : 0.66499537229538
+                    }
+                },
+                "03f2b2e5-5df5-49a0-8515-62d6df7739bd" : {
+                    "LabelInfo" : {
+                        "Confidence" : 0.996562480926514,
+                        "LabelId" : 3
+                    },
+                    "Box2D" : {
+                        "xmin" : 0.877566039562225,
+                        "ymin" : 0.4940065741539,
+                        "xmax" : 1,
+                        "ymax" : 0.62068098783493
+                    }
+                }
+            },
+            "1" : {
+                "b61c36dd-98d2-4a2a-902e-9d12d9472f15" : {
+                    "LabelInfo" : {
+                        "Confidence" : 0.983914494514465,
+                        "LabelId" : 3
+                    },
+                    "Box2D" : {
+                        "xmin" : 0.854629874229431,
+                        "ymin" : 0.483299434185028,
+                        "xmax" : 0.938638925552368,
+                        "ymax" : 0.547508895397186
+                    }
+                },
+                ...`}
+    />,
+  ]}
+>
+
+### Output file
+
+You should obtain a _ContextScene_ file with 2D objects.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 10. Other requests
+
+In this tutorial, you have seen almost all the API requests except two:
+
+- deleting a job: this is only possible if the job has not been submitted yet. The job will be deleted from the service database.
+- canceling a job: it can be done while active. The job will stay in the service database but will not be processed anymore.
+  Please refer to the [API Reference](/apis/realitydataanalysis/operations/).
+
+As mentioned in the documentation, Reality Analysis API is batch oriented to allow concurrent analysis on large datasets.
+This is why the input and output ContextScenes go through an upload/download to/from Reality Management API.
+To simplify use cases where these files are light enough to go be transferred via the API requests,
+future versions will allow direct json transfers as a possible choice.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulations for completing the Get started with the Reality Analysis API tutorial! You should now be able to detect 2D objects in a set of photos.
+Stay tuned for more tutorials. Meanwhile, you might want to try photo segmentation jobs.
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="iTwin Capture SDKs"
+    href="https://github.com/iTwin/reality-capture/"
+    description="Python and Typescript SDKs to use iTwin Capture services."
+    isExternal={true}
+  />
+  <LinkCard
+    title="Reality Data API"
+    href="/apis/realitydata/"
+    description="Reality Data API is necessary for uploading inputs for Reality Modeling, and downloading outputs."
+  />
+  <LinkCard
+    title="Detector library"
+    href="https://bentleysystems.service-now.com/community?id=kb_article_view&sysparm_article=KB0107801"
+    description="Library of available Context Detectors."
+    isExternal={true}
+  />
+  <LinkCard
+    title="Reality Management API"
+    href="/apis/reality-management/"
+    description="Reality Management API is necessary for uploading inputs for Reality Modeling, and downloading outputs."
+  />
+</TileList>
+
+</ContinueLearningSection>

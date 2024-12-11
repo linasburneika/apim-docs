@@ -1,0 +1,102 @@
+---
+title: 'Authorize a Service Application'
+version: 2
+tile:
+  name: 'Authorize a Service Application'
+  description: 'This tutorial will provide you information how to authorize your Service application.'
+  durationInMinutes: 10
+  href: '/tutorials/authorize-service/'
+  relatedApiIds: []
+---
+
+## Introduction
+
+When building a server-side app that securely stores secrets, use the following procedures to set up your authorization. This tutorial is based on the OAuth workflow, diagram, and steps described in the [service app authorization documentation](/apis/overview/authorization/service-app/).
+
+## Register your application
+
+The first step for authorizing your service app is to register your application.
+
+1. If you have not created an application, open the [My Apps](/my-apps) page under your **Profile** menu, and click the **Register New** button. In this case, the application type is **Service**.
+2. Make sure to save the `client_id` and the `client_secret` supplied when you create your application.
+
+<Alert type="warning">
+
+**IMPORTANT**
+
+Keep your client credentials, i.e., **client ID**, **client secret**, and **access tokens**, secure. Do not include them in publicly accessible code where they could be discovered. Instead, store them safely on a backend server.
+
+</Alert>
+
+<Alert>
+
+**Note**
+
+Service apps need permission to access the your iTwins or iTwin-related data. You can set up iTwin roles and permissions using the [Access Control API](/apis/access-control/) and the generated email on the _App Details_ page in **My Apps > App Name**. Setting up access control is not required for this tutorial; however, it must be set up before your application makes iTwin specific API requests.
+
+</Alert>
+
+## Obtain an access token
+
+Once you have your app registered, you can obtain an access token by following these steps:
+
+1. Send a request to the authorization server endpoint.
+
+   <RequestLine
+     method="POST"
+     baseUrl={(data) => data.authority}
+     path="/connect/token"
+   />
+
+Below is an example request along with required parameters. You can obtain the _client_id_ and _redirect_uri_ from your app registration on [My Apps](/my-apps). If you didn’t save your _client_secret_, generate a new one from the same app registration.
+
+<ExecutableCodeBlock
+  method="POST"
+  baseUrl={(data) => data.authority}
+  path="/connect/token"
+  headers={{
+    'Content-Type': 'application/x-www-form-urlencoded',
+  }}
+  body={new URLSearchParams(
+    'client_id=<client_id>&client_secret=<client_secret>&scope=itwin-platform&grant_type=client_credentials'
+  ).toString()}
+  dataToSave={[
+    {
+      variableName: 'accessToken',
+      jsonQuery: 'access_token',
+    },
+  ]}
+/>
+
+2. Your application can now use the access token returned by the token endpoint to access APIs.
+
+## Use your token
+
+If you received a `200 OK` response to your token request, you have successfully obtained a token. You can use this token to call various iTwin Platform APIs. You can try making an API call to `users/me` endpoint to test your token. On success, this request returns the profile information for the user account associated with the token received.
+
+Remember, the iTwin Platform Base URI is `api.bentley.com`.
+
+<ExecutableCodeBlock
+  method="GET"
+  path="/users/me"
+  headers={(data) => ({
+    Accept: 'application/vnd.bentley.itwin-platform.v1+json',
+    Authorization: `Bearer ${
+      data.accessToken ?? '<returned token from the previous request>'
+    }`,
+  })}
+/>
+
+## Client
+
+If you're developing a service application and need to handle service authentication, you can utilize a TypeScript client specifically designed for this workflow. This client is available in the [iTwin auth-clients](https://github.com/iTwin/auth-clients/tree/main/packages/service/README.md) repository and can be easily integrated into your project via the npm package [@itwin/service-authorization](https://www.npmjs.com/package/@itwin/service-authorization).
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Access Control"
+    href="/apis/access-control/"
+    description="Manage Access Controls for your iTwin member using iTwin roles and permissions."
+  />
+</TileList>

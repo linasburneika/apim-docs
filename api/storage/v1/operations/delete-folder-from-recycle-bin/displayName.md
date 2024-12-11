@@ -1,1 +1,0 @@
-Delete folder from recycle bin

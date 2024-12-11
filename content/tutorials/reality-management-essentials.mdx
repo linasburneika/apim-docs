@@ -1,0 +1,752 @@
+---
+title: 'Reality Management API - Essentials'
+version: 2
+tile:
+  name: 'Reality Management API - Essentials'
+  description: 'An introduction to the Reality Management API. It covers the essential concepts required to get started.'
+  thumbnail: '/images/tutorials/reality-management-essentials/reality-management-essentials-thumbnail.jpg'
+  href: '/tutorials/reality-management-essentials/'
+  relatedApiIds: ['realitymanagement', 'reality-management/reality-data']
+---
+
+## Introduction
+
+This tutorial covers the _essential_ topics for using the [Reality Management API](/apis/reality-management/overview).
+You will learn the following:
+
+- How to create a reality data.
+- How to upload data files to your reality data.
+- How to query your created reality data.
+
+You will also see how your reality data looks in an iTwin Viewer application.
+
+<Alert>
+
+**Use sample data**
+
+This tutorial walks you through using the Reality Management API. We recommend using sample names and data while learning the API for this tutorial. The same instructions apply when using the Reality Management API for your production applications.
+
+</Alert>
+
+## Before you begin
+
+Ensure you meet the following requirements before starting the tutorial:
+
+- Be familiar with the concept of an iTwin. See the [iTwin API Overview](/apis/itwins/overview/) for more information.
+- Be familiar with the concept of Reality Data. See the [Reality Management API Overview](/apis/reality-management/overview/) for more information.
+- (Optional) Be familiar with [Azure Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-overview).
+  You can complete this tutorial regardless of your Azure knowledge level.
+- (Optional) An API client tool that allows you to execute HTTP calls.
+  For ease of use, we have added executable code blocks enabling you to make sample requests within the tutorial.
+  API client tools are helpful when testing your real-world applications.
+
+## Set up your tutorial environment
+
+This section guides you through the pre-requisite steps for the tutorial so you can make sample API requests.
+It also provides sample data for you to use during the tutorial.
+
+<Section level={2}>
+
+### Authorize your requests
+
+This tutorial provides an access token enabling you to complete the tutorial without setting up your own authentication.
+
+Click **Authorize** to generate the token. Your token is automatically populated in the headers of the sample requests.
+
+<AuthorizeUserButton />
+
+<Alert>
+
+**Application permissions**
+
+When using this API to authorize your own application, you need to define the scopes and permissions for your solution. See the [Authorization overview](/apis/overview/authorization) for more information.
+
+</Alert>
+
+</Section>
+<Section level={2}>
+
+### Create an iTwin
+
+To use the Reality Management API, you must associate your reality data with an iTwin.
+
+Click **Create iTwin**.
+
+The ID of your iTwin is automatically populated in the requests that need it.
+Make sure save the iTwin ID. Click the **Copy** button to copy the ID and save it somewhere safe.
+When using the iTwin ID, make sure to remove the _iTwin ID_ label from the pasted copy.
+
+<CreateITwinButton
+  name={'Reality_Management_Essentials_Tutorial_iTwin'}
+  accessTokenFunc={(data) => {
+    return data.accessToken ? data.accessToken : undefined;
+  }}
+/>
+
+<Alert>
+
+**Manually create an iTwin**
+
+An iTwin is required when using this API in your own applications. For more information on creating an iTwin, see the [Create iTwin](/apis/itwins/operations/create-itwin/) reference.
+
+</Alert>
+
+</Section>
+<Section level={2}>
+
+### Get your data files
+
+You must have reality data files on your computer to follow this tutorial. We have provided some sample files for you to use.
+
+1. Click **Download Data** to download the sample reality data files.
+
+   There are a lot of data files.
+   It may take a few minutes for them to download.
+
+2. Please unzip the folder `Scene.zip` after the download completes.
+
+   There are a lot of data files.
+   It may take a few minutes for them to unzip.
+
+<DownloadFilesButton
+  type="folder"
+  folderName="Scene.zip"
+  buttonText="Download Data"
+  jsonFilesManifest={{
+    filename: 'data_manifest.json',
+    filepath:
+      '/images/tutorials/reality-management-essentials/data_manifest.json',
+  }}
+/>
+
+<Alert>
+
+**Generate your own files**
+
+Provide your own reality data files when using the Reality Management API in production applications. Please see the [Reality Modeling API](/apis/contextcapture/) for more information.
+
+</Alert>
+
+</Section>
+
+## Create a reality data
+
+The Reality Management API enables you to create and manage reality models and data.
+A _reality model_ is the real world environment visualized in a reality data viewer and is stored as data files.
+_Reality data_ is a place to store your reality model and any information describing that reality model.
+
+Send a request to the create reality data endpoint:
+
+<RequestLine
+  method="POST"
+  path="/reality-management/reality-data/"
+  href="/apis/reality-management/operations/create-reality-data/"
+/>
+
+The example request includes the following properties in its body:
+
+| **Parameter** | **Required** | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| iTwinId       | No           | The iTwin ID is a unique identifier associating your reality data with your iTwin. **Reminder:** The ID is pre-populated in this tutorial if you clicked the [**Create an iTwin**](#create-an-itwin) button during setup.                                                                                                                                                                                                                                                                                                                                          |
+| displayName   | Yes          | The user friendly name of the reality data.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| type          | Yes          | Indicates the format of your reality data files. Find the list of available types in the [types table](/apis/reality-management/rm-rd-details/#types) on the [Reality Data Properties](/apis/reality-management/rm-rd-details/) page. For the sample files provided, the `type` is `Cesium3DTiles`.                                                                                                                                                                                                                                                                |
+| rootDocument  | No           | The path to the root document file. The root document file is a manifest containing extra information about the reality data and is used by the Visualization service to visualize your reality model. See the [Root Document](/apis/reality-management/rm-rd-details/#root-document) section on the [Reality Data Properties](/apis/reality-management/rm-rd-details/) page for more information. In our sample, the root document file is `electrical_substation.json` in the `Scene` folder making the `rootDocument` value `Scene/electrical_substation.json`. |
+
+<Alert>
+
+**More properties**
+
+This step contains the bare minimum properties required for this tutorial.
+Many more properties are available and detailed in the [Create reality data](/apis/reality-management/operations/create-reality-data/#create-reality-data) reference.
+
+</Alert>
+
+### Create reality data request example
+
+<ExecutableCodeBlock
+  method="POST"
+  path="/reality-management/reality-data/"
+  headers={(data) => ({
+    'Accept': 'application/vnd.bentley.itwin-platform.v1+json',
+    'Content-Type': 'application/json',
+    'Authorization': data.accessToken ?? 'Bearer TOKEN',
+  })}
+  body={(data) => {
+    return `{
+    "iTwinId": "${data.iTwinId ? data.iTwinId : '{iTwinId}'}",
+    "displayName": "Reality_Management_Essentials_Tutorial",
+    "type": "Cesium3DTiles",
+    "rootDocument": "Scene/electrical_substation.json"
+}`;
+  }}
+  dataToSave={[
+    {
+      variableName: 'realityDataId',
+      jsonQuery: 'realityData.id',
+    },
+  ]}
+  handleResponse={(response, helpers) => {
+    if (response.status === 401) {
+      {
+        helpers?.toaster.negative(
+          <span>
+            Did you complete the <b>Authorize your requests</b> step?
+          </span>,
+          {
+            link: {
+              onClick: () => {
+                window.open(
+                  '/tutorials/reality-management-essentials/#authorize-your-requests',
+                  '_self'
+                );
+              },
+              title: 'Go to step',
+            },
+          }
+        );
+      }
+    }
+    if (
+      response.status === 422 &&
+      response.data.error.details.some((detail) => {
+        return detail.target === 'iTwinId';
+      })
+    ) {
+      helpers?.toaster.negative(
+        <span>
+          Did you complete the <b>Create an iTwin</b> step?
+        </span>,
+        {
+          link: {
+            onClick: () => {
+              window.open(
+                '/tutorials/reality-management-essentials/#create-an-itwin',
+                '_self'
+              );
+            },
+            title: 'Go to step',
+          },
+        }
+      );
+    }
+  }}
+/>
+
+The ID of your reality data is automatically populated in the following requests that need it.
+
+## Upload your reality model to the reality data's container
+
+A reality data provides basic information about your reality model through its properties (such as what is the type/format of the files, where is the root document, etc).
+When you created your reality data, a container in the cloud was also created to serve as a home for your reality model.
+
+This section details how to access and upload reality data files to that container.
+
+<Section level={2}>
+
+### Get your reality data's container
+
+The Reality Management API exposes two endpoints you can use to access your reality data's container.
+One endpoint provides read access to the container. The other endpoint provides write access.
+However, both endpoints accept the same parameters.
+The container is hosted in [Azure Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/).
+
+We want write access so you can upload the reality data files to the container.
+For more information on read access, please see the [Retrieve read access to reality data container](/apis/reality-management/operations/get-read-access-to-reality-data-container) reference.
+
+For write access, send the request to the write access endpoint.
+
+<RequestLine
+  method="GET"
+  path="/reality-management/reality-data/{id}/writeaccess?iTwinId={iTwinId}"
+  href="/apis/reality-management/operations/get-write-access-to-reality-data-container/"
+/>
+
+The endpoint accepts the following parameters:
+
+| **Parameter** | **Required** | **Description**                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id            | Yes          | The ID of your reality data. **Reminder:** The ID is pre-populated in this tutorial if you completed the [Create reality data request example](#create-reality-data-request-example).                                                                                                                                                                                                 |
+| iTwinId       | No           | The ID of your iTwin. It affects the permissions for accessing the container as discussed in the [Retrieve write access to reality data container](/apis/reality-management/operations/get-write-access-to-reality-data-container/) reference. **Reminder:** The ID is pre-populated in this tutorial if you clicked the [**Create an iTwin**](#create-an-itwin) button during setup. |
+
+#### Retrieve write access to reality data container request example
+
+<ExecutableCodeBlock
+  method="GET"
+  path={(data) =>
+    `/reality-management/reality-data/${
+      data.realityDataId ?? '{id}'
+    }/writeaccess?iTwinId=${data.iTwinId ?? '{iTwinId}'}`
+  }
+  headers={(data) => ({
+    Accept: 'application/vnd.bentley.itwin-platform.v1+json',
+    Authorization: data.accessToken ?? 'Bearer TOKEN',
+  })}
+  handleResponse={(response, helpers) => {
+    if (response.status === 401) {
+      {
+        helpers?.toaster.negative(
+          <span>
+            Did you complete the <b>Authorize your requests</b> step?
+          </span>,
+          {
+            link: {
+              onClick: () => {
+                window.open(
+                  '/tutorials/reality-management-essentials/#authorize-your-requests',
+                  '_self'
+                );
+              },
+              title: 'Go to step',
+            },
+          }
+        );
+      }
+    }
+    if (
+      response.status === 422 &&
+      response.data.error.details.some((detail) => {
+        return detail.target === 'id';
+      })
+    ) {
+      helpers?.toaster.negative(
+        <span>
+          Did you complete the <b>Create a reality data</b> step?
+        </span>,
+        {
+          link: {
+            onClick: () => {
+              window.open(
+                '/tutorials/reality-management-essentials/#create-a-reality-data',
+                '_self'
+              );
+            },
+            title: 'Go to step',
+          },
+        }
+      );
+    }
+    if (
+      response.status === 422 &&
+      response.data.error.details.some((detail) => {
+        return detail.target === 'iTwinId';
+      })
+    ) {
+      helpers?.toaster.negative(
+        <span>
+          Did you complete the <b>Create an iTwin</b> step?
+        </span>,
+        {
+          link: {
+            onClick: () => {
+              window.open(
+                '/tutorials/reality-management-essentials/#create-an-itwin',
+                '_self'
+              );
+            },
+            title: 'Go to step',
+          },
+        }
+      );
+    }
+  }}
+/>
+
+The `href` returned in the response is a SAS URI with write access to the Azure blob hosting your reality data's container.
+
+<Alert>
+
+**Understanding the SAS URI**
+
+Understanding the SAS URI is not required to use it for the API or tutorial.
+You can learn more about Azure Storage SAS URI's from [Microsoft's SAS token documentation](https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview#sas-token).
+
+</Alert>
+
+</Section>
+
+<Section level={2}>
+
+### Upload your files to the container
+
+Microsoft has several workflows available for uploading data to an Azure blob.
+Exhaustively exploring these options is beyond this scope of this tutorial.
+However, we will point you to a couple of workflows that will allow you to upload the previously downloaded `Scene` folder with as little friction as possible.
+
+<Section level={3}>
+
+#### Uploading the files via the command line
+
+[AzCopy](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10) is a command line tool that you can use to upload files to your storage account.
+This is our recommended way to upload your files for the tutorial.
+
+To upload your reality data files, follow these steps:
+
+1. Ensure you have clicked the [**Download Data**](#get-your-data-files) button and unzipped the downloaded `Scene` folder.
+2. [Download AzCopy](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10#download-azcopy).
+3. [Run AzCopy](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10#run-azcopy) via the command line.
+   `azcopy copy "{path_to_downloaded_Scene_folder}" "{SAS_URI_from_the_previous_response}" --recursive`
+
+Microsoft has an example in the [Use a SAS token](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10#option-2-use-a-sas-token) section of their [Get started with AzCopy](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10) page.
+Be sure to at least read the [Run AzCopy](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10#run-azcopy) link. It points out restrictions on where you can run AzCopy.
+
+</Section>
+
+<Section level={3}>
+
+#### Uploading the files graphically
+
+Microsoft has a desktop application called Azure Storage Explorer that you can download to have a
+graphical experience of dragging and dropping your reality data files into your blob container.
+
+To upload your reality data files using Azure Storage Explorer, follow these steps:
+
+1. Ensure you have clicked the [**Download Data**](#get-your-data-files) button and unzipped the downloaded `Scene` folder.
+2. Download the application by going to Microsoft's [Azure Storage Explorer](https://azure.microsoft.com/en-us/products/storage/storage-explorer/) website and selecting your operating system.
+3. Once you have the application downloaded and open, you can follow Microsoft's instructions in the
+   [Attach to an individual resource](https://learn.microsoft.com/en-us/azure/vs-azure-tools-storage-manage-with-storage-explorer?tabs=windows#attach-to-an-individual-resource)
+   and [Shared access signature (SAS) URL](https://learn.microsoft.com/en-us/azure/vs-azure-tools-storage-manage-with-storage-explorer?tabs=windows#shared-access-signature-sas-url)
+   sections of their [Get started with Storage Explorer](https://learn.microsoft.com/en-us/azure/vs-azure-tools-storage-manage-with-storage-explorer?tabs=windows) page.
+   The resource you want to connect to should be "Blob container" (or something similarly named).
+4. After following Microsoft's instructions and connecting, drag and drop the
+   `Scene` folder into the container.
+
+</Section>
+
+<Alert>
+
+**Programmatic options**
+
+The above two options are easiest for uploading your reality model quickly.
+However, if you are attempting to programmatically upload a reality model in your application, we recommend using Microsoft's Azure Blob Storage client libraries. Microsoft has Azure Blob Storage client libraries for [.NET](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-dotnet?tabs=visual-studio%2Cmanaged-identity%2Croles-azure-portal%2Csign-in-azure-cli%2Cidentity-visual-studio), [Java](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java?tabs=powershell%2Cmanaged-identity%2Croles-azure-portal%2Csign-in-azure-cli), [Python](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-python?tabs=managed-identity%2Croles-azure-portal%2Csign-in-azure-cli), [JavaScript](https://learn.microsoft.com/en-us/azure/storage/blobs/quickstart-blobs-javascript-browser), [C++](https://learn.microsoft.com/en-us/azure/storage/blobs/quickstart-blobs-c-plus-plus?tabs=environment-variable-windows), and [Go](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-go?tabs=roles-azure-portal).
+If you are using a language that does not have a client library, check out the raw [Azure Blob Storage REST API](https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-rest-api).
+
+</Alert>
+
+</Section>
+
+## Query your created reality data
+
+The Reality Management API exposes two endpoints you can use to query your reality data.
+
+<Section level={2}>
+
+### Query reality data associated with an iTwin
+
+This endpoint returns the first 100 reality data associated with the iTwin specified in the request.
+It only returns reality data that you have access to, relative to your organization's access rights.
+
+To query all reality data associated with your iTwin, send a request to the get iTwin's reality data endpoint.
+
+<RequestLine
+  method="GET"
+  path="/reality-management/reality-data/?iTwinId={iTwinId}"
+  href="/apis/reality-management/operations/get-all-reality-data/"
+/>
+
+The example request includes the following parameters:
+
+| **Parameter** | **Required** | **Description**                                                                                                                                                                                                                                                                                          |
+| ------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| iTwinId       | No           | The ID of your iTwin. If you do not provide your iTwin ID, then the request instead returns the first 100 reality data that you have access to across all iTwins. **Reminder:** The ID is pre-populated in this tutorial if you clicked the [**Create an iTwin**](#create-an-itwin) button during setup. |
+
+<Alert>
+
+**More properties**
+
+This step contains the bare minimum parameters required for this tutorial.
+More parameters are available and detailed in the documentation for the [Get iTwin's reality data](/apis/reality-management/operations/get-all-reality-data/) endpoint.
+
+</Alert>
+
+#### Get iTwin's reality data request example
+
+<ExecutableCodeBlock
+  method="GET"
+  path={(data) =>
+    `/reality-management/reality-data/?iTwinId=${data.iTwinId ?? '{iTwinId}'}`
+  }
+  headers={(data) => ({
+    Prefer: 'return=representation',
+    Accept: 'application/vnd.bentley.itwin-platform.v1+json',
+    Authorization: data.accessToken ?? 'Bearer TOKEN',
+  })}
+  handleResponse={(response, helpers) => {
+    if (response.status === 401) {
+      {
+        helpers?.toaster.negative(
+          <span>
+            Did you complete the <b>Authorize your requests</b> step?
+          </span>,
+          {
+            link: {
+              onClick: () => {
+                window.open(
+                  '/tutorials/reality-management-essentials/#authorize-your-requests',
+                  '_self'
+                );
+              },
+              title: 'Go to step',
+            },
+          }
+        );
+      }
+    }
+    if (
+      response.status === 422 &&
+      response.data.error.details.some((detail) => {
+        return detail.target === 'iTwinId';
+      })
+    ) {
+      helpers?.toaster.negative(
+        <span>
+          Did you complete the <b>Create an iTwin</b> step?
+        </span>,
+        {
+          link: {
+            onClick: () => {
+              window.open(
+                '/tutorials/reality-management-essentials/#create-an-itwin',
+                '_self'
+              );
+            },
+            title: 'Go to step',
+          },
+        }
+      );
+    }
+  }}
+/>
+
+At this point, only the reality data you created during this tutorial should be listed.
+
+</Section>
+
+<Section level={2}>
+
+### Query a specific reality data
+
+This endpoint takes a reality data ID and returns that specific reality data.
+
+To query a specific reality data, send a request to the get reality data metadata endpoint.
+
+<RequestLine
+  method="GET"
+  path="/reality-management/reality-data/{id}?iTwinId={iTwinId}"
+  href="/apis/reality-management/operations/get-reality-data-details/"
+/>
+
+The example request accepts the following parameters:
+
+| **Parameter** | **Required** | **Description**                                                                                                                                                                                                                                                                                                                                 |
+| ------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id            | Yes          | The ID of your reality data. **Reminder:** The ID is pre-populated in this tutorial if you completed the [Create reality data request example](#create-reality-data-request-example).                                                                                                                                                           |
+| iTwinId       | No           | The ID of your iTwin. It affects the permissions for querying the reality data as discussed in the [Get reality data metadata](/apis/reality-management/operations/get-reality-data-details/) reference. **Reminder:** The ID is pre-populated in this tutorial if you clicked the [**Create an iTwin**](#create-an-itwin) button during setup. |
+
+#### Get reality data metadata request example
+
+<ExecutableCodeBlock
+  method="GET"
+  path={(data) =>
+    `/reality-management/reality-data/${data.realityDataId ?? '{id}'}?iTwinId=${
+      data.iTwinId ?? '{iTwinId}'
+    }`
+  }
+  headers={(data) => ({
+    Accept: 'application/vnd.bentley.itwin-platform.v1+json',
+    Authorization: data.accessToken ?? 'Bearer TOKEN',
+  })}
+  handleResponse={(response, helpers) => {
+    if (response.status === 401) {
+      {
+        helpers?.toaster.negative(
+          <span>
+            Did you complete the <b>Authorize your requests</b> step?
+          </span>,
+          {
+            link: {
+              onClick: () => {
+                window.open(
+                  '/tutorials/reality-management-essentials/#authorize-your-requests',
+                  '_self'
+                );
+              },
+              title: 'Go to step',
+            },
+          }
+        );
+      }
+    }
+    if (
+      response.status === 422 &&
+      response.data.error.details.some((detail) => {
+        return detail.target === 'id';
+      })
+    ) {
+      helpers?.toaster.negative(
+        <span>
+          Did you complete the <b>Create a reality data</b> step?
+        </span>,
+        {
+          link: {
+            onClick: () => {
+              window.open(
+                '/tutorials/reality-management-essentials/#create-a-reality-data',
+                '_self'
+              );
+            },
+            title: 'Go to step',
+          },
+        }
+      );
+    }
+    if (
+      response.status === 422 &&
+      response.data.error.details.some((detail) => {
+        return detail.target === 'iTwinId';
+      })
+    ) {
+      helpers?.toaster.negative(
+        <span>
+          Did you complete the <b>Create an iTwin</b> step?
+        </span>,
+        {
+          link: {
+            onClick: () => {
+              window.open(
+                '/tutorials/reality-management-essentials/#create-an-itwin',
+                '_self'
+              );
+            },
+            title: 'Go to step',
+          },
+        }
+      );
+    }
+  }}
+/>
+
+</Section>
+
+## Visualize your newly uploaded reality data
+
+After creating a reality data and uploading your reality model to its container, you can now visualize your reality data in an [iTwin Viewer](/tutorials/web-application-quick-start/).
+
+Click **View Reality Data** to see the reality model you created in a Viewer.
+
+<LinkButtonUsingTutorialData
+  href={(data) => {
+    return `/my-itwins/${data.iTwinId ? data.iTwinId : 'iTwinId'}/${
+      data.realityDataId ? data.realityDataId : 'realityDataId'
+    }/reality-data-tutorial-viewer/`;
+  }}
+  handleTutorialStateValidation={(data, helpers) => {
+    let isValid = true;
+    if (!data.realityDataId) {
+      isValid = false;
+      helpers?.toaster.negative(
+        <span>
+          Did you complete the <b>Create a reality data</b> step?
+        </span>,
+        {
+          link: {
+            onClick: () => {
+              window.open(
+                '/tutorials/reality-management-essentials/#create-a-reality-data',
+                '_self'
+              );
+            },
+            title: 'Go to step',
+          },
+        }
+      );
+    }
+    if (!data.iTwinId) {
+      isValid = false;
+      helpers?.toaster.negative(
+        <span>
+          Did you complete the <b>Create an iTwin</b> step?
+        </span>,
+        {
+          link: {
+            onClick: () => {
+              window.open(
+                '/tutorials/reality-management-essentials/#create-an-itwin',
+                '_self'
+              );
+            },
+            title: 'Go to step',
+          },
+        }
+      );
+    }
+    return isValid;
+  }}
+  buttonText="View Reality Data"
+/>
+
+<Alert type="warning">
+
+**Viewer Errors**
+
+The reality data viewer will attempt to display helpful error messages if it detects a potential mistake.
+To resolve some of the errors, please check the following:
+
+1. Ensure that you have completed all steps of the tutorial _before_ clicking the **View Reality Data** button.
+2. Verify that the `rootDocument` path specified during the [Create a reality data](#create-a-reality-data) step is still valid based on the structure of the files you uploaded during the [Upload your reality model to the reality data's container](#upload-your-reality-model-to-the-reality-datas-container) step.
+
+</Alert>
+
+The official [Reality Data sample](https://www.itwinjs.org/sandboxes/iTwinPlatform/Reality%20Data) provides an example on attaching and visualizing reality data in an iTwin Viewer.
+Check out that sample, our [iTwin.js documentation](https://www.itwinjs.org/reference/core-frontend/views/displaystylestate/attachrealitymodel/), the [@itwin/reality-data-client package](https://www.npmjs.com/package/@itwin/reality-data-client), and the [reality-capture web application](https://github.com/iTwin/reality-capture/tree/main/typescript/examples/web-app) for how to visualize your reality data in your own application.
+
+<Alert>
+
+**Reality Data Location**
+
+If you are building your own iTwin Viewer application, it is helpful to know the location of your reality data. The sample reality data has the following coordinates (with longitude and latitude in degrees and height in meters):
+
+- Longitude: 4.668735091306921&deg
+- Latitude: 45.265122669456325&deg
+- Height: 456.72571760937933 meters
+
+</Alert>
+
+## What you've learned
+
+In this tutorial, you should have learned:
+
+- How to [Create a reality data](#create-a-reality-data):
+  - Choose a `displayName`.
+  - Choose the `type` from [types table](/apis/reality-management/rm-rd-details/#types).
+  - Include the `rootDocument` path.
+  - Execute the [Create reality data](/apis/reality-management/operations/create-reality-data/) request.
+- How to [Upload your reality model to the reality data's container](#upload-your-reality-model-to-the-reality-datas-container) to the reality data's container:
+  - Supply your reality data's ID and your iTwin's ID for the [Retrieve write access to reality data container](/apis/reality-management/operations/get-write-access-to-reality-data-container/) request.
+  - Upload your reality data files using the command line, a graphical application, or programmatically.
+- How to [Query your created reality data](#query-your-created-reality-data) for your reality data(s)
+  - Query all reality data associated with your iTwin by providing your iTwin's ID to the [Get iTwin's reality data](/apis/reality-management/operations/get-all-reality-data/) endpoint.
+  - Query a specific reality data by providing that reality data's ID and your iTwin's ID to the [Get reality data metadata](/apis/reality-management/operations/get-reality-data-details/) endpoint.
+
+This tutorial provided the background knowledge required for you to:
+
+- Learn how to [Visualize your newly uploaded reality data](#visualize-your-newly-uploaded-reality-data) in an iTwin Viewer by checking out the official [Reality Data sample](https://www.itwinjs.org/sandboxes/iTwinPlatform/Reality%20Data).
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Reality Management API"
+    href="/apis/reality-management/"
+    description="The reference documentation for the reality management API. Allows you to manage your reality data and is covered in this tutorial."
+  />
+  <LinkCard
+    title="Reality Modeling API"
+    href="/apis/contextcapture/"
+    description="The reference documentation for the reality modeling API. Allows you to turn images and point clouds into reality meshes, orthophotos and others."
+  />
+  <LinkCard
+    title="Reality Analysis API"
+    href="/apis/realitydataanalysis/"
+    description="The reference documentation for the reality analysis API. Allows you to run AI/ML on photos, maps, meshes or point clouds."
+  />
+</TileList>

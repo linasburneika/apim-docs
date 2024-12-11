@@ -1,0 +1,360 @@
+---
+title: 'Creating Your First Issue'
+version: 1
+tile:
+  name: 'Creating Your First Issue'
+  description: 'Learn the basics of the Issues REST API by creating, viewing, and modifying an issue.'
+  href: '/tutorials/creating-your-first-issue'
+  durationInMinutes: 15
+  relatedApiIds: ['issues']
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="15">
+
+## Introduction
+
+Issues generally represent items of work that come up during a project and often need a particular person/group's attention by a certain due date. The Issues API lets you create, view, and edit these issues in your project.
+
+In this tutorial, you will use the Issues REST API to create, modify, and view an issue. No programming experience is necessary, though familiarity with JSON and HTTP will help. This lesson is meant to begin getting you familiar with the Issues API's capabilities before you begin writing application code.
+
+## Prerequisites
+
+If you haven't already, please complete the [Web Application Quick Start](../web-application-quick-start) tutorial before continuing. This will give you an iModel and a project under which you can create issues.
+
+</Introduction>
+
+<TutorialSection>
+
+## 1. Creating an Issue
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+<LinkButton
+  href="/apis/issues-v1/operations/get-project-form-definitions/"
+  target="_blank"
+  title="Try the Get Project Form Definitions endpoint"
+  buttonText="Go"
+/>,
+<Title>Sample request</Title>,
+<CodeBlock language="http" code={`GET https://api.bentley.com/issues/formDefinitions?projectId=<yourId> HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+<Title>Sample response</Title>,
+<CodeBlock language="http" code={`HTTP/1.1 200 OK
+Content-Type: application/json\n
+{
+  "formDefinitions":[
+    {
+      "id":"e5Ue5Ue5U02hNz19awLcRpwxKq9kmcZEqw123456789",
+      "displayName":"Issue",
+      "type":"Field Data"
+    },
+    {
+      "id":"e5Ue5Ue5U02hNz19awLcRnQIKZ9n-5VNql123456789",
+      "displayName":"Clash Review",
+      "type":"Clash"
+    },
+    {
+      "id":"e5Ue5Ue5U02hNz19awLcRnQIKZ9n-8765l123456789",
+      "displayName":"Data Quality Review",
+      "type":"Data Quality"
+    }
+  ]
+}`} />
+]}>
+
+### 1.1. Choosing a Form Definition
+
+In order to create an issue, you must associate it with a **form definition**. A form definition simply adds metadata to the issue, including how it should displayed in certain Bentley applications. However, for third-party applications, often the only property that matters is the **type**, as this will determine which type of issue is created.
+
+To see all available form definitions in your project, make a request to the [Get Project Form Definitions](/apis/issues-v1/operations/get-project-form-definitions/) endpoint as shown under **Sample request**, replacing **&lt;yourId&gt;** with the ID of the project you created in a previous step.
+
+<Alert type="informational">
+
+You can try making a request to this endpoint, like any endpoint in the Issues REST API, by clicking the blue Try It Out button on its [**documentation page**](/apis/issues-v1/operations/get-project-form-definitions/).
+
+</Alert>
+
+This will return a list of form definitions similar to the **Sample response**.
+
+Choose any one of these form definitions returned from your request and note its `id` for the next step.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+<LinkButton
+  href="/apis/issues-v1/operations/create-issue/"
+  target="_blank"
+  title="Try the Create Issue endpoint"
+  buttonText="Go"
+/>,
+<Title>Sample method, URL, and headers</Title>,
+<CodeBlock language='http' code={`POST https://api.bentley.com/issues HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+<Title>Sample body (Copy and use this! Fill in your form ID.)</Title>,
+<CodeBlock language="json" 
+  code={`{
+  "formId":"<your form id>",
+  "subject":"Unspecified material",
+  "description":"The plans do not specify what material this support beam will be made out of.",
+  "dueDate":"2021-07-30T00:00:00Z"
+}`} />,
+<Title>Sample response</Title>,
+<CodeBlock language='http' code={`HTTP/1.1 201 Created
+Content-Type: application/json\n
+{
+  "issue":{
+    "id":"xospFt7H20-9uSSLOwfBeBs-UbbpqxhKgAL4wWWajpw",
+    "subject":"Unspecified material",
+    "description":"The plans do not specify what material this support beam will be made out of.",
+    "dueDate":"2021-07-30T00:00:00Z",
+    "createdBy":"Andrew Menzies",
+    "createdDateTime":"2021-06-11T18:17:45.4807786Z",
+    "lastModifiedBy":"Andrew Menzies",
+    "lastModifiedDateTime":"2021-06-11T18:17:45.4807786Z",
+    "number":"FID-00002",
+    "status":"Draft",
+    "assignee":{
+      "id":"9e39de83-2457-466d-9de3-8d8a186b4189",
+      "displayName":"Andrew Menzies"
+    },
+    "assignees":[],
+    "displayName":"FID-00002",
+    "type":"Field Data",
+    "state":"Open"
+  }
+}`} />
+]}>
+
+### 1.2. Posting the Issue Data
+
+You can create an issue by making a POST request to the [Create issue](/apis/issues-v1/operations/create-issue/) endpoint.
+
+#### URL
+
+The URL for creating an issue is always the same: `https://api.bentley.com/issues`
+
+#### Body
+
+A new issue typically includes a few simple textual properties and, optionally, some metadata properties linking it to an iModel and, potentially, a specific element in that iModel. We'll go over those metadata properties (anything denoted as **"Origin info"** on the documentation page) in another tutorial.
+
+The only property absolutely required for a new issue request is:
+
+- **formId:** The ID of one of the form definitions in your project, as retrieved from the **Get Project Form Definitions** endpoint.
+
+Other properties that are typically included are:
+
+- **subject:** A short descriptive title of the issue, usually less than a sentence.
+- **description:** A longer, more detailed explanation of the issue. Can be multiple sentences and can span multiple lines.
+- **assignee** or **assignees**: A person, or list of people, respectively, who should review the issue and take action. These must be members of the current project. If neither property is set, **assignee** will default to whoever created the issue, i.e. you.
+- **dueDate:** Date by which the assignee(s) should take action on the issue, if applicable. Apps might warn users when an issue is near due or overdue, for instance.
+
+Generally, an app that creates issues would collect these properties from the user, such as by providing a text box for **subject**, a text area for **description**, a dropdown list of project members for **assignee**, and so forth.
+
+<Alert type="informational">
+
+Setting <strong>assignee</strong> or <strong>assignees</strong> requires both a user's display name and ID. These can be obtained using the [**Get iTwin Team Members**](/apis/access-control-v2/operations/get-itwin-user-member/) endpoint of the Access Control API.
+
+</Alert>
+
+Copy the sample body from the pane on the right and visit the [documentation page](/apis/issues-v1/operations/create-issue/) to create your first issue. After you click **Try It**, paste the body into the text area, overwriting any JSON already there. Be sure to replace **&lt;your form id&gt;** with the `id` you obtained in Step 1.1.
+
+#### Response
+
+If you've made the request correctly, you should receive a response similar to the sample. Note that several properties are automatically filled in by the server, even though you didn't specify them: `type` is equal to the type of the form definition you chose, and properties such as `createdBy` and `createdDateTime` were automatically set to show who created the issue and when. You will need to use the `id` property's value to make further requests regarding that issue.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Viewing Your Issues
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[
+<LinkButton
+  href="/apis/issues-v1/operations/get-project-issues/"
+  target="_blank"
+  title="Try the Get Project Issues endpoint"
+  buttonText="Go"
+/>,
+<Title>Sample Request</Title>,
+<CodeBlock language='http' code={`GET https://api.bentley.com/issues?projectId=<your-project-ID> HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+<Title>Sample Response</Title>,
+<CodeBlock language='http' code={`HTTP/1.1 200 OK
+Content-Type: application/json\n
+{
+  "issues":[
+    {
+      "id":"xospFt7H20-9uSSLOwfBeBs-UbbpqxhKgAL4wWWajpw",
+      "displayName":"FID-00002",
+      "state":"Open",
+      "type":"Field Data",
+      "subject":"Unspecified material"
+    }
+  ],
+  "_links":{
+    "self":{
+      "href":"https://api.bentley.com/issues?projectId=16298bc6-c7de-4fdb-bdb9-248b3b07c178&$top=1"
+    },
+    "next":{
+      "href":"https://api.bentley.com/issues?projectId=16298bc6-c7de-4fdb-bdb9-248b3b07c178&continuationToken=eyJ0b3AiOjEsInNraXBUb2tlbiI6IntcInRva2VuXCI6XCIrUklEOn5xMEp4QUxUU1ROYmMzZzhBQUFBQURnPT0jUlQ6MSNUUkM6MSNSVEQ6UXRrNDlqVXpNaTdWUElHNElWQUNCVE14TXpJdU1UY3VNakpWTWprN01qZzdOVFl2TlRreE9EZzVOMXNBI0lTVjoyI0lFTzo2NTU1MSNRQ0Y6NyNGUEM6QWdnL0FBQUFBRGdBQUQ4QUFBQUFPQUFBUHdBQUFBQTRBQUFFQU5FZVFCQT1cIixcInJhbmdlXCI6e1wibWluXCI6XCIwNUMxRTlDRDY3MzM5OFwiLFwibWF4XCI6XCIwNUMxRUQ3NTAzOERBQ1wifX0ifQ"
+    }
+  }
+}`} />
+]}>
+
+### 2.1. Viewing All Issues in Project
+
+Make a request to the [Get Project Issues](/apis/issues-v1/operations/get-project-issues/) endpoint to get a summary of all the issues in the project. You must specify the `projectId` in a query parameter, and you can optionally filter by `type` as an additional query parameter.
+
+<Alert type="informational">
+
+Note: If there are too many issues to be returned in one response, you can request the next "page" of results by making a GET request to the exact URL in `next.href`. (`next.href` will not normally appear if there is just one issue to return, but was included in the sample response for illustrative purposes.)
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection subSection="true" actions={[
+<LinkButton
+  href="/apis/issues-v1/operations/get-issue-details/"
+  target="_blank"
+  title="Try the Get Issue Details endpoint"
+  buttonText="Go"
+/>,
+<Title>Sample Request</Title>,
+<CodeBlock language='http' code={`GET https://api.bentley.com/issues/<your-issue-ID> HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+<Title>Sample Response</Title>,
+<CodeBlock language='http' code={`HTTP/1.1 200 OK
+Content-Type: application/json\n
+{
+  "issue":{
+    "id":"xospFt7H20-9uSSLOwfBeBs-UbbpqxhKgAL4wWWajpw",
+    "subject":"Unspecified material",
+    "description":"The plans do not specify what material this support beam will be made out of.",
+    "dueDate":"2021-07-30T00:00:00Z",
+    "createdBy":"Andrew Menzies",
+    "createdDateTime":"2021-06-11T18:17:45.4807786Z",
+    "lastModifiedBy":"Andrew Menzies",
+    "lastModifiedDateTime":"2021-06-11T18:17:45.4807786Z",
+    "number":"FID-00002",
+    "status":"Open",
+    "assignee":{
+      "id":"9e39de83-2457-466d-9de3-8d8a186b4189",
+      "displayName":"Andrew Menzies"
+    },
+    "assignees":[
+      
+    ],
+    "displayName":"FID-00002",
+    "type":"Field Data",
+    "state":"Open",
+    "formId":"ZaZaZaYbYav2qwer_-wqer-___wqerqwetaqtewq123"
+  }
+}`} />
+]}>
+
+### 2.2 Viewing a Single Issue's Details
+
+To retrieve all properties of an issue, call the [Get issue details](/apis/issues-v1/operations/get-issue-details/) endpoint.
+
+The URL for this request is https://api.bentley.com/issues/&lt;id&gt; where **&lt;id&gt;** equals the `id` property of the issue you want to look up (in this case, the one you created in Step 1.2).
+
+</TutorialSection>
+
+<TutorialSection actions={[
+<LinkButton
+  href="/apis/issues-v1/operations/modify-issue/"
+  target="_blank"
+  title="Try the Update Issue endpoint"
+  buttonText="Go"
+/>,
+<Title>Sample method, URL, and headers</Title>,
+<CodeBlock language='http' code={`PATCH https://api.bentley.com/issues/<your-issue-ID> HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+<Title>Sample body (Copy and use this!)</Title>,
+<CodeBlock language="json" 
+  code={`{
+  "description":"Version 1.2 of the plans does not specify what material this support beam will be made out of."
+}`
+} />,
+<Title>Sample response</Title>,
+<CodeBlock language='http' code={`HTTP/1.1 200 OK
+Content-Type: application/json\n
+{
+  "issue":{
+    "id":"xospFt7H20-9uSSLOwfBeBs-UbbpqxhKgAL4wWWajpw",
+    "description":"Version 1.2 of the plans does not specify what material this support beam will be made out of.",
+    "createdBy":"Andrew Menzies",
+    "createdDateTime":"2021-06-11T18:17:45.4807786Z",
+    "lastModifiedBy":"Andrew Menzies",
+    "lastModifiedDateTime":"2021-06-14T17:11:27.3959581Z",
+    "status":"Open",
+    "assignee":{
+      "displayName":"Andrew Menzies",
+      "id":"9e39de83-2457-466d-9de3-8d8a186b4189"
+    },
+    "number":"FID-00002",
+    "displayName":"FID-00002",
+    "subject":"Unspecified material",
+    "type":"Field Data",
+    "dueDate":"2021-07-30T00:00:00Z",
+    "state":"Open"
+  }
+}`} />
+]}>
+
+## 3. Modifying an Issue
+
+Once you've created an issue, you can call the [Update issue](/apis/issues-v1/operations/modify-issue/) endpoint to modify its properties. Updating an issue can be done simply by making a PATCH request to the same URL where you retrieved its details (ending in the issue's ID). Provide a JSON object body containing only the properties you want changed; anything not included will keep its saved values. (Note: Including a property with a value of `null` on the will set that property on the saved issue to `null`; it is not the same as omitting the property from the request entirely.)
+
+For example, if you wanted to make the description slightly more detailed, you could make a request using the body shown to the right. Be sure to set the `id` URL parameter to the ID of your newly created issue.
+
+<Alert type="warning">
+
+Be aware that some properties returned in the **Get issue details** request are read-only. The documentation for **Update issue** lists only the properties you are allowed to edit.
+
+</Alert>
+
+#### URL format
+
+`https://api.bentley.com/issues/<ID-of-issue-to-change>`
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+<TileList>
+  <Tile
+    name="Adding Attachments and Comments to Your Issue"
+    description="Upload images and documents, and post comments, to make your issue more detailed."
+    href="../adding-attachments-and-comments-to-your-issue"
+  />
+  <Tile
+    name="Stepping Through an Issue Workflow"
+    description="Learn how an issue's status can be set to track its progress."
+    href="../stepping-through-an-issue-workflow"
+  />
+  <Tile
+    name="Model Issues Interactive Sample"
+    description="See the Issues API in action in an iTwin Viewer app."
+    href="https://www.itwinjs.org/sandboxes/iTwinPlatform/Issues"
+    isExternal
+  />
+</TileList>
+
+</ContinueLearningSection>

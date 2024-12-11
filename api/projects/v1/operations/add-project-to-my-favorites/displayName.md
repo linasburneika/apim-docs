@@ -1,1 +1,0 @@
-Add project to my favorites

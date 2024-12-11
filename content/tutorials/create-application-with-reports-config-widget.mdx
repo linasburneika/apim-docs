@@ -1,0 +1,117 @@
+---
+title: 'Create application with Reports Config Widget'
+version: 1
+tile:
+  name: 'Create application with Reports Config Widget'
+  description: 'This tutorial will guide you through the process of creating an application with the Reports Config Widget.'
+  href: '/tutorials/create-application-with-reports-config-widget'
+  durationInMinutes: 10
+  relatedApiIds: ['insights', 'insights/reporting']
+  showInFirstSteps: false
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="10">
+
+## Introduction
+
+The [Reports Config widget](https://www.npmjs.com/package/@itwin/reports-config-widget-react) is a UI that simplifies the creation, modification, and extraction of Reports within the Reporting Platform.
+This tutorial will guide you through some basic steps and provide references to set up a viewer application for Reports Config Widget.
+
+By the end of this walk-through, you will be able to have an iTwin viewer with quick access to all your reports.
+
+</Introduction>
+
+<TutorialSection subSection={true} actions={[
+    <LinkButton
+      href="/tutorials/web-application-quick-start"
+      target="_blank"
+      title="iTwin Web Viewer Quick Start Instructions"
+      buttonText="Go"
+    />
+]}>
+
+## Prerequisite
+
+This tutorial assumes that you already have:
+
+- Your own local source for the iTwin Web Viewer. Please refer to the [quick start instructions](/tutorials/web-application-quick-start).
+
+</TutorialSection>
+
+<TutorialSection actions={[<CodeBlock language="plaintext" code="itwin-platform" />]}>
+
+## Permissions and Scopes
+
+Do not forget to put these values within the `IMJS_AUTH_CLIENT_SCOPES` environment variable.
+
+In addition, users must have the `imodels_read` and `imodels_write` [permissions](/apis/insights/operations/create-mapping/#authorization) assigned at either the Project or iModel level. Further instruction on how to create roles and assign permissions can be found in the [iTwin Platform Access Control API documentation](/apis/access-control-v2/tutorials/).
+
+</TutorialSection>
+
+<TutorialSection actions={[<CodeBlock language="jsx" code={`useEffect(() => {
+  ReportsConfigWidget.initialize(IModelApp.localization);
+})
+ 
+<Viewer
+  iTwinId={iTwinId}
+  iModelId={iModelId}
+  authClient={authClient}
+  viewCreatorOptions={viewCreatorOptions}
+  enablePerformanceMonitors={true}
+  uiProviders={[new ReportsConfigProvider()]}
+/>
+`} />]}>
+
+## Adding the Reports Config Widget
+
+The first step required by the widget is to initialize it before making use of the provider. This will initialize the widget’s localization.
+
+Next, you must add the `ReportsConfigProvider` to the list of `uiProviders` within the viewer component.
+More details on adding `uiProviders` can be shown in this [tutorial](/tutorials/itwin-viewer-hello-world/#2-your-first-ui-widget).
+
+Congratulations, you should now have the Reports Config widget within your iTwin Viewer application.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Creating an Insights Report using iModel Data"
+    href="/tutorials/creating-an-insights-report-using-imodel-data/"
+    description="A guide on how to create the grouping and mapping required by your reports."
+  />
+  <LinkCard
+    title="Reporting API Documentation"
+    href="/apis/insights/"
+    description="This is the official documentation of Reporting API."
+  />
+  <LinkCard
+    title="Create a test iModel from a Bentley provided sample"
+    href="/tutorials/create-test-imodel-sample"
+    description="The quickest way to get access to a cloud hosted iModel is by creating an iModel seeded with Bentley provided sample data."
+  />
+  <LinkCard
+    title="Sample House Model"
+    href="/tutorials/create-test-imodel-sample/#house-sample"
+    description="Bentley provided sample of a House for test iModel creation."
+  />
+  <LinkCard
+    title="UI Provider"
+    href="https://www.itwinjs.org/reference/ui-abstract/uiitemsprovider/uiitemsprovider/"
+    description="Describes interface of objects that want to provide UI component to the running IModelApp."
+    isExternal={true}
+  />
+  <LinkCard
+    title="IModelApp"
+    href="https://www.itwinjs.org/reference/imodeljs-frontend/imodelapp/imodelapp/"
+    description="Global singleton that connects the user interface with the iTwin.js services."
+    isExternal={true}
+  />
+</TileList>
+
+</ContinueLearningSection>

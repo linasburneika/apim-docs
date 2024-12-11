@@ -1,0 +1,251 @@
+---
+title: 'Using cache in Reality Modeling API'
+version: 1
+tile:
+  name: 'Using cache in Reality Modeling API'
+  description: 'This tutorial focuses on using cache for faster processing in Reality Modeling'
+  thumbnail: '/images/cccs-cache-thumb.png'
+  href: '/tutorials/contextcapture-api-how-to-use-cache/'
+  durationInMinutes: 15
+  relatedApiIds: ['contextcapture']
+---
+
+<Introduction
+  skillLevel="Advanced"
+  durationInMinutes="15"
+  summaryImageSrc="/images/cccs-cache-header.jpg">
+
+## Introduction
+
+The goal of this tutorial is to leverage the caching mechanism of _Reality Modeling REST API_ in order to speed up your processing.
+
+In this tutorial, we will create a job to be cached, then use this cache to export another format without reprocessing the complete data.
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- Completed the [Reality Modeling Quick Start tutorial](/tutorials/contextcapture-api-quick-start):
+  - [Created a workspace](/tutorials/contextcapture-api-quick-start/#3-create-a-workspace)
+  - Uploaded input data (images and orientations)
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 1. Cache re-usage and behavior
+
+### Cache re-usage
+
+Before creating jobs, it is important to understand how caching works in _Reality Modeling_.
+When asked for, a cache will be created if the job is successful. If a job is failed or cancelled, no cache will be created.
+
+A created cache can be used for later jobs in order to reuse it (new exports for example). This is the table of possible workflows:
+
+|                | Cached Calibration | Cached Reconstruction | Cached Full |
+| -------------: | :----------------: | :-------------------: | :---------: |
+|    Calibration |         ✔️         |          ❌           |     ✔️      |
+| Reconstruction |         ✔️         |          ✔️           |     ✔️      |
+|           Full |         ✔️         |          ❌️          |     ✔️      |
+
+A new calibration job based on a cached reconstruction will failed for example.
+
+### Cache behavior
+
+_Reality Modeling_ considers that cache is the truth, and will use it as much as possible.
+For example, if you submit a full job with a _Draft_ mesh quality to produce a 3MX, then use it as cache for a full job with _Extra_ mesh quality to produce an OBJ, you will have a _Draft_ OBJ result.
+
+Caches are standalone snapshot of a job. They don't depend on each other. Note that for large projects, cache can be very large:
+
+- Cache upload will then slow marginally your job
+- Usage of Reality Data will increase
+
+Cache can be cleaned: they are uploaded in the _Reality Modeling_ workspace reality data on _Reality Management_ - reality data id is the workspace id, in `{JOB_ID}/cache`.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Create a job that will be cache
+
+In order to tell _Reality Modeling_ we want to create a cache of the job, we just need to specify a setting in the job creation payload.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language='http' code={`POST https://api.bentley.com/contextcapture/jobs HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}/>
+  ]}
+>
+
+#### Request
+
+A new job with cache is created by sending a HTTP POST message to https://api.bentley.com/contextcapture/jobs endpoint with the payload describing the job.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "type": "Full",
+  "name": "My Reality Modeling job to be cached",
+  "workspaceId": "WORKSPACE_ID",
+  "inputs": [
+    {
+      "id": "IMAGECOLLECTION_RD_ID",
+      "description": "Drone ImageCollection"
+    },
+    {
+      "id": "CCORIENTATIONS_RD_ID",
+      "description": "Drone CCOrientations"
+    }
+  ],
+  "settings": {
+    "quality": "Extra",
+    "processingEngines": 0,
+    "outputs": [
+      "OBJ"
+    ],
+    "cacheSettings":
+    {
+      "createCache": true
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+#### Request Body
+
+As you can see, we added in the settings a new section `cacheSettings` with the property `createCache` set to _True_.
+
+At the end of the job, if it is successful, the cache will be automatically uploaded to _Reality Modeling_ workspace reality data on _Reality Management_ - reality data id is the workspace id, in `{JOB_ID}/cache`.
+
+<Alert type="informational">
+
+Note the JOB_ID created by this job. It will be useful later for using the cache.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Use a cached job
+
+If you want to export your data to another format - 3SM for example, we can use the cached job to speed up the processing time.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language='http' code={`POST https://api.bentley.com/contextcapture/jobs HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`}
+    />
+  ]}
+>
+
+#### Request
+
+A new job with using cache is created by sending a HTTP POST message to https://api.bentley.com/contextcapture/jobs endpoint with the payload describing the job.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+  "type":"Full",
+  "name":"My Reality Modeling job using cache",
+  "workspaceId":"WORKSPACE_ID",
+  "inputs":[
+    {
+      "id":"IMAGECOLLECTION_RD_ID",
+      "description":"Drone ImageCollection"
+    },
+    {
+      "id":"CCORIENTATIONS_RD_ID",
+      "description":"Drone CCOrientations"
+    }
+  ],
+  "settings":{
+    "meshQuality":"Extra",
+    "processingEngines":0,
+    "outputs":[
+      "3SM"
+    ],
+    "cacheSettings":{
+      "useCache":"JOB_ID_OF_CACHED_JOB"
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+#### Request Body
+
+As you can see, we added in the settings a section `cacheSettings` with the property `useCache` set to _JOB_ID_OF_CACHED_JOB_.
+This tells _Reality Modeling_ to download and use the cached job.
+That way, your job will be faster, since geometry was cached and only need to be converted to _3SM_ format.
+
+<Alert type="informational">
+
+It is possible to combine both properties in `cacheSettings`. For example you may want to use the cache of a _Calibration_ job for a _Full_ job, and have the result of this job cached for future exports.
+
+</Alert>
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulations for completing the _Reality Modeling_ cache tutorial! You should now be able to create and use cached job for faster processing.
+To go further and use _Reality Modeling_ to its maximum potential, you can check the following tutorials.
+
+<TileList>
+  <Tile
+    name="Better calibration in Reality Modeling"
+    description="Learn how to specify calibration settings in Reality Modeling, and download the result of a calibration"
+    thumbnail="/images/cccs-calibration-thumb.jpg"
+    href="/tutorials/contextcapture-api-better-calibration"
+  ></Tile>
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="iTwins API"
+    href="/apis/itwins/"
+    description="An iTwin is necessary for using Reality Modeling API. You can check its possibilities."
+  />
+  <LinkCard
+    title="Reality Data API"
+    href="/apis/realitydata/"
+    description="Reality Data API is necessary for uploading inputs for Reality Modeling, and downloading outputs."
+  />
+  <LinkCard
+    title="Reality Management API"
+    href="/apis/reality-management/"
+    description="Reality Management API is necessary for uploading inputs for Reality Modeling, and downloading outputs."
+  />
+</TileList>
+
+</ContinueLearningSection>

@@ -1,1 +1,0 @@
-Remove project from my favorites

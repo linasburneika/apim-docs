@@ -1,1 +1,0 @@
-Delete Catalog Document

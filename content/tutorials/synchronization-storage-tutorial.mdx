@@ -1,0 +1,613 @@
+---
+title: 'Synchronize a file from iTwin Storage'
+version: 1
+tile:
+  name: 'Synchronize a file from iTwin Storage'
+  description: 'Walk-through how to synchronize a file from iTwin Storage to an iModel using Synchronization API.'
+  thumbnail: '/images/synchronizationThumbnail.png'
+  href: '/tutorials/synchronization-storage-tutorial/'
+  durationInMinutes: 30
+  relatedApiIds: ['synchronization', 'imodels', 'storage']
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="30">
+
+## Introduction
+
+This is a walk-through of how to synchronize a file from iTwin Storage to an iModel using Synchronization API. Synchronization API works in iTwin and iModel context. To synchronize a set of files a connection has to be created. Connection is an aggregation of properties like file metadata which is needed for synchronization. Connections can be run on demand which starts a file specified in the connection conversion to an iModel.
+
+</Introduction>
+
+<TutorialSection 
+actions={[
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+## Prerequisites
+
+This tutorial assumes that you:
+
+- Already have a tool such as `Postman` that can be used to execute HTTP calls. These calls can also be made using the **Try it out** button in the API documentation or any other HTTP request tool.
+- Familiar with concepts of Authorization, iModel, iTwin, Project & Storage.
+- Have created a iTwin and have its `ITWIN_ID`. You can create a iTwin using [iTwins API](/apis/itwins/operations/create-itwin/).
+- Have files uploaded inside the iTwin (or Project) by using previously created `ITWIN_ID` or `PROJECT_ID`. If you do not have files in the Storage, follow [Storage API tutorial](/tutorials/storage-quick-start/) or consult with [Storage API documentation](/apis/storage/). You may use generated `ITWIN_ID` instead of `PROJECT_ID` in Storage API endpoints.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 1. Preparing to use Synchronization API
+
+There are some actions, which should be completed before starting using Synchronization API.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[<CreateSPAButton clientName="Synchronization tutorial"/>]}>
+
+### 1.1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 1.2. Get a token
+
+To make request to API user token is needed. There are several ways to get it.
+
+#### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+#### Grab a token from Api reference "Try it" Section
+
+1. Go to [Create Storage Connection](/apis/synchronization/operations/create-storage-connection/)
+1. Click "Try it out" button.
+1. On Authorization section select "AuthorizationCode".
+1. After popup closes Authorization header with token value should be visible.
+1. Save token value for this tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Create an iModel
+
+An iModel is a specialized information container for exchanging data associated with the lifecycle of infrastructure assets.
+iModels were created to facilitate the sharing and distribution of information regardless of the source and format of the information.
+
+iTwin Platform iModels API is based on iModelHub cloud service which enables alignment, accountability and accessibility of infrastructure digital twins.
+It is the control center for iModels and is responsible for coordinating concurrent access to iModels as well as changes made to them.
+
+<Alert type="informational">
+
+Note that this step assumes that You already have a ITWIN_ID from previously created iTwin.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language='http' code={`POST https://api.bentley.com/imodels HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json
+Accept: application/vnd.bentley.itwin-platform.v2+json`}
+    />
+  ]}
+>
+
+#### Request
+
+An empty iModel is created by sending a HTTP POST message to https://api.bentley.com/imodels/ endpoint with the payload describing the iModel to be created.
+
+You can execute the request on the [iModel API Documentation](/apis/imodels-v2/operations/create-imodel/) page, “Try it out” section.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock
+      language="json"
+      code={`{
+      "iTwinId": "ITWIN_ID",
+      "name": "Sun City Renewable-energy Plant",
+      "description": "Overall model of solar farms in Sun City",
+      "extent": {
+          "southWest": {
+            "latitude": 46.13267702834806,
+            "longitude": 7.672120009938448
+          },
+          "northEast": {
+            "latitude": 46.302763954781234,
+            "longitude": 7.835541640797823
+          }
+        }
+    }`}
+    />,
+  ]}
+>
+
+#### Request Body
+
+There are two required properties for the create iModel payload.
+
+**name** - iModel name is required which uniquely identifies the iModel within the Project. <br/>
+**iTwinId** - provides iTwin identifier that created iModel will belong to. iTwin identifier is a required property. <br />
+**description** - free form text field so you could give more information about the iModel. <br />
+**extent** - iModels usually are placed at some location on the Earth.
+This property allows the specification of the maximum rectangular area on the Earth which encloses the iModel.
+The maximum extent is used to help keep your iModel clean.
+When new elements are imported, those outside the extent will be flagged for further processing.
+This extent will also help to zoom into the area of interest in web viewers.
+
+<Alert type="informational">
+
+If you get a response code 404 with the message "Requested iTwin is not available.", Please check if App or User has access to the iTwin.
+
+</Alert>
+
+<Alert type="informational">
+
+Note that after completing this step, you will be provided with an IMODEL_ID which will be required in later steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 3. Get FILE_ID from Storage API
+
+iTwin File Storage API store files and folders under some folder. To get root files and folder we can use "Get top level folders and files by itwin" API.
+
+To get any files from folder we can use the "[Get Files in Folder](/apis/storage/operations/get-files-in-folder/)"
+
+**Note**: If you don't have any files in the root folder, then you have to create and upload file in the root folder. You can do this by executing the request in [Create File](/apis/storage/operations/create-file/) page, “Try it” section.
+
+**For more information you can see "[Storage Tutorial](/tutorials/storage-quick-start/)"**
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language='http' code={`GET https://api.bentley.com/storage/?iTwinId=ITWIN_ID HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />
+  ]}
+>
+
+#### Request
+
+That can be done by sending a GET https://api.bentley.com/storage/?iTwinId=ITWIN_ID request.
+
+You can execute the request on the [Storage API Documentation](/apis/storage/operations/get-top-level-folders-and-files-by-itwin/) page, “Try it out” section.
+
+Requirements:
+
+1. Authorization header with valid Bearer token is required.
+2. ITWIN_ID where files and folders are stored.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language='json' code={`{
+    "items": [{
+        "id": "FOLDER_ID",
+        "type": "folder",
+        "displayName": "1",
+        "description": null,
+        "path": "1",
+        "lastModifiedByDisplayName": "Joe User",
+        "createdDateTime": "2019-07-16T08:41:05.6415752Z",
+        "lastModifiedDateTime": "2020-01-07T08:46:47.5422276Z",
+        "parentFolderId": "mCbnk2CSr0K4bAkoDGgNEZgm55Ngkq9CuGwJKAxoDRE",
+        "_links": {
+            "createdBy": {
+                "href": "https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/4ebeaf72-3c42-4734-b41a-485c6c2ecb67"
+            },
+            "lastModifiedBy": {
+                "href": "https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/4ebeaf72-3c42-4734-b41a-485c6c2ecb67"
+            },
+            "parentFolder": {
+                "href": "https://api.bentley.com/storage/folders/mCbnk2CSr0K4bAkoDGgNEZgm55Ngkq9CuGwJKAxoDRE"
+            }
+        }
+    },{
+        "id": "FILE_ID",
+        "type": "file",
+        "displayName": "Test.dgn",
+        "description": null,
+        "path": "Test.dgn",
+        "size": "38400",
+        "lastModifiedByDisplayName": "Joe User",
+        "createdDateTime": "2020-06-23T11:13:42.3498148Z",
+        "lastModifiedDateTime": "2020-07-07T11:46:44.9573652Z",
+        "parentFolderId": "mCbnk2CSr0K4bAkoDGgNEZgm55Ngkq9CuGwJKAxoDRE",
+        "_links": {
+            "createdBy": {
+                "href": "https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/4ebeaf72-3c42-4734-b41a-485c6c2ecb67"
+            },
+            "lastModifiedBy": {
+                "href": "https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/4ebeaf72-3c42-4734-b41a-485c6c2ecb67"
+            },
+            "parentFolder": {
+                "href": "https://api.bentley.com/storage/folders/mCbnk2CSr0K4bAkoDGgNEZgm55Ngkq9CuGwJKAxoDRE"
+            }
+        }
+    }],
+    "_links": {
+        "self": {
+            "href": "https://api.bentley.com/storage?iTwinId=ITWIN_ID&$skip=0&$top=100"
+        },
+        "prev": {
+            "href": "https://api.bentley.com/storage?iTwinId=ITWIN_ID&$skip=0&$top=100"
+        },
+        "next": {
+            "href": "https://api.bentley.com/storage?iTwinId=ITWIN_ID&$skip=100&$top=100"
+        },
+        "folder": {
+            "href": "https://api.bentley.com/storage/folders/mCbnk2CSr0K4bAkoDGgNEZgm55Ngkq9CuGwJKAxoDRE"
+        }
+    }
+}`} /> 
+  ]}
+>
+
+#### Response
+
+The request response contains a FILE_ID which will be used in next step.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Create a Connection
+
+The synchronization process is based on connections that establish links from design files to iModels. There could be multiple connections for an iModel, and those could be executed on-demand multiple times to synchronize changes. In this step we will be creating such connection.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language='http' code={`POST https://api.bentley.com/synchronization/imodels/storageConnections HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  ]}
+>
+
+#### Request
+
+To create a connection, send a `POST` request to the `synchronization/imodels/storageConnections` endpoint.
+
+You can execute the request on the [Synchronization API Documentation](/apis/synchronization/operations/create-storage-connection/) page, “Try it out” section.
+
+Requirements:
+
+1. Authorization header with valid Bearer token is required.
+2. IMODEL_ID of created iModel from step 3.
+3. We will need to specify what file from File Storage should be mapped to a connection. To do that we will need a FILE_ID from previous step response.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+<CodeBlock
+  language="json"
+  code={`{
+    "displayName": "Connection1",
+    "iModelId": "IMODEL_ID",
+    "sourceFiles": [{
+        "storageFileId": "FILE_ID",
+        "connectorType": "MSTN"
+    }]
+}`}
+/>
+  ]}
+>
+
+#### Request Body
+
+- **displayName** - user facing connection name
+- **iModelId**: - iModel Id which should contain created connection
+- **sourceFiles** - information about source files from File Storage
+  - **storageFileId** - id of the file from Storage API
+  - **connectorType** - identifier of the connector used to process the file. For more information, see [Supported formats.](/apis/synchronization/supported-formats/)
+  - [Optional] **authenticationType** - defaults to **User** and uses a refresh token to get an access token for long synchronizations. But it can be set to **Service** when API is used from server application without user context.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock
+  language="json"
+  code={`{
+    "connection": {
+        "id": "CONNECTION_ID",
+        "displayName": "connection1",
+        "iModelId": "IMODEL_ID",
+        "iTwinId": "ITWIN_ID",
+        "_links": {
+            "iModel": {
+                "href": "https://api.bentley.com/imodels/IMODEL_ID"
+            },
+            "iTwin": {
+                "href": "https://api.bentley.com/itwins/ITWIN_ID"
+            },
+            "lastRun": null
+        }
+    }
+}`}
+/>
+  ]}
+>
+
+#### Response
+
+The request response contains created connection properties values. Id is going to be needed in next step
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 5. Store refresh token for user
+
+The synchronization process usually takes time and is performed in the background. For that, we need to store the connection owner's refresh token. You can get it by using Get Authorization Information API. This API will return the current status and a redirect URL where user has to be redirected on the browser if the token has to be renewed.
+
+<Alert type="informational">
+
+Note that if connection authenticationType is set to **Service** this step should be skipped.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <CodeBlock language="http" code={`GET https://api.bentley.com/synchronization/imodels/connections/authorizationInformation?redirectUrl=REDIRECT_URL HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />
+  ]}
+>
+
+#### Request
+
+That can be done by sending a GET https://api.bentley.com/synchronization/imodels/connections/authorizationInformation?redirectUrl=REDIRECT_URL request.
+
+You can execute the request on the [Synchronization API Documentation](/apis/synchronization/operations/get-authorization-information/) page, “Try it out” section.
+
+1. Authorization header with valid Bearer token is required.
+2. REDIRECT_URL a url of where a user should be redirected after successful token renewal.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language='json' code={`{
+    "authorizationInformation": {
+        "isUserAuthorized": true,
+        "_links": {
+            "authorizationUrl": {
+                "href": null
+            }
+        }
+    }
+}`} /> 
+  ]}
+>
+
+#### Response if user has a valid refresh token
+
+isUserAuthorized with value true, means that user has a valid refresh token and can run long running synchronizations.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language='json' code={`{
+    "authorizationInformation": {
+        "isUserAuthorized": false,
+        "_links": {
+            "authorizationUrl": {
+                "href": "https://connect-itwinbridgeportal.bentley.com/authenticate?redirect_url=REDIRECT_URL"
+            }
+        }
+    }
+}`} /> 
+  ]}
+>
+
+#### Response if user does not have a valid refresh token
+
+isUserAuthorized with value false, means that user does not have valid refresh token and cannot run long running synchronizations. To refresh token user has to be redirected to authorizationUrl from response.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 6. Run a Connection
+
+A Run defines a single Connection synchronization process. It can be initialized manually by sending run start request.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language="http" code={`POST https://api.bentley.com/synchronization/imodels/storageConnections/CONNECTION_ID/run HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  ]}
+>
+
+#### Request
+
+Send a `POST` request to the `synchronization/imodels/connections/CONNECTION_ID/runs` endpoint with valid connectionId to run a connection.
+
+You can execute the request on the [Synchronization API Documentation](/apis/synchronization/operations/run-storage-connection/) page, “Try it out” section.
+
+1. Authorization header with valid Bearer token is required.
+1. CONNECTION_ID which should be started for processing. Use the value from previous step response.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}
+actions={[
+<CodeBlock language="http" code={`HTTP/1.1 202 Accepted`} />
+]}>
+
+#### Response
+
+On successful request, operation returns http status code 202/accepted - the request is accepted for processing and will be executed in the background.
+If there is already an active run in progress for this connection, new run is being added to the queue.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 7. Get runs statuses
+
+A run contains synchronization process status. To get runs history and statuses get request has to be made.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock language="http" code={`POST https://api.bentley.com/synchronization/imodels/storageConnections/CONNECTION_ID/runs HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Content-Type: application/json`} />,
+  ]}
+>
+
+#### Request
+
+Getting Run status requires sending a GET request to the synchronization/imodels/storageConnections/CONNECTION_ID/runs endpoint with valid connectionId.
+
+You can execute the request on the [Synchronization API Documentation](/apis/synchronization/operations/get-storage-connection-runs/) page, “Try it out” section.
+
+1. Authorization header with valid Bearer token is required.
+1. CONNECTION_ID which runs we want to get.
+
+</TutorialSection>
+<TutorialSection
+  subSection={true}
+  actions={[
+  <CodeBlock
+  language="json"
+  code={`{
+  "runs":[
+    {
+      "id":"41062244-3e62-42a3-8232-9f2b4d31be16",
+      "state":"Completed",
+      "result":"Success"
+    }
+  ],
+  "_links":{
+    "self":{
+      "href":"https://api.bentley.com/Synchronization/imodels/storageConnections/CONNECTION_ID/runs?$skip=0&$top=100"
+    },
+    "prev":{
+      "href":"https://api.bentley.com/Synchronization/imodels/storageConnections/CONNECTION_ID/runs?$skip=0&$top=100"
+    },
+    "next":{
+      "href":"https://api.bentley.com/Synchronization/imodels/storageConnections/CONNECTION_ID/runs?$skip=100&$top=100"
+    }
+  }
+}`}
+/>
+  ]}
+>
+
+##### Response
+
+At the end of synchronization run state should be "Completed" and result "Success".
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 8. Synchronize an updated file
+
+If a file is changed on iTwin storage, it has to be synchronized again for the iModel to be updated. The workflow should be:
+
+1. File is updated on iTwin Storage.
+2. Run the connection again. (See step 7)
+3. Get connection run status. (See step 8)
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 8. Conclusion
+
+In this tutorial we have gone through a file from iTwin Storage synchronization process:
+
+1. Create a connection
+2. Run the connection
+3. Get run status.
+
+After successful run, design file changes should be in an iModel. Next step could be to create a Named Version.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulations for the completion of your first synchronization! You've now know a lot on the subject, but there's still possibilities to learn more to unleash the platform capabilities.
+
+<TileList>
+  <Tile
+    name="Create iModel Named Version"
+    description="This quick start is intended to guide you through the steps to create a new iModel Named Version."
+    href="/tutorials/create-named-version"
+  ></Tile>
+</TileList>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Synchronization API documentation"
+    href="/api-groups/synchronization"
+    description="An overview and detailed Synchronization API documentation."
+  />
+  <LinkCard
+    title="Synchronization API code sample"
+    href="https://github.com/iTwin/synchronization-api-sample-app"
+    description="A working code sample showing how Synchronization API can be integrated into a React application."
+    isExternal={true}
+  />
+  <LinkCard
+    title="Data Management API documentation"
+    href="/api-groups/data-management/"
+    description="An overview and detailed Data Management API documentation."
+  />
+</TileList>
+
+</ContinueLearningSection>

@@ -1,0 +1,376 @@
+---
+title: 'Create & Query iTwins'
+version: 1
+tile:
+  name: 'Create & Query iTwins'
+  description: 'This tutorial will guide you through the process of creating and querying iTwins'
+  href: '/tutorials/create-and-query-itwins-guide'
+  durationInMinutes: 20
+  relatedApiIds: ['itwins']
+  showInFirstSteps: false
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="20">
+
+## Introduction
+
+This tutorial will take you through the process of creating and querying iTwins.
+
+By the end of this walk-through, you will be able to utilize the API endpoints to create or query iTwins.
+
+</Introduction>
+
+<TutorialSection
+  actions={[
+    <LinkButton
+      href="https://www.google.com/chrome/"
+      target="_blank"
+      title="Google Chrome"
+      icon={<GoogleChromeIcon />}
+    />,
+    <LinkButton
+      href="https://code.visualstudio.com/"
+      target="_blank"
+      title="Visual Studio Code"
+      icon={<VSCodeIcon />}
+    />,
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- A tool, such as `Postman` that can be used to execute HTTP calls. These calls can also be made using the **Try it out** button in the API documentation.
+- If a user is affiliated with an Organization, the user must be an Organization Administrator to create an iTwin. An Organization Administrator
+  must have at least one of the following roles assigned in User Management: Account Administrator, Co-Administrator, or CONNECT Services Administrator. For more information about User Management please visit our Bentley Communities [Licensing, Cloud, and Web Services](https://bentleysystems.service-now.com/community?id=kb_article_view&sys_kb_id=1e5410491b7d8a90f3fc5287624bcb57) wiki page.
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton tooltip="Register a basic SPA App for this tutorial" clientName="Create and Query iTwins tutorial"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+Before you can make a request to the APIs, a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use Client ID generated from previous registration step.
+
+</Alert>
+
+### Grab a user token from the iTwins documentation page
+
+1. Go [here](/apis/itwins/operations/get-my-itwins/)
+2. Click **Try it out** button.
+3. Under the `Authorization` section, select `authorizationCode` from the dropdown.
+4. After the sign in popup closes, the `Authorization` header with token value should be visible beneath the `HTTP request` dropdown.
+5. Copy & paste the `Authorization` value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`POST https://api.bentley.com/itwins/ HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock language="http" code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "class": "Endeavor",
+    "subClass": "Project",
+    "type": "Construction Project",
+    "number": "iTwin #",
+    "displayName": "my iTwin 2",
+    "dataCenterLocation": "East US",
+    "status": "Active"
+}`}
+/>,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 201 Created
+content-length: 937
+content-type: application/json
+date: Thu, 24 Jun 2021 14:44:18 GMT
+request-context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 5262b13f-394e-49b8-95ea-a5361d2513a3
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`
+    {
+      "iTwin": {
+          "id": "eb8ffd43-725c-4f9a-9cbd-3b38b4efe168",
+          "class": "Endeavor",
+          "subClass": "Project",
+          "type": "Construction Project",
+          "number": "ifdsafasdfa",
+          "displayName": "fasfdasdaf",
+          "dataCenterLocation": "East US",
+          "status": "Active",
+          "createdDateTime": "2022-06-09T17:26:11.13",
+          "createdBy": "56c58c0c-28a9-4cd2-b50b-102e33b657f2"
+      }
+    }
+    `}
+/>,
+]}>
+
+## 3. Create a new iTwin
+
+The iTwins API is used to create and manage iTwins. A POST call to the iTwins endpoint will create a new iTwin.
+
+At minimum, `class`, `subClass`, `displayName`, and `number` are required for creating a new iTwin. The `number` and `displayName` properties must be unique. If you get a Conflict error then you will need to replace them with unique values. See the [iTwins API documentation](/apis/itwins/operations/create-itwin/) for descriptions of the different properties, including default values.
+
+The POST call will return a new iTwin instance. The `id` can be used to query for the iTwin. The iTwin Id is also used in many other iTwin APIs. You may want to save this Id to use in other tutorials.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`GET https://api.bentley.com/itwins/083004cb-9cc1-4d1b-bc2a-d6329288200e HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+content-length: 936
+content-type: application/json
+date: Thu, 24 Jun 2021 18:10:04 GMT
+request-context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: fed95960-ea7c-43b5-a9af-66ab5353d073
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "iTwin": {
+        "id": "da5be678-7404-4885-a622-eebf0ab29390",
+        "class": "Endeavor",
+        "subClass": "Project",
+        "type": null,
+        "number": "Test35353535",
+        "displayName": "Test",
+        "dataCenterLocation": "East US",
+        "status": "Active",
+        "createdDateTime": "2015-11-05T19:10:42.9712696",
+        "createdBy": null
+    }
+}`}
+/>,
+]}>
+
+## 4. Query for an iTwin Using the iTwin Id
+
+The iTwin id can be used to [query for a specific iTwin](/apis/itwins/operations/get-itwin/).
+
+The iTwin will only be returned if you are an Organization Administrator or if you have been added as a member of the iTwin with any role. Only a single iTwin will be returned.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`GET https://api.bentley.com/itwins/?number=PWCSDemoTest1 HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`Prefer: return=representation
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+cache-control: must-revalidate, no-cache, private
+content-encoding: gzip
+content-type: application/json
+date: Thu, 24 Jun 2021 18:20:43 GMT
+request-context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: dd4d68c9-614d-4d67-8e51-7147c18513f8
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "iTwins": [{
+        "id": "daf96c16-fb0a-4f94-90c5-667742cf35be",
+        "class": "Endeavor",
+        "subClass": "Project",
+        "type": null,
+        "number": "PWCSDemoTest1",
+        "displayName": "PWCSDemoTest1",
+        "dataCenterLocation": "East US",
+        "status": "Active",
+        "createdDateTime": "2016-01-27T11:44:06.2602325",
+        "createdBy": null
+    }],
+    "_links": {
+        "self": {
+            "href": " https://api.bentley.com/itwins/?$skip=0&$top=100&subClass=Project&number=PWCSDemoTest1"
+        }
+    }
+}`}
+/>,
+]}>
+
+## 5. Query for iTwins Using Number
+
+The `number` query parameter can be used to [find an iTwin](/apis/itwins/operations/my-itwins/). Because this is a query, the response will be a list of iTwins that will usually contain one element. The number is unique for iTwins created in your organization. However, it is possible that you are a member of an iTwin in another organization that has the same number.
+
+The api will only return iTwins that you are able to access. If you expect it to return a specific iTwin and it does not then you may not have access to that iTwin.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`GET https://api.bentley.com/itwins/?$search=Tutorial HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`Prefer: return=minimal
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+cache-control: must-revalidate, no-cache, private
+content-encoding: gzip
+content-type: application/json
+date: Thu, 24 Jun 2021 18:40:47 GMT
+request-context: appId=cid-v1:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 86bc760f-d0c4-4292-b72d-97a078ce1c7a
+x-itwinplatform-media-type: bentley.itwin-platform.v1
+x-itwinplatform-region: East US`} />,
+  <Title>Response Body</Title>,
+  <CodeBlock language="json"
+    code={`{
+    "iTwins": [{
+        "id": "083004cb-9cc1-4d1b-bc2a-d6329288200e",
+        "class": "Endeavor",
+        "subClass": "Project",
+        "type": null,
+        "number": "Tutorial Project 123",
+        "displayName": "Tutorial Sample Project",
+        "dataCenterLocation": "East US",
+        "status": "Active",
+        "createdDateTime": "2021-06-24T14:44:19.33",
+        "createdBy": "d27f4f7a-cf24-41fa-8044-c17eaaaccfb5"
+    }, {
+        "id": "0ed7a661-4b7f-44ce-b6c3-f0064bb14c70",
+        "class": "Endeavor",
+        "subClass": "Project",
+        "type": null,
+        "number": "Project A",
+        "displayName": "A Tutorial Project",
+        "dataCenterLocation": "East US",
+        "status": "Active",
+        "createdDateTime": "2021-06-24T18:48:34.127",
+        "createdBy": "d27f4f7a-cf24-41fa-8044-c17eaaaccfb5"
+    }, {
+        "id": "bc29f384-bd93-48c9-ae6c-08cb36b40fb0",
+        "class": "Endeavor",
+        "subClass": "Project",
+        "type": null,
+        "number": "tutorial A",
+        "displayName": "A Sample Project",
+        "dataCenterLocation": "East US",
+        "status": "Active",
+        "createdDateTime": "2021-06-24T18:49:50.287",
+        "createdBy": "d27f4f7a-cf24-41fa-8044-c17eaaaccfb5"
+    }],
+    "_links": {
+        "self": {
+            "href": " https://api.bentley.com/itwins/?$skip=0&$top=100&subClass=Project&$search=Tutorial"
+        }
+    }
+}`}
+/>,
+]}>
+
+## 6. Query for iTwin Using the Number or Name (wildcard)
+
+The $search query parameter can be used to [find an iTwin](/apis/itwins/operations/my-itwins/) using a query string that will search using the `number` or `displayName`. This example will find all iTwins with 'Tutorial' in the number or displayName. The query is case sensitive and you should not add wildcard characters to the query string. This example is the SQL equivalent of number like '%Tutorial%' OR displayName like '%Tutorial%'.
+
+Because this is a query, the response will be a list that could contain many iTwins. Notice that this example is using the prefer header to indicate that only the minimal representation of the iTwins should be returned. This should be used whenever possible to improve performance and reduce the size of the response payload.
+
+The api will only return iTwins that you are able to access. If you expect it to return a specific set of iTwins and it does not, you may not have access to those iTwins.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="iTwin Sample App"
+    href="https://github.com/itwin/itwin-api-sample-app"
+    description="Sample application that uses the iTwins API to create, update and query for iTwins."
+    isExternal={true}
+  />
+  <LinkCard
+    title="Manage User Members on iTwins Guide"
+    href="/tutorials/manage-user-members-on-itwins-guide"
+    description="Tutorial for managing user members on your iTwins."
+    isExternal={false}
+  />
+  <LinkCard
+    title="Manage Group Members on iTwins Guide"
+    href="/tutorials/manage-group-members-on-itwins-guide"
+    description="Tutorial for managing group members on your iTwins."
+    isExternal={false}
+  />
+</TileList>
+
+</ContinueLearningSection>

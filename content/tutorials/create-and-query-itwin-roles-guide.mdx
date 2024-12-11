@@ -1,0 +1,310 @@
+---
+title: 'Create and Query iTwin Roles'
+version: 1
+tile:
+  name: 'Create and Query iTwin Roles'
+  description: 'This tutorial will guide you through the process of creating and querying roles on an iTwin'
+  href: '/tutorials/create-and-query-itwin-roles-guide'
+  durationInMinutes: 15
+  relatedApiIds: ['accesscontrol']
+  showInFirstSteps: false
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="15">
+
+## Introduction
+
+<Alert>
+
+This tutorial is for the [Access Control API V2](/apis/access-control-v2/overview/). To control the API version, [see the API versions documentation](/apis/overview/lifecycle/#api-versions).
+
+</Alert>
+
+This tutorial will take you through the process of creating and retrieving roles for a given iTwin. Roles enable you to organize permissions and are assigned to one or more members. While not required, roles usually reflect the functional job duties within an organization and may be determined by various factors such as tasks or business operations.
+
+You can create roles on the Account iTwin to manage access across iTwins or create a roles for an individual iTwin. Roles created on an individual iTwin are available only on that iTwin. For more information for managing access using the Account iTwin, see [Managing access using the Account iTwin](/apis/access-control/#managingaccessusingtheaccountitwin)
+
+By the end of this walk-through, you will be able to utilize the API endpoints in order to create roles, add & assign permissions to the role, and retrieve the list of iTwin roles.
+
+</Introduction>
+
+<TutorialSection
+actions={[
+<LinkButton
+href="https://www.google.com/chrome/"
+target="_blank"
+title="Google Chrome"
+icon={<GoogleChromeIcon />}
+/>,
+<LinkButton
+href="https://code.visualstudio.com/"
+target="_blank"
+title="Visual Studio Code"
+icon={<VSCodeIcon />}
+/>,
+<LinkButton
+href="https://www.postman.com/downloads/"
+target="_blank"
+title="Postman"
+icon={<PostmanIcon />}
+/>
+]}>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- A tool, such as `Postman` that can be used to execute HTTP calls. These calls can also be made using the **Try it out** button in the API documentation.
+- If a user is affiliated with an Organization, the user must be an Organization Administrator to create an iTwin. An Organization Administrator
+  must have at least one of the following roles assigned in User Management: Account Administrator, Co-Administrator, or CONNECT Services Administrator. For more information about User Management please visit our Bentley Communities [Licensing, Cloud, and Web Services](https://bentleysystems.service-now.com/community?id=kb_article_view&sys_kb_id=1e5410491b7d8a90f3fc5287624bcb57) wiki page.
+- Permissions to assign to a role. To see the list of available permissions, [see get all permissions.](/apis/access-control/operations/get-all-permissions/)
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Create and Query iTwins tutorial"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorizesinglepageapplicationsspaanddesktopmobileapplicationsnative) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+Before you can make a request to the APIs, a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use Client ID generated from previous registration step.
+
+</Alert>
+
+### Grab a user token from the iTwins documentation page
+
+1. Go [here](/apis/access-control/operations/get-iTwin-roles/)
+2. Click **Try it out** button.
+3. Under the `Authorization` section, select `authorizationCode` from the dropdown.
+4. After the sign in popup closes, the `Authorization` header with token value should be visible beneath the `HTTP request` dropdown.
+5. Copy & paste the `Authorization` value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/accesscontrol/itwins/{id}/roles HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+    "displayName":"iTwin Administrator",
+    "description":"A description of iTwin Administrator"
+  }`}
+  />,
+    <Title>Response Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`HTTP/1.1 201 Created
+content-length: 203
+content-type: application/json
+date: Wed, 30 Jun 2021 17:26:10 GMT
+request-context: appId=cid-v2:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 74e263d7-ded7-45a5-8347-ca1f98ffab86
+x-itwinplatform-media-type: bentley.itwin-platform.v2
+x-itwinplatform-region: East US`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+    "role":{
+      "id":"14b391cf-ce9e-43d3-8fee-c49e57c2680d",
+      "displayName":"iTwin Administrator",
+      "description":"A description of iTwin Administrator",
+      "permissions":[]
+    }
+  }`}
+  />
+]}>
+
+## 3. Create iTwin Role
+
+The [Create iTwin role](/apis/access-control/operations/create-iTwin-role/) endpoint is used to create iTwin roles. After a role is created, permissions can be assigned.
+
+The `iTwin id` from an existing iTwin (see [create and query iTwins guide](/tutorials/create-and-query-itwins-guide/)) is required to create a role. A `display name` and `description` are required in the POST body.
+
+The POST call will return a new role instance. The returned `role id` along with the `iTwin id` will be used to add permissions in the next step.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock
+    language="http"
+    code={`PATCH https://api.bentley.com/accesscontrol/itwins/{id}/roles/{roleId} HTTP/1.1`}
+  />,
+  <Title>Request Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`}
+  />,
+  <Title>Request Body</Title>,
+  <CodeBlock
+    language="json"
+    code={`{
+        "displayName": "A new Role display name",
+        "description": "A new Role description",
+        "permissions":[
+          "administration_invite_member",
+          "administration_manage_roles",
+          "administration_remove_member"
+      ]
+  }`}
+  />,
+  <Title>Response Headers</Title>,
+  <CodeBlock
+    language="http"
+    code={`HTTP/1.1 200 OK
+content-length: 324
+content-type: application/json
+date: Wed, 30 Jun 2021 18:17:39 GMT
+request-context: appId=cid-v2:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: f16d2765-4a9c-40a4-995e-bd7c6b8b8d4a
+x-itwinplatform-media-type: bentley.itwin-platform.v2
+x-itwinplatform-region: East US`}
+  />,
+  <Title>Response Body</Title>,
+  <CodeBlock
+    language="json"
+    code={`{
+    "role":{
+      "id":"10a2d277-ea41-4e81-b309-f7a9aea09d51",
+      "displayName":"iTwin Administrator",
+      "description":"A description of iTwin Administrator",
+      "permissions":[
+        "administration_invite_member",
+        "administration_manage_roles",
+        "administration_remove_member"
+      ]
+    }
+  }`}
+  />
+]}>
+
+## 4. Update iTwins Role Using the iTwin Id and Role Id
+
+To assign `permissions`, the Role needs to be [updated](/apis/access-control/operations/update-iTwin-role/). `iTwin id` and `role id` are required. The POST body should contain `list of permissions`.
+
+To see the list of available permissions, [see get all permissions.](/apis/access-control/operations/get-all-permissions/)
+
+The response will contain the role details along with the list of permissions assigned.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+    <Title>Request Syntax</Title>,
+    <CodeBlock
+      language="http"
+      code={`GET https://api.bentley.com/accesscontrol/itwins/{id}/roles HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`HTTP/1.1 200 OK
+content-type: application/json
+date: Mon, 29 Aug 2022 19:24:14 GMT
+request-context: appId=cid-v2:7a353d36-9a8b-423e-965e-9d7f51324584
+vary: Accept-Encoding
+x-correlation-id: 260678e5-0244-413d-bc60-f6dac19fd450
+x-itwinplatform-media-type: bentley.itwin-platform.v2
+x-itwinplatform-region: East US
+x-rate-limit-limit: 1s
+x-rate-limit-remaining: 49
+x-rate-limit-reset: 2022-08-29T19:24:15.3864257Z`} />,
+      <Title>Response Body</Title>,
+      <CodeBlock language="json"
+        code={`{
+        "roles": [{
+            "id": "5ba9eab1-9597-4f20-b360-4d79b9af511d",
+            "displayName": "iTwin Administrator",
+            "description": "The iTwin Administration Role",
+            "permissions": [],
+            "assignedDateTime": "0001-01-01T00:00:00"
+        }, {
+            "id": "fe117fcd-7cf0-4f95-829f-b4cc065dc6ed",
+            "displayName": "iTwin Administrator 3",
+            "description": "The iTwin Administration Role 3",
+            "permissions": [],
+            "assignedDateTime": "0001-01-01T00:00:00"
+        }]
+    }`}
+    />
+]}>
+
+## 5. Query for Roles using the iTwin Id
+
+`iTwin Id` can be used to [retrieve a list of iTwin roles](/apis/access-control/operations/get-iTwin-roles/).
+
+The api will return a list of roles for a given iTwin.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Create and Query iTwins Guide"
+    href="/tutorials/create-and-query-itwins-guide/"
+    description="Tutorial for creating and querying iTwins."
+    isExternal={false}
+  />
+  <LinkCard
+    title="Manage User Members on iTwins Guide"
+    href="/tutorials/manage-user-members-on-itwins-guide"
+    description="Tutorial for managing user members on your iTwins."
+    isExternal={false}
+  />
+  <LinkCard
+    title="Manage Group Members on iTwins Guide"
+    href="/tutorials/manage-group-members-on-itwins-guide"
+    description="Tutorial for managing group members on your iTwins."
+    isExternal={false}
+  />
+</TileList>
+
+</ContinueLearningSection>

@@ -1,1 +1,0 @@
-Get static image

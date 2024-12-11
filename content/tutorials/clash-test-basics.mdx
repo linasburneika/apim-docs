@@ -1,0 +1,457 @@
+---
+title: 'Clash Test Basics'
+version: 1
+tile:
+  name: 'Clash Test Basics'
+  description: 'Walk-through of the clash detection lifecycle-creating, running and retrieving the results.'
+  href: '/tutorials/clash-test-basics/'
+  thumbnail: '/images/ClashDetectionSample.png'
+  durationInMinutes: 20
+  relatedApiIds: ['clashdetection']
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="20">
+
+## Introduction
+
+Clash detection is used to analyze the potential conflicts between multiple elements in an iModel. Based on criteria you set, it detects geometrical clashes between object element sets and returns information about each of these clashes so you can follow up and determine which might lead to potential problems. In this tutorial, you will learn how to:
+
+- Create a clash test
+- Run the clash test against a specific iModel version
+- Monitor the Clash Test run process
+- Retrieve and interpret the resulting clashes
+- Update your clash test
+
+</Introduction>
+
+<TutorialSection>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- Access to an iModel and the associated projectId and imodelId for that iModel, along with the named version ID for the version you want to run the test against
+- A list of model and category IDs you wish to check for clashes
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 1. Get a token
+
+To make request to the API a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+### Grab a user token from Api reference "Try it" Section
+
+1. Go [here](/apis/clash-detection/operations/create-clashdetection-tests/)
+1. Click "Try it" button.
+1. On Authorization section select "AuthorizationCode".
+1. After popup closes Authorization header with your user token value should be visible.
+1. Save user token value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+    <CodeBlock 
+    language="http" 
+    code={`POST https://api.bentley.com/clashdetection/tests HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "projectId":"00000000-0000-0000-0000-000000000000",
+  "displayName":"Sample Test",
+  "description":"Categories: Tag v Structure",
+  "setA":{
+    "modelIds":[],
+    "categoryIds":["0x4000000000d"],
+    "selfCheck":false,
+    "clearance":0
+  },
+  "setB":{
+    "modelIds":[],
+    "categoryIds":["0x40000000e71"],
+    "selfCheck":false,
+    "clearance":0
+  },
+  "suppressTouching":true,
+  "touchingTolerance":0.001,
+  "includeSubModels":false
+}`} />,
+<Title>Response Body</Title>,
+<CodeBlock
+  language="json"
+  code={`{
+  "test":{
+    "id":"000000000000000-000000000000000000000000000",
+    "_links":{
+      "self":{
+        "href":"https://api.bentley.com/clashdetection/tests/000000000000000-000000000000000000000000000"
+      }
+    }
+  }
+}`}
+/>
+]}>
+
+## 2. Create a Clash Test
+
+Now that we have an authorization token, along with the prerequisites we should have everything we need to run our first clash test.
+
+<Alert type="informational">
+
+Note: Many people's first inclination when experimenting with clash tests is to run every model or category against every other model or category. While this does usually guarantee you will see clashes, it also usually guarantees a long wait time while the engine processes the sets. Consider selecting a smaller subset if you're just starting out. You can always look in the iTwin Viewer and find two elements you know are clashing, and note the models/categories they belong to to use in your practice test.
+
+</Alert>
+
+Clash tests are saved and associated with a specific project; if you run a clash test and find issues that you plan to fix in your model, once you upload the new model version you can rerun the same test to ensure they've been resolved.
+
+<Alert type="informational">
+
+Note: Even if iModels share category and model display names, the ids may differ. Please check before running a test against a different iModel than the one it was initially created for.
+
+</Alert>
+
+To create a clash test send an HTTP POST request to `POST https://api.bentley.com/clashdetection/tests/`
+
+Clash detection tests are highly configurable. so let's quickly go over all of the different parameters you can set in the request body:
+**projectId** - Id of the project this test will be associated with. <br/>
+**displayName** - Name of the clash test. <br/>
+**description** - Additional identifying information or descriptions of the clash. <br />
+**setA/setB** - Object containing clash test information about a given set of elements. <br />
+**modelIds** - Array of model IDs which contain elements to check for clashes. <br />
+**categoryIds** - Array of category IDs which contain elements to check for clashes <br />
+**selfCheck** - Boolean value. When this is true, elements in this set will be checked for clashes against other elements in this set. When false, it will only check against elements in the opposing set. <br />
+**clearance** - When this is set above 0, any elements within this distance will be reported as a clash, even when not touching. A "Clearance" value will be supplied in results, telling you the distance between the elements. This is in meters. <br />
+**suppressTouching** - Boolean value. When this is true, the results will not include elements that are touching, or whose clash overlap falls within the touching tolerance limits specified below. <br />
+**touchingTolerance** - Elements that are overlapping by less than this amount will be suppressed. This is in meters. <br />
+**includeSubModels** - Boolean value. When this is true, any elements under any model that falls under the model hierarchy of the models you've specified will be included. When false, this test will only include elements directly under the models you've specified.<br />
+
+The response from the server will include the id of the newly created test, as well as a link to the test.
+
+<Alert type="informational">
+
+Note: You will need this test ID later to run the test.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`POST https://api.bentley.com/clashdetection/runs/ HTTP/1.1`} />,
+  <Title>Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Request Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "testId":"00000000-0000-0000-0000-000000000000",
+  "iModelId":"00000000-0000-0000-0000-000000000000",
+  "namedVersionId":"00000000-0000-0000-0000-000000000000"
+}`} />,
+<Title>Response Body</Title>,
+<CodeBlock
+  language="json"
+  code={`{
+  "run":{
+    "id":"000000000000000-000000000000000000000000000",
+    "_links":{
+      "run":{
+        "href":"https://api.bentley.com/clashdetection/runs/000000000000000-000000000000000000000000000"
+      }
+    }
+  }
+}`}
+/>
+]}>
+
+## 3. Run the Clash Detection Test
+
+Now that you have created a test, we're going to go ahead and run it. To run a Clash Detection test, you just need to send the HTTP POST request `POST https://api.bentley.com/clashdetection/runs/` with a request body containing the testId from the previous step, the iModel id and Named Version Id you want to run against.
+
+Clash detection tests are asynchronous, so instead of containing the results directly, the result body contains the runId as well as a link to the run. You will use this in the next step to retrieve the run status.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <Title>Retrieve Run Results Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`GET https://api.bentley.com/clashdetection/runs/000000000000000-000000000000000000000000000 HTTP/1.1`} />,
+  <Title>Retrieve Run Results Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+<Title>Retrieve Run Results Response Body</Title>,
+<CodeBlock
+  language="json"
+  code={`{
+  "run":{
+    "id":"000000000000000-000000000000000000000000000",
+    "displayName":"ClashDetectionTest1-12/1/2020 5:12:50 PM",
+    "executedDateTime":"12/1/2020 5:12:50 PM",
+    "count":"0",
+    "userName":"Your Name",
+    "status":"queued",
+    "_links":{
+      "result":{
+        "href":"https://api.bentley.com/clashdetection/results/000000000000000-000000000000000000000000000"
+      },
+      "test":{
+        "href":"https://api.bentley.com/clashdetection/tests/000000000000000-000000000000000000000000000"
+      }
+    }
+  }
+}`}
+/>,<Title>Retrieve Clash Results Request Syntax</Title>,
+<CodeBlock
+  language="http"
+  code={`GET https://api.bentley.com/clashdetection/results/000000000000000-000000000000000000000000000 HTTP/1.1`}
+/>,
+<Title>Retrieve Clash Results Request Headers</Title>,
+<CodeBlock
+  language="http"
+  code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`}/>,
+<Title>Retrieve Clash Results Response Body</Title>,
+<CodeBlock
+  language="json"
+  code={`{
+  "result":[
+    {
+      "clashType":"Collision",
+      "clearance":-1,
+      "elementAId":"0x400000000c4",
+      "elementALabel":"1-SWS-0104-EX-OPM [4-5G]",
+      "elementACategoryIndex":0,
+      "elementAModelIndex":0,
+      "elementBId":"0x4000000003e",
+      "elementBLabel":"IsmCurveMember [4-1Q]",
+      "elementBCategoryIndex":1,
+      "elementBModelIndex":0,
+      "center":{
+        "x":12.192031860351562,
+        "y":407.69541931152344,
+        "z":122.92329406738281
+      },
+      "suppressingRuleIndexArray":[]
+    }
+  ],
+  "categoryList":[
+    {
+      "id":"0x4000000000d",
+      "displayName":"Tag-Category"
+    },
+    {
+      "id":"0x40000000e71",
+      "displayName":"Structure"
+    }
+  ],
+  "modelList":[
+    {
+      "id":"0x20000000002",
+      "displayName":"Sample"
+    }
+  ],
+  "suppressingRuleList":[]
+}`}/>
+]}>
+
+## 4. Retrieve Clash Detection Results
+
+Once you've run a clash detection test, you'll need to wait for the engine to finish processing the test. This can take less than ten minutes or several hours depending on the queue time and number of elements and potential collision are in your element sets.
+
+There are two parts to results retrieval, retrieving the information about the clash test run itself, and then the actual results:
+
+### Retrieve Run Results
+
+You can check on the status of your clash job via an HTTP `GET https://api.bentley.com/clashdetection/runs/{id}` using the runId returned in the previous create step. It can take a while, so you might want to run this on a loop until you get the "status: completed" result.
+
+In addition to the status, the results body will also include some metadata, and most importantly for us a results link we will use to retrieve the actual clash results.
+
+<Alert type="informational">
+
+Note: While the results link will always appear in the response body, you will not be able to actually retrieve the results until the status is shown as complete.
+
+</Alert>
+
+### Retrieve Clash Results
+
+Using the results link from the previous step, we can now retrieve the actual clash results we've been waiting for using a GET HTTP request `GET https://api.bentley.com/clashdetection/results/{id}`. The clash results object contains a lot of information, so let's quickly go over them. There are four main array objects in the result body:
+
+**categoryList** - Category lookup table. Contains an array of category id and category display name pairs.<br />
+**modelList** - Model lookup table. Contains an array of model id and model display name pairs. <br />
+**suppressingRuleList** - Suppression rule lookup table. Contains an array of suppression rule ids and suppression rule display name pairs. <br />
+**clashDetectionResult** - Array of all the clashes in this clash detection result. <br />
+
+A single clash object in the clashDetectionResult array contains:<br />
+**clashType** - The type of clash detected - possible values: Collision, Clearance, Touching, Not Initialized. <br />
+**clearance** - When the clash type is Clearance, the value is returned in meters. Otherwise -1 is returned. <br />
+**elementAId** - The unique id of element A. <br />
+**elementALabel** - The display label of element A. <br />
+**elementACategoryIndex** - The zero-based index used to lookup the element A category in the categoryList. <br />
+**elementAModelIndex** - The zero-based index used to lookup the element A model in the modelList. <br />
+**elementBId** - The unique id of element B. <br />
+**elementBLabel** - The display label of element B. <br />
+**elementBCategoryIndex** - The zero-based index used to lookup the element B category in the categoryList. <br />
+**elementBModelIndex** - The zero-based index used to lookup the element B model in the modelList. <br />
+**center** - The clash center point. This contains x, y, and z properties for the exact spatial position of the center point. <br />
+**suppressingRuleIndexArray** - An array of the zero-based indexes used to lookup any suppression rules this clash would be suppressed by in the suppressingRuleList. <br />
+
+</TutorialSection>
+
+<TutorialSection actions={[
+   <Title> Get Clash Test Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`GET https://api.bentley.com/clashdetection/tests/000000000000000-000000000000000000000000000 HTTP/1.1`} />,
+  <Title>Get Clash Test Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Get Clash Test Response Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "test":{
+    "displayName":"Sample Test",
+    "description":"Categories: Tag v Structure",
+    "setA":{
+      "modelIds":[],
+      "categoryIds":["0x4000000000d"],
+      "selfCheck":false,
+      "clearance":0
+    },
+    "setB":{
+      "modelIds":[],
+      "categoryIds":["0x40000000e71"],
+      "selfCheck":false,
+      "clearance":0
+    },
+    "suppressTouching":true,
+    "touchingTolerance":0.001,
+    "includeSubModels":false,
+    "_links":{
+      "createdBy":{
+        "href":"https://api.bentley.com/projects/00000000-0000-0000-0000-000000000000/members/00000000-0000-0000-0000-000000000000"
+      },
+      "lastModifiedBy":{
+        "href":"https://api.bentley.com/projects/00000000-0000-0000-0000-000000000000/members/00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
+}`} />,
+  <Title>Update Clash Test Request Syntax</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`PUT https://api.bentley.com/clashdetection/tests/000000000000000-000000000000000000000000000 HTTP/1.1`} />,
+  <Title>Update Clash Test Request Headers</Title>,
+  <CodeBlock 
+    language="http" 
+    code={`Accept: application/vnd.bentley.itwin-platform.v1+json
+Prefer: return=representation
+Authorization: Bearer JWT_TOKEN`} />,
+  <Title>Update Clash Test Request Body</Title>,
+  <CodeBlock 
+    language="json" 
+    code={`{
+  "projectId":"00000000-0000-0000-0000-000000000000",
+  "displayName":"Sample Test",
+  "description":"Categories: Tag v Structure",
+  "setA":{
+    "modelIds":[],
+    "categoryIds":["0x4000000000d"],
+    "selfCheck":true,
+    "clearance":0
+  },
+  "setB":{
+    "modelIds":[],
+    "categoryIds":["0x40000000e71"],
+    "selfCheck":false,
+    "clearance":0
+  },
+  "suppressTouching":true,
+  "touchingTolerance":0.005,
+  "includeSubModels":true
+}`} />,
+<Title>Update Clash Test Response Body</Title>,
+<CodeBlock
+  language="json"
+  code={`{
+  "test":{
+    "id":"000000000000000-000000000000000000000000000",
+    "_links":{
+      "self":{
+        "href":"https://api.bentley.com/clashdetection/tests/000000000000000-000000000000000000000000000"
+      }
+    }
+  }
+}`}/>
+]}>
+
+## 5. Update a Clash Test
+
+After running your test, you might realize you want to tweak your criteria slightly. Instead of making a new test, you can just update the one you just made previously. This is a replacement update, so you will still need the full test criteria you enetered previously. If you still have your test criteria handy, you can just copy it and update as necessary. If not, you can use a `GET https://api.bentley.com/clashdetection/tests/{id}`, with your test id to retrieve the test details and update from there.
+
+Once you have your test criteria and have implemented any updates you want to make, you can use an HTTP `PUT https://api.bentley.com/clashdetection/tests/{id}` using the test id.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 6. Conclusion
+
+You have now gone through the entire life cycle of a clash detection test: creating, running and retrieving the results. This will aid you in detecting any potential problems or clashes earlier in the modeling process while they are easier to fix. As you continue to practice and gain experience creating and running tests, you will be able to refine the criteria to be specific to your individual needs and issues.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Validation API documentation"
+    href="/api-groups/validation/"
+    description="An overview and detailed version of Validation API documentation, including Clash Detection."
+  />
+  <LinkCard
+    title="Clash Review Sample Showcase"
+    href="https://www.itwinjs.org/sandboxes/iTwinPlatform/Clash%20Review"
+    description="A sample showcase that demonstrates calling Clash Detection APIs to retrieve clash data and present it for review in a viewer app."
+    isExternal={true}
+  />
+</TileList>
+
+</ContinueLearningSection>

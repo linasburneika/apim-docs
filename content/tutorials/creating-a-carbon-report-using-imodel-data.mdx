@@ -1,0 +1,248 @@
+---
+title: 'Creating a Carbon Report using iModel Data'
+version: 1
+tile:
+  name: 'Creating a Carbon Report using iModel Data'
+  description: 'This tutorial will teach you how to create a carbon report using iModel data with One Click LCA service.'
+  href: '/tutorials/creating-a-carbon-report-using-imodel-data'
+  durationInMinutes: 30
+  relatedApiIds: ['insights', 'insights/carbon-calculation']
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="30">
+
+## Introduction
+
+[One Click LCA](https://www.oneclicklca.com) is a third-party construction Life Cycle Assessment (LCA)
+and Environmental Product Declaration (EPD) software company. Bentley's iTwin platform integration with
+One Click LCA allows you to export Quantity Takeoff Reports created using the iTwin Reporting platform
+to One Click LCA for convenient Life Cycle Analysis for both infrastructure projects
+and buildings. The iTwin Platform enables the incorporation of engineering data created
+by various design tools. A summary of the design data is exported through this integration,
+allowing you to gain insights into the environmental impacts of your infrastructure project.
+This integration also allows you to work with the [third-party certifications and standards](https://oneclicklca.com/software/design-construction/certifications-compliance).
+
+This tutorial will cover all the fundamental steps to create a carbon calculation summary
+based on an insights report.
+
+</Introduction>
+
+<TutorialSection>
+
+## 1. Set up your permissions
+
+Use of the Carbon Calculation APIs requires some iModel/Project level permissions.
+For these permissions, you must be an Organization Administrator for the organization
+that owns a given project or have `administration_manage_roles` permission assigned at
+the Project level. If you do not have admin access to the Project or iModel you would
+like to use, contact a Project Administrator. As a Project Administrator,
+you can use APIs described in the [Manage Project Team Members](/tutorials/manage-user-members-on-itwins-guide/)
+tutorial to create a role and update it with `"permissions": ["REPORTINGVIEW", "REPORTINGEDIT", "CARBONCALCULATE", "imodels_read", "imodels_write"]`.
+Once this is done and the role is assigned to you, use any iModel inside your
+project to finish this tutorial.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://nodejs.org"
+      target="_blank"
+      title="Node.js"
+      icon={<NodeJsIcon />}
+    />,
+    <LinkButton
+      href="https://git-scm.com/downloads"
+      target="_blank"
+      title="Git"
+      icon={<GitIcon />}
+    />
+  ]}>
+
+### 1.1 Required materials
+
+##### <a href="https://nodejs.org" target="_blank">Node.js v12 (must be greater than 12.10.x)</a>
+
+This tool provides the backend JavaScript runtime necessary for your computer to read and
+render code appropriately. It also allows you to run NPM command line (required for every
+iTwin project).
+
+##### <a href="https://git-scm.com/downloads" target="_blank">Git</a>
+
+This is the source code control system for the iTwin repositories.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <LinkButton
+      href="https://www.google.com/chrome/"
+      target="_blank"
+      title="Google Chrome"
+      icon={<GoogleChromeIcon />}
+    />,
+    <LinkButton
+      href="https://code.visualstudio.com/"
+      target="_blank"
+      title="Visual Studio Code"
+      icon={<VSCodeIcon />}
+    />,
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+### 1.2 Suggested materials
+
+##### <a href="https://www.google.com/chrome/" target="_blank">Google Chrome</a>
+
+This software helps you to develop and debug front-end JavaScript problems.
+
+##### <a href="https://code.visualstudio.com/" target="_blank">Visual Studio Code</a>
+
+This is our recommended editor and debugger tool for developing iTwin.js applications.
+It is free, open source and includes a GUI for working with GIT.
+
+##### <a href="https://www.postman.com/downloads/" target="_blank">Postman</a>
+
+If you want to test the REST API calls directly, you can use
+[Postman](https://www.postman.com/downloads/) or any other application capable of sending
+HTTP requests. If you do it this way, you will require an authorization token for the HTTP
+requests to work.
+
+To learn more about how authentication and authorization works in an iTwin powered
+application, check out the full
+[documentation](/apis/overview/authorization/) on how to obtain
+a valid token.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 1.3. Step-by-Step Guide to Create a Report through the Reporting APIs
+
+First you will need a report. For guidance on creating a report, see
+[Creating an Insights Report using iModel Data](https://developer.bentley.com/tutorials/creating-an-insights-report-using-imodel-data/).
+The report and associated mapping should contain all the elements and required properties of One Click LCA's Life Cycle Analysis.
+
+Take note of the `reportId`. This will be used later as `reportId`.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 1.4 Create One Click LCA user account
+
+An account with One Click LCA is required to use this integration.
+User accounts are created at [One Click LCA](https://oneclicklcaapp.com/app/register).
+For guidance on One Click LCA, please contact One Click LCA support: support@oneclicklca.com.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>Example HTTP Request to request one click LCA token</Title>,
+    <CodeBlock language="http" code={`POST /app/api/login HTTP/1.1
+Content-Type: application/json
+{
+"username": "username",
+"password": "password"
+}`} />,
+]}>
+
+## 2. Get One Click LCA access token
+
+In order to use One Click LCA APIs for carbon calculation, you need an access token.
+A user token is acquired by sending a POST request to `https://oneclicklcaapp.com/app/api/login` with request body:
+
+```json
+{
+  "username": "username",
+  "password": "password"
+}
+```
+
+Take note of the `access_token` in the response which will be used as `token` later.
+
+> Creating a bearer token requires having a valid user account and a license for One Click LCA.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>Example HTTP Request to create a carbon calculation job</Title>,
+    <CodeBlock language="http" code={`POST https://api.bentley.com/insights/carbon-calculation/oneclicklca/jobs HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Content-Type: application/json
+{
+    "reportId": "reportId",
+    "token": "token"
+}`} />,
+]}>
+
+## 3. Create a carbon calculation job
+
+Next, trigger a carbon calculation job to export your report to One Click LCA with the `token` and `reportId` we have created.
+
+Alternatively, use the **Try It** button on the [Create One Click LCA Job](https://developer.bentley.com/apis/carbon-calculation/operations/create-oneclicklca-job/) page to execute the request directly.
+
+Save `jobId` in the response for progress monitoring.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>Example HTTP Request to create a carbon calculation job</Title>,
+    <CodeBlock language="http" code={`GET https://api.bentley.com/insights/carbon-calculation/oneclicklca/jobs/{jobId} HTTP/1.1
+Authorization: Bearer JWT_TOKEN
+Accept: application/vnd.bentley.itwin-platform.v1+json`} />,
+]}>
+
+## 4. Monitor carbon calculation job progress
+
+The job might take some time. We provide an endpoint to track the progress of carbon calculation process linked with `jobId`. The response status might be one of the `Queued`, `Running`, `Succeeded` or `Failed`.
+
+Alternatively, use the **Try It** button on the [Get One Click LCA Job Status](https://developer.bentley.com/apis/carbon-calculation/operations/get-oneclicklca-job-status/) page to execute the request directly.
+
+Once the export is complete, save the `job -> _links -> oneclicklca -> href` link to view the result.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 5. Use our UI interface
+
+We have a public NPM package [One Click LCA React](https://www.npmjs.com/package/@itwin/one-click-lca-react). Follow the steps in the README file, you will get the same result.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## Conclusion
+
+Congratulations on completing this tutorial and running your first carbon calculation report using the APIs.
+Now you can create your own customized groups, group properties and map them to your own customized report and calculate carbon emission based on it.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Carbon Calculation API Documentation"
+    href="/apis/carbon-calculation/"
+    description="This is the official documentation of Carbon Calculation API."
+  />
+</TileList>
+
+</ContinueLearningSection>

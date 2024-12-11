@@ -1,0 +1,271 @@
+---
+title: 'Manage iTwin Owners'
+version: 1
+tile:
+  name: 'Manage iTwin Owners'
+  description: 'This tutorial will guide you through the process of adding and removing owners on an iTwin'
+  href: '/tutorials/manage-itwin-owners-guide'
+  durationInMinutes: 10
+  relatedApiIds: ['accesscontrol']
+  showInFirstSteps: false
+---
+
+<Introduction
+  skillLevel="Basic"
+  durationInMinutes="10">
+
+## Introduction
+
+<Alert>
+
+This tutorial is for the [Access Control API V2](/apis/access-control-v2/overview/). To control the API version, [see the API versions documentation](/apis/overview/lifecycle/#api-versions).
+
+</Alert>
+
+This tutorial will take you through the process of adding and removing owners for a given iTwin. iTwin owners are the individuals with upmost level of authority on an iTwin; They are implicitly granted all Access Control permissions for the iTwin they own. For more information, see [iTwin owner overview documentation](/apis/access-control/#itwinowner).
+
+By the end of this walk-through, you will be able to utilize the API endpoints in order to add and remove iTwin owners.
+
+</Introduction>
+
+<TutorialSection
+actions={[
+<LinkButton
+href="https://www.google.com/chrome/"
+target="_blank"
+title="Google Chrome"
+icon={<GoogleChromeIcon />}
+/>,
+<LinkButton
+href="https://code.visualstudio.com/"
+target="_blank"
+title="Visual Studio Code"
+icon={<VSCodeIcon />}
+/>,
+<LinkButton
+href="https://www.postman.com/downloads/"
+target="_blank"
+title="Postman"
+icon={<PostmanIcon />}
+/>
+]}>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- A tool, such as `Postman` that can be used to execute HTTP calls. These calls can also be made using the **Try it out** button in the API documentation.
+- Already created an iTwin. If you have not, follow the [Create and Query iTwins Guide](/tutorials/create-and-query-itwins-guide/).
+
+</TutorialSection>
+
+<TutorialSection actions={[<CreateSPAButton clientName="Manage iTwin Owners tutorial"/>]}>
+
+## 1. Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorizesinglepageapplicationsspaanddesktopmobileapplicationsnative) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen whether or not to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 2. Get a token
+
+Before you can make a request to the APIs, a user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use Client ID generated from previous registration step.
+
+</Alert>
+
+### Grab a user token from the iTwins documentation page
+
+1. Go [here](/apis/access-control/operations/get-iTwin-roles/)
+2. Click **Try it out** button.
+3. Under the `Authorization` section, select `authorizationCode` from the dropdown.
+4. After the sign in popup closes, the `Authorization` header with token value should be visible beneath the `HTTP request` dropdown.
+5. Copy & paste the `Authorization` value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection actions={[
+  <>
+    <Title>Request Syntax</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/accesscontrol/itwins/{id}/members/owners HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Content-Type: application/json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "email": "FirstName.LastName@organization.com"
+}`}
+  />,
+    <Title>Response Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`HTTP/1.1 201 Created
+content-length: 203
+content-type: application/json
+date: Wed, 30 Jun 2021 17:26:10 GMT
+request-context: appId=cid-v2:7a353d36-9a8b-423e-965e-9d7f51324584
+x-correlation-id: 74e263d7-ded7-45a5-8347-ca1f98ffab86
+x-itwinplatform-media-type: bentley.itwin-platform.v2
+x-itwinplatform-region: East US`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "member": {
+    "id": "d0ec803b-de9a-41cd-9d97-c8edddd4cb0d",
+    "email": "FirstName.LastName@organization.com",
+    "givenName": "FirstName",
+    "surName": "LastName",
+    "organization": "Organization LLC"
+  }
+}`}
+      />
+  </>
+]}>
+
+## 3. Add a user as an owner
+
+The [Add iTwin Owner](/apis/access-control/operations/add-itwin-owner-member/) endpoint is used to add iTwin owners. The user making this request must be an Owner themself.
+
+The iTwin `id` from an existing iTwin (see [create and query iTwins guide](/tutorials/create-and-query-itwins-guide/)) is required to manage ownership and the `email` of who is being added as the owner, is also required.
+
+The POST call will return the member object. The returned member `id` will be used in subsequent steps to remove the owner.
+
+**Note:** The Account Administrator can also perform this request, and is not required to be an Owner, but that is the only exception to this rule.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+<>
+    <Title>Request Syntax</Title>,
+    <CodeBlock
+      language="http"
+      code={`GET https://api.bentley.com/accesscontrol/itwins/{id}/members/owners HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`HTTP/1.1 200 OK
+content-type: application/json
+date: Mon, 29 Aug 2022 19:24:14 GMT
+request-context: appId=cid-v2:7a353d36-9a8b-423e-965e-9d7f51324584
+vary: Accept-Encoding
+x-correlation-id: 260678e5-0244-413d-bc60-f6dac19fd450
+x-itwinplatform-media-type: bentley.itwin-platform.v2
+x-itwinplatform-region: East US
+x-rate-limit-limit: 1s
+x-rate-limit-remaining: 49
+x-rate-limit-reset: 2022-08-29T19:24:15.3864257Z`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock language="json"
+      code={`{
+  "members": [
+    {
+      "id": "d0ec803b-de9a-41cd-9d97-c8edddd4cb0d",
+      "email": "FirstName.LastName@organization.com",
+      "givenName": "FirstName",
+      "surName": "LastName",
+      "organization": "Organization LLC"
+    },
+    {
+      "id": "5665087f-3f44-446d-9ce5-84c5d41af3c5",
+      "email": "Another.Owner@organization.com",
+      "givenName": "Another",
+      "surName": "Owner",
+      "organization": "Organization LLC"
+    }
+  ]
+}`}
+  />
+</>
+]}>
+
+## 4. Query for an iTwin's owners
+
+The iTwin `id` can be used to [retrieve a list of iTwin owners](/apis/access-control/operations/get-itwin-owner-members/).
+
+The API will return a list of owners for a given iTwin.
+
+</TutorialSection>
+
+<TutorialSection actions={[
+<>
+    <Title>Request Syntax</Title>,
+    <CodeBlock
+      language="http"
+      code={`DELETE https://api.bentley.com/accesscontrol/itwins/{id}/members/owners/{memberId} HTTP/1.1`} />,
+    <Title>Request Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`Accept: application/vnd.bentley.itwin-platform.v2+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={`HTTP/1.1 204 No Content
+content-length: 0
+date: Tue, 27 Jun 2023 17:13:28 GMT
+request-context: appId=cid-v1:eed7f349-e7be-4e9c-a631-b40237883d60
+x-correlation-id: 5e8e9dc2-8fb3-4d39-92c8-e807eabe2e13
+x-itwinplatform-media-type: bentley.itwin-platform.v2
+x-itwinplatform-region: West Central US`} />
+</>
+]}>
+
+## 5. Remove an owner
+
+The [Remove iTwin Owner](/apis/access-control/operations/remove-itwin-owner-member/) endpoint is used to remove iTwin owners. The user making this request must be an Owner themself.
+
+The iTwin `id` from an existing iTwin (see [create and query iTwins guide](/tutorials/create-and-query-itwins-guide/)) is required to manage ownership and the member `id` of the owner being removed, is also required.
+
+**Note:** The Account Administrator can also perform this request, and is not required to be an Owner, but that is the only exception to this rule.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Create and Query iTwins Guide"
+    href="/tutorials/create-and-query-itwins-guide/"
+    description="Tutorial for creating and querying iTwins."
+    isExternal={false}
+  />
+</TileList>
+
+</ContinueLearningSection>

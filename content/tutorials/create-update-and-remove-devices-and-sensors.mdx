@@ -1,0 +1,265 @@
+---
+title: 'Create, Update, and Remove Devices and Sensors in iTwin IoT asset - Essentials'
+version: 2
+tile:
+  name: 'Create, Update, and Remove Devices and Sensors in iTwin IoT asset - Essentials'
+  description: 'This tutorial will take you through the process of how you can create,update & delete device(s) and sensor(s) in sensor data service.'
+  href: '/tutorials/create-update-and-remove-devices-and-sensors/'
+  relatedApiIds: ['sensor-data']
+---
+
+## Introduction
+
+This tutorial will take you through the process of how you can create, update & delete device(s) and sensor(s) and focuses on importing [generic sensors](/apis/sensor-data/overview/#genericsensors) into iTwin IoT and concentrates on the persona, where the you will be able to **push** the data into sensor data service. You will learn the following:
+
+- How to [Create node, device(s) and sensor(s)](/tutorials/create-update-and-remove-devices-and-sensors/#create-node-devices-and-sensors)
+- How to [Update device(s) and sensor(s)](/tutorials/create-update-and-remove-devices-and-sensors/#update-devices-and-sensors)
+- How to [Delete device(s) and sensor(s)](/tutorials/create-update-and-remove-devices-and-sensors/#delete-devices-and-sensors)
+
+## Before you begin
+
+This tutorial assumes that you already have:
+
+- A Bentley IMS account
+- [Create an application in iTwin platform](/apis/sensor-data/overview/#createanapplicationinitwinplatform)
+- [Register an Asset in iTwin IoT](/apis/sensor-data/overview/#registeranassetinahrefhttpsitwiniotbentleycomtarget_blankitwiniota)
+- A tool, such as `Postman` that can be used to execute HTTP calls.
+
+## Set up your tutorial environment
+
+This section guides you through the pre-requisite steps for the tutorial so you can make sample API requests.
+It also provides sample data for you to use during the tutorial.
+
+<Section level={2}>
+
+### Authorize your requests
+
+<RequestLine
+  method="GET"
+  path="/connect/token"
+  baseUrl={(data) => data.authority}
+/>
+
+```shell
+curl --location 'https://ims.bentley.com/connect/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'client_id=<Your client id> ' \
+--data-urlencode 'client_secret=<Your client secret> ' \
+--data-urlencode 'grant_type=client_credentials' \
+--data-urlencode 'scope=itwin-platform'
+```
+
+</Section>
+
+<Section level={2}>
+
+## Create Node, Device(s), and Sensor(s)
+
+You can create a new node, device(s), and sensor(s) in an asset.
+
+<RequestLine method="POST" path="integrations/integrate" />
+
+### Request parameters for create a node, device(s) and sensor(s)
+
+| Name       | Required? | Description          |
+| ---------- | --------- | -------------------- |
+| iTwinId | Yes       | iTwin Project or Asset. |
+
+### Request definitions
+
+| Name                                           | Type   | Required? | Description                                                                                                                        |
+| ---------------------------------------------- | ------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| props.INTEGRATION_ID                           | string | Yes       | Data Source API Import Id (NODE_API_SDE for generic type)                                                                          |
+| refId                                          | string | Yes       | Unique id can be used to update or delete devices or sensors.                                                                      |
+| integration.changeState                        | string | No        | To create a node set changeState to `new` (Although this property is not necessary, failing to provide will result in a 422 error) |
+| devices[].changeState or sensors[].changeState | string | No        | To create an device or sensor set changeState to `new`; to update set to `update` to remove set to `remove`                        |
+| props.NAME                                     | string | No        | Device or sensor name                                                                                                              |
+| props.LOCATION                                 | object | No        | X, Y & Z coordinates of device or sensor                                                                                           |
+| sensors[].props.UNKNOWN_UNITS                  | object | No        | Unknown units of a sensor                                                                                                          |
+| sensors[].props.UNKNOWN_METRICS                | object | No        | Arbitrary metrics of a sensor                                                                                                      |
+| sensors[].props.KNOWN_UNITS                    | object | No        | Known units of a sensor                                                                                                            |
+| sensors[].props.KNOWN_METRICS                  | object | No        | Known metrics of a sensor                                                                                                          |
+| props.NOTES                                    | string | No        | Additional information of devices and sensors                                                                                      |
+
+```shell
+curl --location 'https://api.bentley.com/sensor-data/integrations/integrate?iTwinId=<Your asset id>' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <Your access token>' \
+--data '
+{
+    "integration": {
+        "changeState": "new",
+        "devices": [
+            {
+                "changeState": "new",
+                "refId": "ecf7c340-7cef-43c8-9d5642-9096d2e45db5",
+                "props": {
+                    "INTEGRATION_ID": "IMPORT_DEVICE_SDE",
+                    "NAME": "Test Device",
+                    "LOCATION": {
+                        "type": "Point",
+                        "coordinates": [
+                            174.7805678,
+                            -41.27834066,
+                            20
+                        ]
+                    }
+                },
+                "sensors": [
+                    {
+                        "changeState": "new",
+                        "refId": "2ef86679-a18f-464500-9c78-4fa9c89c963f",
+                        "props": {
+                            "INTEGRATION_ID": "GENERIC_SENSOR_SDE",
+                            "NAME": "Test sensor",
+                            "LOCATION": {
+                                "type": "Point",
+                                "coordinates": [
+                                    174.7805678,
+                                    -41.27834066,
+                                    20
+                                ]
+                            },
+                            "UNKNOWN_UNITS": {
+                                "0": "millimeter",
+                                "1": "millimeter"
+                            },
+                            "UNKNOWN_METRICS": {
+                                "0": "Alignment_Left_SD",
+                                "1": "Alignment_Right_SD"
+                            },
+                            "NOTES":"Generic sensor"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
+'
+```
+
+</Section>
+
+<Section level={2}>
+
+## Update Device(s) and Sensor(s)
+
+You can use this API endpoint to update the device(s) and sensor(s), request body is similar to [create node, device(s) and sensor(s) request](tutorials/create-update-and-remove-nodes-devices-and-sensors/#create-node-devices-and-sensors) but make sure you have provided the `nodeId`, `refId` that was used while creating devices or sensors and set the `changeState` property to `update`.
+
+<RequestLine
+  method="POST"
+  path="/sensor-data/integrations/integrate"
+  href="#create-devices-and-sensors"
+/>
+
+### Request parameters for update device(s) or sensor(s)
+
+| Name       | Required? | Description          |
+| ---------- | --------- | -------------------- |
+| iTwinId | Yes       | iTwin Project or Asset. |
+
+### Update device(s) and sensor(s) CURL
+
+```shell
+curl --location 'https://api.bentley.com/sensor-data/integrations/integrate?iTwinId=<Your asset id>' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <Your access token>' \
+--data '
+{
+    "integration": {
+        "nodeId": "<Your node id>",
+        "devices": [
+            {
+                "changeState": "update",
+                "refId": "ecf7c340-7cef-43c8-9d5642-9096d2e45db5",
+                "props": {
+                    "INTEGRATION_ID": "IMPORT_DEVICE_SDE",
+                    "NAME": "Test Device - UPDATED",
+                    "NOTES":"Demo device - Updated"
+                },
+                "sensors": [
+                    {
+                        "changeState": "update",
+                        "refId": "2ef86679-a18f-464500-9c78-4fa9c89c963f",
+                        "props": {
+                            "NAME": "Test Sensor - UPDATED",
+                            "INTEGRATION_ID": "GENERIC_SENSOR_SDE",
+                            "NOTES":"Generic sensor - Updated"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
+'
+```
+
+</Section>
+
+<Section level={2}>
+
+## Delete Device(s) and Sensor(s)
+
+You can use this API endpoint to delete the device(s) and sensor(s),
+
+- To delete device(s) and sensor(s), make sure to set `changeState` property to `remove`
+- If you want to delete a sensors from an existing device make sure to set `changeState` property of that device to `update`
+- If you delete a node all underlying device(s) and sensor(s) will be deleted
+- If you delete a node or device(s) or sensor(s) all underlying the sensor observations will be deleted
+
+<RequestLine
+  method="POST"
+  path="/sensor-data/integrations/integrate"
+  href="#create-devices-and-sensors"
+/>
+
+### Request parameters for delete device(s) and sensor(s)
+
+| Name       | Required? | Description          |
+| ---------- | --------- | -------------------- |
+| iTwinId | Yes       | iTwin Project or Asset. |
+
+### Delete device(s) and sensor(s) CURL
+
+```shell
+curl --location 'https://api.bentley.com/sensor-data/integrations/integrate?iTwinId=<Your asset id>' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <Your access token>' \
+--data '
+{
+    "integration": {
+        "nodeId": "<Your node id>",
+        "devices": [
+            {
+                "changeState": "remove",
+                "refId": "ecf7c340-7cef-43c8-9d5642-9096d2e45db5",
+                "sensors": [
+                    {
+                        "changeState": "remove",
+                        "refId": "2ef86679-a18f-464500-9c78-4fa9c89c963f"
+                    }
+                ]
+            }
+        ]
+    }
+}
+'
+```
+
+</Section>
+
+## What you've learned
+
+In this tutorial, you should have learned how to create, update & delete the device(s) and sensor(s) in the sensor data service.
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Sensor Data API"
+    href="/apis/sensor-data/operations/upload-data/"
+    description="The reference documentation for the sensor data API. Allows you to upload readings into specified sensor."
+  />
+</TileList>

@@ -1,1 +1,0 @@
-Get Inference Run Result Content

@@ -1,1 +1,0 @@
-Get Latest Extension Version

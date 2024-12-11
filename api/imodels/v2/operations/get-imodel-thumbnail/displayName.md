@@ -1,1 +1,0 @@
-Download iModel Thumbnail

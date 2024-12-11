@@ -1,0 +1,984 @@
+---
+title: 'Get started with Storage API'
+version: 1
+tile:
+  name: 'Get started with Storage API'
+  description: 'This tutorial is introduction to Storage API explaining main workflows and operations.'
+  href: '/tutorials/storage-quick-start/'
+  durationInMinutes: 45
+  relatedApiIds: ['storage']
+---
+
+<Introduction 
+  skillLevel="Basic" 
+  durationInMinutes="45">
+
+## Introduction
+
+This quick start is going to help you work with using Storage API. Tutorial describes main operations required to create files with folders, retrieving and managing them.
+
+</Introduction>
+
+<TutorialSection
+  actions={[
+    <LinkButton
+      href="https://www.postman.com/downloads/"
+      target="_blank"
+      title="Postman"
+      icon={<PostmanIcon />}
+    />
+  ]}>
+
+## Prerequisites
+
+This tutorial assumes that you already have:
+
+- A tool such as `Postman` that can be used to execute http calls. These calls can also be made using the `Try It` button in the API documentation except from requests for file uploads.
+- Project iTwin created and configured. Try [iTwins API](/apis/itwins/operations/create-itwin/).
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 1. Preparing to use Storage API
+
+There are some actions, which should be completed before starting using Storage API.
+
+</TutorialSection>
+
+<TutorialSection subSection={true} actions={[<CreateSPAButton clientName="Get started with Storage API tutorial"/>]}>
+
+### 1.1 Register an Application
+
+You will need to register an application to use the iTwin Platform APIs. You can use the **Register** button to automatically create your first single page application (SPA). This will allow you to configure [Authorization Code Flow for your SPA application](/apis/overview/authorization/#authorize-single-page-applications-spa-and-desktopmobile-applications-native) and get the correct access token.
+
+Once generated, you will be shown a few lines of code under the button.
+
+- **IMJS_AUTH_CLIENT_CLIENT_ID** - this is the unique identifier for your application. Displayed on application details page as **Client ID**.
+- **IMJS_AUTH_CLIENT_REDIRECT_URI** - specifies where users are redirected after they have chosen to authenticate your app. Displayed on application details page as one of **Redirect URIs**.
+- **IMJS_AUTH_CLIENT_LOGOUT_URI** - specifies where users can be returned to after logging out. Displayed on application details page as one of **Post logout redirect URIs**.
+- **IMJS_AUTH_CLIENT_SCOPES** - list of accesses granted to the application. Displayed on application details page as **Scopes**.
+
+> **Or optionally:** Register and configure your application manually following instructions in [Register and modify an Application](/tutorials/register-and-modify-application/) tutorial.
+
+</TutorialSection>
+
+<TutorialSection subSection={true}>
+
+### 1.2 Get a token
+
+To make request to API user token is needed. There are several ways to get it.
+
+### Implement Authorization Code Flow in the application
+
+Follow this [article](/apis/overview/authorization/) to implement Authorization code workflow in your application.
+
+<Alert type="informational">
+
+Here you can use Client ID generated from previous registration step.
+
+</Alert>
+
+#### Grab a user token from API reference "Try it" Section
+
+1. Go to [Get top level folders and files by itwin - Storage](/apis/storage/operations/get-top-level-folders-and-files-by-itwin/)
+1. Click "Try it" button.
+1. On Authorization section select "AuthorizationCode".
+1. After popup closes Authorization header with your user token value should be visible.
+1. Save user token value for this tutorial.
+
+<Alert type="informational">
+
+Use user token to replace JWT_TOKEN dynamic parameter in the next steps.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock       
+      language="http"
+      code={`GET https://api.bentley.com/storage?iTwinId=ITWIN_ID HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Body</Title>,
+      <CodeBlock
+        language="json"
+        code={`{
+  "items": [],
+  "_links": {
+    "self": {
+        "href": "https://api.bentley.com/storage?iTwinId=ITWIN_ID&$skip=0&$top=100"
+    },
+    "prev": {
+        "href": "https://api.bentley.com/storage?iTwinId=ITWIN_ID&$skip=0&$top=100"
+    },
+    "next": {
+        "href": "https://api.bentley.com/storage?iTwinId=ITWIN_ID&$skip=100&$top=100"
+    },
+    "folder": {
+        "href": "https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+    }
+  }
+}`}
+      />,
+  ]}
+>
+
+### 1.3 Get a link to the Storage
+
+Files and folders created via Storage API are associated with iTwin. If iTwin is already existing then **root folder**, which is parent folder to first level files and folders could be retrieved by [getting iTwins](/apis/itwins/operations/get-itwin/) operation.
+
+Another way of getting link to the storage is by executing HTTP GET https://api.bentley.com/storage?iTwinId=ITWIN_ID request.
+
+You can execute the request in [Get top level folders and files by itwin documentation](/apis/storage/operations/get-top-level-folders-and-files-by-itwin/) page, “Try it” section.
+
+The Root Folder serves as the primary directory for your iTwin, identified by the iTwinId.
+
+**Root Folder**: Base folder created when iTwin is created.
+
+Top level folders with files should be returned if there are any. Response will contain link to the storage, to the root folder.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>HTTP request</Title>,
+      <CodeBlock       
+      language="http"
+      code={`GET https://api.bentley.com/storage/folders/FOLDER_ID HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "folder": {
+    "id": "FOLDER_ID",
+    "displayName": "test",
+    "description": "test folder",
+    "path": "folderName/test",
+    "lastModifiedByDisplayName": "Bob User",
+    "createdDateTime": "2020-05-03T11:05:11.0133549Z",
+    "lastModifiedDateTime": "2020-05-03T11:05:11.0133549Z",
+    "parentFolderId": "TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+    "_links": {
+      "createdBy": {
+          "href": "https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "lastModifiedBy": {
+          "href": "https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "parentFolder": {
+          "href": "https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+      }
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+## 2. Get folder
+
+To retrieve root folder, HTTP GET https://api.bentley.com/storage/folders/FOLDER_ID request should be executed by using link from previous section or by existing another root folder ID.
+
+Here, `folderId` is required in the parameters. This `folderId` is the Id of the folder in which you want to retrieve.
+
+You can execute the request in [Get folder documentation](/apis/storage/operations/get-folder/) page, “Try it” section.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/storage/folders/FOLDER_ID/folders HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "displayName": "test",
+  "description": "test folder"
+}`}
+    />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "folder": {
+    "id": "TYJsPN0xtkWId0yUrXkS5pN5AQzuullIkxz5aDnDJSI",
+    "displayName": "test",
+    "description": "test folder",
+    "path": "test",
+    "lastModifiedByDisplayName": "Bob User",
+    "createdDateTime": "2020-05-03T11:05:11.0133549Z",
+    "lastModifiedDateTime": "2020-05-03T11:05:11.0133549Z",
+    "parentFolderId": "TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+    "_links": {
+      "createdBy": {
+          "href": "https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "lastModifiedBy": {
+          "href": "https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "parentFolder": {
+          "href": "https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+      }
+    }
+  }
+}`}
+    />,
+    <Title>Response headers</Title>,
+    <CodeBlock 
+      language="http"
+      code={"Location: https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5pN5AQzuullIkxz5aDnDJSI"}/>,
+  ]}
+>
+
+## 3. Create folder
+
+Files are organized in a folder structure. To create folder request, send the payload using HTTP POST https://api.bentley.com/storage/folders/FOLDER_ID/folders. `displayName` is required, while `description` is optional in the payload.
+
+Here, `folderId` is required in the parameters. This `folderId` is the Id of the folder in which you want to create a folder.
+
+You can execute the request in [Create folder documentation](/apis/storage/operations/create-folder/) page, “Try it” section.
+
+Folder should be created and ready to be used.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 4. Create file
+
+Create file is a three step process. First, create the metadata, then the actual file should be uploaded, and finally confirmation request needs to be sent. Created files can be synchronized with iModels. Try [Synchronization API](/api-groups/synchronization/).
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/storage/folders/FOLDER_ID/files HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "displayName": "test.txt",
+  "description": "test file"
+}`}
+    />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "_links": {
+    "completeUrl": {
+        "href": "https://api.bentley.com/storage/files/TYJsPN0xtkWId0yUrXkS5s4FlCroosBMlyDhZZmlzoc/complete"
+    },
+    "uploadUrl": {
+        "href": "https://projectshareprodeussa01.blob.core.windows.net/azuresqldbecpluginstorage/ProjectShare/File/b6145b7f-fee9-4a13-b1e4-5d061970373e?sv=2017-04-17&sr=b&sig=4NfdEriAONQhbHGkrTAL4bNMzjW8Qm5l%2FoEPiSQl%2BPo%3D&se=2020-10-19T15:12:51Z&sp=rw&rscd=attachment%3B%20filename%3D%22test.txt%22&userid=b905387c-a685-4d27-aab7-468c9ff0c9a6"
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+### 4.1 Create file's metadata
+
+Use root folder ID from previous step to create a file in the same directory as previously created folder and execute HTTP POST https://api.bentley.com/storage/folders/FOLDER_ID/files request. `displayName` is required, while `description` is optional in the payload.
+
+You can execute the request in [Create file documentation](/apis/storage/operations/create-file/) page, “Try it” section.
+
+Here, `folderId` is required in the parameters. This `folderId` is the Id of the folder in which you want to create a file.
+
+File's metadata should be created and links from the response will be used in the further steps to create file.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`PUT https://projectshareprodeussa01.blob.core.windows.net/azuresqldbecpluginstorage/ProjectShare/File/b6145b7f-fee9-4a13-b1e4-5d061970373e?sv=2017-04-17&sr=b&sig=4NfdEriAONQhbHGkrTAL4bNMzjW8Qm5l%2FoEPiSQl%2BPo%3D&se=2020-10-19T15:12:51Z&sp=rw&rscd=attachment%3B%20filename%3D%22test.txt%22&userid=b905387c-a685-4d27-aab7-468c9ff0c9a6 HTTP/1.1
+x-ms-blob-type: BlockBlob`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock
+      language="json"
+      code={"test"}
+    />
+  ]}
+>
+
+### 4.2 Upload actual file
+
+To upload actual file, use a request. A tool such as `Postman` should be used to make http request. Url should be picked from previous request's response where `uploadUrl` is specified. The maximum file size to upload with single request is **256 MiB**. If bigger file needs to be uploaded there are ways to use Azure libraries to upload file via given Azure SAS url or by uploading file with [multiple requests](https://docs.microsoft.com/en-us/rest/api/storageservices/operations-on-block-blobs).
+
+For large size file upload you can upload the file in chunks using **FileStream** depending on the tech-stack.
+
+<Alert type="informational">
+
+Note: Authorization header is not required for this request.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/storage/files/TYJsPN0xtkWId0yUrXkS5s4FlCroosBMlyDhZZmlzoc/complete HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "file":{
+    "id":"TYJsPN0xtkWId0yUrXkS5s4FlCroosBMlyDhZZmlzoc",
+    "displayName":"test.txt",
+    "description":"test file",
+    "path":"folderName/test.txt",
+    "size":8,
+    "lastModifiedByDisplayName":"Bob User",
+    "createdDateTime":"2020-05-03T11:05:11.0133549Z",
+    "lastModifiedDateTime":"2020-05-03T11:05:11.0133549Z",
+    "parentFolderId":"TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+    "_links":{
+      "createdBy":{
+        "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "lastModifiedBy":{
+        "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "parentFolder":{
+        "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+      }
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+### 4.3 Complete file creation
+
+Confirmation is required after file upload. That will make file visible, and it could be used further. Url should be picked from the first step of file's metadata creation where `completeUrl` is specified.
+
+Execute the request in [Complete file upload](/apis/storage/operations/complete-file-creation/) page, “Try it” section.
+
+**Note**: If you add or change request body format, you will reset your changes to body content. So, **Do not add anything in body**.
+
+Your file should be placed in the storage and be ready to be used.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`GET https://api.bentley.com/storage/files/FILE_ID/download HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+octet-stream
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Headers</Title>,
+    <CodeBlock
+      language="http"
+      code={"Location: https://projectshareprodeussa01.blob.core.windows.net/azuresqldbecpluginstorage/ProjectShare/File/b6145b7f-fee9-4a13-b1e4-5d061970373e?sv=2017-04-17&sr=b&sig=4NfdEriAONQhbHGkrTAL4bNMzjW8Qm5l%2FoEPiSQl%2BPo%3D&se=2020-10-19T15:12:51Z&sp=rw&rscd=attachment%3B%20filename%3D%22test.txt%22&userid=b905387c-a685-4d27-aab7-468c9ff0c9a6"}
+    />,
+  ]}
+>
+
+## 5. Download file
+
+Download the files by executing HTTP GET https://api.bentley.com/storage/files/FILE_ID/download request.
+
+The request can be executed in the [Complete file upload](/apis/storage/operations/download-file/) page, “Try it” section.
+
+Download the file with the content specified in the previous request.
+
+<Alert type="informational">
+
+Execute a follow-up request using the link in the `Location` header, this should return a `302` redirect response.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`GET https://api.bentley.com/storage/folders/FOLDER_ID/list HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "items":[
+    {
+      "type":"folder",
+      "id":"TYJsPN0xtkWId0yUrXkS5pN5AQzuullIkxz5aDnDJSI",
+      "displayName":"test",
+      "description":"test folder",
+      "path":"test",
+      "lastModifiedByDisplayName":"Bob User",
+      "createdDateTime":"2020-05-03T11:05:11.0133549Z",
+      "lastModifiedDateTime":"2020-05-03T11:05:11.0133549Z",
+      "parentFolderId":"TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+      "_links":{
+        "createdBy":{
+          "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+        },
+        "lastModifiedBy":{
+          "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+        },
+        "parentFolder":{
+          "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+        }
+      }
+    },
+    {
+      "type":"file",
+      "id":"TYJsPN0xtkWId0yUrXkS5s4FlCroosBMlyDhZZmlzoc",
+      "displayName":"test.txt",
+      "description":"test file",
+      "path":"folderName/test.txt",
+      "size":8,
+      "lastModifiedByDisplayName":"Bob User",
+      "createdDateTime":"2020-05-03T11:05:11.0133549Z",
+      "lastModifiedDateTime":"2020-05-03T11:05:11.0133549Z",
+      "parentFolderId":"TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+      "_links":{
+        "createdBy":{
+          "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+        },
+        "lastModifiedBy":{
+          "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+        },
+        "parentFolder":{
+          "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+        }
+      }
+    }
+  ],
+  "_links":{
+    "self":{
+      "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s/list?$skip=0&$top=100"
+    },
+    "prev":{
+      "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s/list?$skip=0&$top=100"
+    },
+    "next":{
+      "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s/list?$skip=100&$top=100"
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+## 6. Get folders and files in the folder
+
+Usually for navigating through folders and files request execute HTTP GET https://api.bentley.com/storage/folders/FOLDER_ID/list with root folder id as folder id should be used to retrieve the items of root folder. It is possible to set page size by specifying `$skip` and `$top` query parameters. `$top` default is set to 100 if it is not changed.
+
+You can execute the request in [Get folders and files in folder documentation](/apis/storage/operations/get-folders-and-files-in-folder/) page, “Try it” section.
+
+Here, `folderId` is required in the parameters. This `folderId` is the Id of the folder from which you want files and folders.
+
+Your created folder and file should be retrieved.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`PATCH https://api.bentley.com/storage/folders/FOLDER_ID HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "displayName":"test update",
+  "description":"test folder update"
+}`}
+    />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "folder":{
+    "id":"TYJsPN0xtkWId0yUrXkS5pN5AQzuullIkxz5aDnDJSI",
+    "displayName":"test",
+    "description":"test folder",
+    "path":"test",
+    "lastModifiedByDisplayName":"Bob User",
+    "createdDateTime":"2020-05-03T11:05:11.0133549Z",
+    "lastModifiedDateTime":"2020-05-03T11:09:02.0954397Z",
+    "parentFolderId":"TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+    "_links":{
+      "createdBy":{
+        "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "lastModifiedBy":{
+        "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "parentFolder":{
+        "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+      }
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+## 7. Update folder
+
+To update folder's metadata, request with payload should be send to HTTP PATCH https://api.bentley.com/storage/files/FOLDER_ID. Metadata including `displayName` and `description` properties can be updated by sending this request.
+
+You can execute the request in [Update folder documentation](/apis/storage/operations/update-folder/) page, “Try it” section.
+
+Here, `folderId` is required in the parameters. This `folderId` is the Id of the folder from which you want files and folders.
+
+Folder's properties should be updated.
+
+</TutorialSection>
+
+<TutorialSection
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`PATCH https://api.bentley.com/storage/files/FILE_ID HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "displayName":"test update.txt",
+  "description":"test file update"
+}`}
+    />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "folder":{
+    "id":"TYJsPN0xtkWId0yUrXkS5pN5AQzuullIkxz5aDnDJSI",
+    "displayName":"test",
+    "description":"test folder",
+    "path":"test",
+    "lastModifiedByDisplayName":"Bob User",
+    "createdDateTime":"2020-05-03T11:05:11.0133549Z",
+    "lastModifiedDateTime":"2020-05-03T11:15:02.0954397Z",
+    "parentFolderId":"TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+    "_links":{
+      "createdBy":{
+        "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "lastModifiedBy":{
+        "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "parentFolder":{
+        "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+      }
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+## 8. Update file
+
+To update file's metadata, request with payload should be send to HTTP PATCH https://api.bentley.com/storage/files/FILE_ID. File metadata of `displayName` and `description` properties can be updated by sending this request same as with folder update. `displayName` is required in the payload.
+
+You can execute the request in [Update file documentation](/apis/storage/operations/update-file/) page, “Try it” section.
+
+Here, `fileId` is required in the parameters. This `fileId` is the Id of the file which you want to update.
+
+File's properties should be updated.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 9. Update file's content
+
+Update file's content is a three step process. Request for initiating update need to be made first then actual file should be uploaded and finally confirmation request needs to be sent. Which is complete File Upload Link.
+
+You can execute the request in [Update file documentation](/apis/storage/operations/update-file-content/) page, “Try it” section.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/storage/files/FILE_ID/updatecontent HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "_links":{
+    "completeUrl":{
+      "href":"https://api.bentley.com/storage/files/TYJsPN0xtkWId0yUrXkS5s4FlCroosBMlyDhZZmlzoc/complete"
+    },
+    "uploadUrl":{
+      "href":"https://projectshareprodeussa01.blob.core.windows.net/azuresqldbecpluginstorage/ProjectShare/File/b6145b7f-fee9-4a13-b1e4-5d061970373e?sv=2017-04-17&sr=b&sig=4NfdEriAONQhbHGkrTAL4bNMzjW8Qm5l%2FoEPiSQl%2BPo%3D&se=2020-10-19T15:12:51Z&sp=rw&rscd=attachment%3B%20filename%3D%22test.txt%22&userid=b905387c-a685-4d27-aab7-468c9ff0c9a6"
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+### 9.1 Initiate file's content update
+
+Use file ID from previous step and execute HTTP POST https://api.bentley.com/storage/files/FILE_ID/updatecontent request.
+
+You can execute the request in [Update file's content documentation](/apis/storage/operations/update-file-content/) page, “Try it” section.
+
+Hyperlinks will be created, which should be used be used in the further steps to update file's content.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`PUT https://projectshareprodeussa01.blob.core.windows.net/azuresqldbecpluginstorage/ProjectShare/File/b6145b7f-fee9-4a13-b1e4-5d061970373e?sv=2017-04-17&sr=b&sig=4NfdEriAONQhbHGkrTAL4bNMzjW8Qm5l%2FoEPiSQl%2BPo%3D&se=2020-10-19T15:12:51Z&sp=rw&rscd=attachment%3B%20filename%3D%22test.txt%22&userid=b905387c-a685-4d27-aab7-468c9ff0c9a6 HTTP/1.1
+x-ms-blob-type: BlockBlob`} />,
+    <Title>Request Body</Title>,
+    <CodeBlock
+      language="json"
+      code={"test update"}
+    />
+  ]}
+>
+
+### 9.2 Upload actual file
+
+This request is used to upload actual file. A tool such as `Postman` should be used to make http request. Url should be picked from previous request's response where `uploadUrl` is specified. The maximum size of the file is **256 MiB**. If bigger file needs to be uploaded there are possibility to use Azure libraries to upload file via given Azure SAS url or by uploading file with [multiple requests](https://docs.microsoft.com/en-us/rest/api/storageservices/operations-on-block-blobs).
+
+For large size file upload you can upload the file in chunks using **FileStream** depending on the tech-stack.
+
+<Alert type="informational">
+
+Note: Authorization headers is not required for this request.
+
+</Alert>
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/storage/files/TYJsPN0xtkWId0yUrXkS5s4FlCroosBMlyDhZZmlzoc/complete HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "file":{
+    "id":"TYJsPN0xtkWId0yUrXkS5s4FlCroosBMlyDhZZmlzoc",
+    "displayName":"test.txt",
+    "description":"test file",
+    "path":"folderName/test.txt",
+    "size":8,
+    "lastModifiedByDisplayName":"Bob User",
+    "createdDateTime":"2020-05-03T11:05:11.0133549Z",
+    "lastModifiedDateTime":"2020-05-03T11:25:46.8659753Z",
+    "parentFolderId":"TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+    "_links":{
+      "createdBy":{
+        "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "lastModifiedBy":{
+        "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+      },
+      "parentFolder":{
+        "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+      }
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+### 9.3 Complete file's content upload
+
+After uploading actual file confirmation is needed. Url should be picked from the first step where `completeUrl` is specified.
+
+You can execute the request in [Complete file upload](/apis/storage/operations/complete-file-creation/) page, “Try it” section.
+
+File's content should be updated.
+
+If you add or change request body format, you will reset your changes to body content. So, **Do not add anything in body**.
+
+</TutorialSection>
+
+<TutorialSection>
+
+## 10. Recycle bin operations
+
+Files and folders can be deleted and restored. Deleted items can be queried as well because they will be only soft deleted and kept in the recycle bin. Items from recycle bin can be deleted manually if there is no reason to keep them longer otherwise they will be removed automatically after 30 days.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`DELETE https://api.bentley.com/storage/folders/FOLDER_ID HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  ]}
+>
+
+### 10.1 Delete folder
+
+Let's delete created folder. Execute HTTP DELETE https://api.bentley.com/storage/folders/FOLDER_ID request.
+
+You can execute the request in [Delete folder](/apis/storage/operations/delete-folder/) page, “Try it” section.
+
+Here, `folderId` is required in the parameters. This `folderId` is the Id of the folder which you want to update.
+
+Folder should be soft deleted. Folder will be added to recycle bin and it would be deleted automatically after 30 days.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`DELETE https://api.bentley.com/storage/files/FILE_ID HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  ]}
+>
+
+### 10.2 Delete file
+
+Let's delete created file as well. Execute HTTP DELETE https://api.bentley.com/storage/files/FILE_ID request.
+
+You can execute the request in [Delete file](/apis/storage/operations/delete-file/) page, “Try it” section.
+
+Here, `fileId` is required in the parameters. This `fileId` is the Id of the file which you want to delete.
+
+File should be soft deleted. File will be added to recycle bin and it would be deleted automatically after 30 days.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`GET https://api.bentley.com/storage/recycleBin?iTwinId=ITWIN_ID HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+    <Title>Response Body</Title>,
+    <CodeBlock
+      language="json"
+      code={`{
+  "items":[
+    {
+      "type":"folder",
+      "id":"TYJsPN0xtkWId0yUrXkS5pN5AQzuullIkxz5aDnDJSI",
+      "displayName":"test",
+      "description":"test folder",
+      "path":"test",
+      "lastModifiedByDisplayName":"Bob User",
+      "createdDateTime":"2020-05-03T11:05:11.0133549Z",
+      "lastModifiedDateTime":"2020-05-03T11:05:11.0133549Z",
+      "parentFolderId":"TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+      "_links":{
+        "createdBy":{
+          "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+        },
+        "lastModifiedBy":{
+          "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+        },
+        "parentFolder":{
+          "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+        }
+      }
+    },
+    {
+      "type":"file",
+      "id":"TYJsPN0xtkWId0yUrXkS5s4FlCroosBMlyDhZZmlzoc",
+      "displayName":"test.txt",
+      "description":"test file",
+      "path":"folderName/test.txt",
+      "size":8,
+      "lastModifiedByDisplayName":"Bob User",
+      "createdDateTime":"2020-05-03T11:05:11.0133549Z",
+      "lastModifiedDateTime":"2020-05-03T11:25:46.8659753Z",
+      "parentFolderId":"TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s",
+      "_links":{
+        "createdBy":{
+          "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+        },
+        "lastModifiedBy":{
+          "href":"https://api.bentley.com/projects/6959daff-27f5-4b87-96ea-9917daa3a8ff/members/1140f95b-1ba0-49d9-bbf4-b53e54d80387"
+        },
+        "parentFolder":{
+          "href":"https://api.bentley.com/storage/folders/TYJsPN0xtkWId0yUrXkS5g0CIYaGZLxEozrWBCOcS_s"
+        }
+      }
+    }
+  ],
+  "_links":{
+    "self":{
+      "href":"https://api.bentley.com/storage/recycleBin?iTwinId=ITWIN_ID&$skip=0&$top=100"
+    },
+    "prev":{
+      "href":"https://api.bentley.com/storage/recycleBin?iTwinId=ITWIN_ID&$skip=0&$top=100"
+    },
+    "next":{
+      "href":"https://api.bentley.com/storage/recycleBin?iTwinId=ITWIN_ID&$skip=100&$top=100"
+    }
+  }
+}`}
+    />,
+  ]}
+>
+
+### 10.3. Get folders and files in recycle bin
+
+To retrieve soft-deleted files and folder, send HTTP GET https://api.bentley.com/recycleBin?iTwinId=ITWIN_ID. It is possible to set page size by specifying `$skip` and `$top` query parameters. `$top` default is set to 100 if it is not changed.
+
+You can execute the request in [Get folders and files in recycle bin documentation](/apis/storage/operations/get-folders-and-files-in-recycle-bin/) page, “Try it” section.
+
+Here, `iTwinId` is required in the parameters. This `iTwinId` is the Id of the iTwin.
+
+The previously deleted files and folders are displayed.
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/storage/recycleBin/folders/FOLDER_ID/restore HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  ]}
+>
+
+### 10.4 Restore folder
+
+It is time to restore deleted folder. Execute HTTP POST https://api.bentley.com/storage/recycleBin/folders/FOLDER_ID/restore request.
+
+You can execute the request in [Restore folder](/apis/storage/operations/restore-folder/) page, “Try it” section.
+
+Here, `folderId` is required in the parameters. This `folderId` is the Id of the folder which you want to restore.
+
+Folder should be successfully restored. File can be restored with in the 30 Days
+
+</TutorialSection>
+
+<TutorialSection
+  subSection={true}
+  actions={[
+    <Title>HTTP request</Title>,
+    <CodeBlock
+      language="http"
+      code={`POST https://api.bentley.com/storage/recycleBin/files/FILE_ID/restore HTTP/1.1
+Accept: application/vnd.bentley.itwin-platform.v1+json
+Authorization: Bearer JWT_TOKEN`} />,
+  ]}
+>
+
+### 10.5 Restore file
+
+To restore a file, execute HTTP POST https://api.bentley.com/storage/recycleBin/files/FILE_ID/restore request.
+
+You can execute the request in [Restore file](/apis/storage/operations/restore-file/) page, “Try it” section.
+
+Here, `fileId` is required in the parameters. This `fileId` is the Id of the file which you want to restore.
+
+File should be successfully restored.
+
+</TutorialSection>
+
+<ContinueLearningSection>
+
+## Continue learning
+
+Congratulation for completing Storage API tutorial! You should be able to manage your securely stored files, which can be integrated to other service.
+
+## More resources that you may like
+
+<TileList>
+  <LinkCard
+    title="Storage API"
+    href="/apis/storage/"
+    description="There are more capabilities, which could be used for retrieving files, folders and more."
+  />
+  <LinkCard
+    title="iTwins API"
+    href="/apis/itwins/"
+    description="An iTwin is necessary for using Storage API. You can check its possibilities."
+  />
+  <LinkCard
+    title="Synchronization API"
+    href="/api-groups/synchronization/"
+    description="Files can be synchronized to iModel via Synchronization API."
+  />
+  <LinkCard
+    title="Export issue"
+    href="/apis/issues-v1/operations/export-issues-to-storage/"
+    description="Issues can be exported as PDF files to Storage."
+  />
+  <LinkCard
+    title="Export form"
+    href="/apis/forms/operations/export-form-to-storage/"
+    description="Forms can be exported as PDF files to Storage."
+  />
+</TileList>
+
+</ContinueLearningSection>

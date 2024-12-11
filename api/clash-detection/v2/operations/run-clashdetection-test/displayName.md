@@ -1,1 +1,0 @@
-Run clash detection tests

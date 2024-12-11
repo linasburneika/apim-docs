@@ -1,5 +1,5 @@
 ---
-title: 'CC Image Collection Test'
+title: 'CC Image Collection'
 displayOrder: 2
 ---
 

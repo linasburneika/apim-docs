@@ -1,5 +1,5 @@
 ---
-title: 'Overview Test'
+title: 'Overview'
 ---
 
 # Access Control API

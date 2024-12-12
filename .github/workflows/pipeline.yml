@@ -30,7 +30,7 @@ jobs:
       - name: approved
         env: 
           ENV_NAME: ${{needs.qa-deploy.outputs.resolved_environment}}
-        run: echo "Approve for %ENV_NAME%""
+        run: echo "Approve for %ENV_NAME%"
     
   prod-deploy:
     name: "Push content to ${{needs.qa-deploy.outputs.resolved_environment}}"

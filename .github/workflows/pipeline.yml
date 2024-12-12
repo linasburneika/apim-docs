@@ -13,30 +13,30 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  qa-deploy:
+  resolve:
     name: "Resolve environment"
-    uses: ./.github/workflows/deploy-environment-qa.yml
+    uses: ./.github/workflows/resolve-environment.yml
     with:
       pr_head_ref: "${{github.head_ref}}"
       pr_base_ref: "master"
       environment: QA
       
   prod-approval-gate:
-    name: "Approve content push to: ${{needs.qa-deploy.outputs.resolved_environment}}"
-    needs: qa-deploy
-    environment: ${{needs.qa-deploy.outputs.resolved_environment}}
+    name: "Approve content push to: ${{needs.resolve.outputs.resolved_environment}}"
+    needs: resolve
+    environment: ${{needs.resolve.outputs.resolved_environment}}
     runs-on: ubuntu-latest
     steps:
       - name: approved
         env: 
-          ENV_NAME: ${{needs.qa-deploy.outputs.resolved_environment}}
+          ENV_NAME: ${{needs.resolve.outputs.resolved_environment}}
         run: echo "Approve for %ENV_NAME%"
     
   prod-deploy:
-    name: "Push content to ${{needs.qa-deploy.outputs.resolved_environment}}"
+    name: "Push content to ${{needs.resolve.outputs.resolved_environment}}"
     needs: prod-approval-gate
-    uses: ./.github/workflows/deploy-environment-prod.yml
+    uses: ./.github/workflows/merge-prod.yml
     with:
       pr_head_ref: "${{github.head_ref}}"
       pr_base_ref: "Release"
-      environment: ${{needs.qa-deploy.outputs.resolved_environment}}
+      environment: ${{needs.resolve.outputs.resolved_environment}}

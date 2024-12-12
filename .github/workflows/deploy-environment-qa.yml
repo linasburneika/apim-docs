@@ -91,9 +91,3 @@ jobs:
           
           Write-Host "Resolved environment: $($envs[0])"
           "RESOLVED_ENVIRONMENT=$($envs[0])" >> $env:GITHUB_OUTPUT
-
-      - name: Merge ${{inputs.pr_head_ref}} branch to 'Release'
-        run: |
-          git checkout ${{inputs.pr_base_ref}}
-          git merge ${{inputs.pr_head_ref}}
-          git push
